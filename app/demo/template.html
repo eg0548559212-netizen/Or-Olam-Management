@@ -379,6 +379,16 @@ td .linkish:hover { text-decoration: underline; }
 #toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 #toast button { border: 0; background: var(--sun); color: #182437; font-weight: 700; border-radius: 999px; padding: 6px 14px; flex: none; }
 @media (max-width: 760px) { .cand { flex-direction: column; align-items: stretch; } .choose { justify-content: center; } #toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); } }
+
+/* ── סוג השיוך ── */
+.kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; background: var(--surface-2); border-radius: 18px; padding: 5px; }
+.kind { text-align: center; padding: 11px 6px; border-radius: 14px; font-weight: 600; cursor: pointer; color: var(--ink-2); }
+.kind:hover { background: var(--surface); color: var(--ink); }
+.kind.on { background: var(--navy); color: var(--on-navy); }
+.kind input { position: absolute; opacity: 0; pointer-events: none; }
+.kind:focus-within { outline: 2px solid var(--teal); outline-offset: 1px; }
+.cand.picked { border-color: var(--teal); background: var(--teal-softer); }
+@media (max-width: 760px) { .kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -841,7 +851,7 @@ function drawQueueBar() {
     <div class="qbar-a">
       <button class="cta" id="q-next" ${q.length ? "" : "disabled"}>להחלטה הבאה ←</button>
       ${sugg.length ? (pstate.bulkAsk
-        ? `<span class="confirm">לאשר ${sugg.length} הצעות ודאיות כ"אותה שלוחה"? <button class="ghost on" id="bulk-yes">כן, לאשר</button><button class="ghost" id="bulk-no">ביטול</button></span>`
+        ? `<span class="confirm">לאשר ${sugg.length} הצעות ודאיות כ"שלוחה קיימת"? <button class="ghost on" id="bulk-yes">כן, לאשר</button><button class="ghost" id="bulk-no">ביטול</button></span>`
         : `<button class="ghost" id="bulk">אישור כל ${sugg.length} ההצעות הוודאיות</button>`) : ""}
     </div></div>
     ${saveNotice()}`;
@@ -869,7 +879,9 @@ const posOf = id => POS.get(id) ?? -1;
 
 function prowHtml(n, depth, flat) {
   const kids = NKIDS.get(n.id) || [];
-  const st = nodeState(n), [lbl, cls] = NSTATE[st] || [];
+  const st = nodeState(n);
+  let [lbl, cls] = NSTATE[st] || [];
+  if (st === "decided") lbl = KIND_LABEL[DEC.get(n.id).action] || lbl;
   const notes = NOTES_BY.get(n.id) || [];
   const dcls = n.digit == null ? "none" : n.status;
   return `<button class="trow${pstate.sel === n.id ? " sel" : ""}" data-nid="${n.id}" style="padding-inline-start:${8 + depth * 18}px">
@@ -929,7 +941,8 @@ function formFor(n) {
   const d = DEC.get(n.id), m = MAP_BY_NODE.get(n.id);
   pstate.form = d ? { node: n.id, action: d.action, ids: [...(d.sclass_ids || [])], note: d.note || "" }
     : m ? { node: n.id, action: "same", ids: [m.ext], note: "" }
-    : { node: n.id, action: n.status === "existing" ? null : "none", ids: [], note: "" };
+    : { node: n.id, action: n.status === "existing" ? "same" : "none", ids: [], note: "" };
+  if (pstate.form.action === "rebuild") pstate.form.action = "same";
   return pstate.form;
 }
 function decisionSummary(d, n) {
@@ -962,56 +975,74 @@ function renderPlanDetail() {
   el.querySelectorAll(".crumbs [data-nid]").forEach(b => b.addEventListener("click", () => selectNode(+b.dataset.nid, true)));
   if (showDecision) wireDecision(n);
 }
+/* סוג השיוך של צומת בטיוטה (D-115). הערכים נשמרים ב-action: none / same / merge / split */
+const KINDS = [
+  ["none", "שלוחה חדשה", "אין לה שלוחה קיימת. שום היסטוריה לא עוברת אליה."],
+  ["same", "שלוחה קיימת", "שלוחה אחת מהעץ הנוכחי עוברת לכאן, עם כל ההיסטוריה שלה."],
+  ["merge", "איחוד", "כמה שלוחות מהעץ הנוכחי מתאחדות לכאן. בוחרים לפחות שתיים."],
+  ["split", "פיצול", "שלוחה מהעץ הנוכחי מתחלקת בין כמה צמתים בטיוטה, וזה אחד מהם."]
+];
+const KIND_LABEL = Object.fromEntries(KINDS.map(k => [k[0], k[1]]));
+KIND_LABEL.rebuild = "בנייה מחדש";
+
+function usedBy(extId, exceptNode) {
+  const out = [];
+  for (const d of DEC.values()) if (d.node_id !== exceptNode && d.action !== "none" && (d.sclass_ids || []).includes(extId)) out.push(NODES.get(d.node_id));
+  return out.filter(Boolean);
+}
 function decisionHtml(n, st, m, d) {
   const sig = m ? m.signals : null;
   const sugg = m ? EXT.get(m.ext) : null;
   const alts = (sig?.candidates || notFoundCands.get(n.id) || []).map(c => EXT.get(c.sclass_id)).filter(e => e && e.id !== sugg?.id);
-  const cands = [...(sugg ? [[sugg, whyLines(n, sig, m.reasons).slice(0, 4), true]] : []), ...alts.map(e => [e, [], false])];
   const who = d ? (d.decided_by === MY_ID ? "את" : (NAMES[d.decided_by] || "")) : "";
   if (d && !pstate.editing) {
-    return `<div class="decision"><div class="done"><span class="ok-ic" aria-hidden="true">✓</span><div><b>הוחלט:</b> ${decisionSummary(d, n)}
+    return `<div class="decision"><div class="done"><span class="ok-ic" aria-hidden="true">✓</span><div><b>${KIND_LABEL[d.action] || d.action}</b>${decisionTargets(d, n)}
       <div class="muted">${who ? esc(who) + " · " : ""}${new Date(d.decided_at).toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" })}${d.source === "bulk" ? " · באישור מרוכז" : ""}${d.note ? " · " + esc(d.note) : ""}</div></div>
       <button class="ghost" id="dec-edit">שינוי</button></div>
       <div class="dec-foot"><button class="ghost" id="dec-next">להחלטה הבאה ←</button></div></div>`;
   }
   const f = formFor(n);
   const ro = CAN_WRITE === false ? " disabled" : "";
+  const kind = f.action;
+  const multi = kind === "merge";
+  const cands = [...(sugg ? [[sugg, whyLines(n, sig, m.reasons).slice(0, 4), true]] : []), ...alts.map(e => [e, [], false])];
+  for (const id of f.ids) if (!cands.some(c => c[0].id === id) && EXT.get(id)) cands.push([EXT.get(id), [], false]);
   const candHtml = ([e, why, isSugg]) => {
     const parent = e.parent != null ? EXT.get(e.parent) : null;
-    return `<div class="cand${isSugg ? " sugg" : ""}">
+    const sel = f.ids.includes(e.id), others = usedBy(e.id, n.id);
+    const btn = multi
+      ? `<button class="choose${sel ? "" : " alt"}" data-toggle="${e.id}"${ro}>${sel ? "✓ נבחרה" : "+ הוספה"}</button>`
+      : `<button class="choose${isSugg ? "" : " alt"}" data-choose="${e.id}"${ro}><span aria-hidden="true">✓</span> ${kind === "split" ? "פיצול מהשלוחה הזו" : "זו השלוחה"}</button>`;
+    return `<div class="cand${isSugg ? " sugg" : ""}${sel && multi ? " picked" : ""}">
       <div class="cand-i">${isSugg ? '<span class="tag-s">הצעת המערכת</span>' : ""}
         <div class="cand-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b></div>
         <div class="muted">${parent ? `תחת ${esc(parent.name || parent.path)}` : "שורש"} · <button class="linkish" data-go="${e.id}">פתיחה בעץ</button></div>
-        ${why.length ? `<div class="whyline">${why.map(w => `<span class="wy ${w[0]}">${esc(w[1])}</span>`).join("")}</div>` : ""}</div>
-      <button class="choose${isSugg ? "" : " alt"}" data-choose="${e.id}"${ro}><span aria-hidden="true">✓</span> זו השלוחה</button></div>`;
+        ${why.length ? `<div class="whyline">${why.map(w => `<span class="wy ${w[0]}">${esc(w[1])}</span>`).join("")}</div>` : ""}
+        ${others.length ? `<div class="wy warn" style="align-self:flex-start">כבר משויכת גם ל: ${others.map(o => esc(o.title)).join(", ")}${kind === "same" ? " · אם היא מתחלקת, בוחרים פיצול" : ""}</div>` : ""}</div>
+      ${btn}</div>`;
   };
+  const kindHint = KINDS.find(k => k[0] === kind)?.[2] || "";
+  const body = kind === "none"
+    ? `<div class="dec-foot"><button class="cta" id="dec-new"${ro}>שמירה: שלוחה חדשה</button></div>`
+    : `${cands.length ? `<div class="cands">${cands.map(candHtml).join("")}</div>` : `<div class="muted">המערכת לא מצאה שלוחה מתאימה. מחפשים אותה כאן:</div>`}
+      <div class="pick"><label class="field" for="pick-q">${ICON_SEARCH}<input id="pick-q" type="search" placeholder="חיפוש שלוחה אחרת לפי שם או נתיב" autocomplete="off"></label><div class="results" id="pick-r"></div></div>
+      ${multi ? `<div class="dec-foot"><button class="cta" id="dec-merge"${f.ids.length >= 2 && !ro ? "" : " disabled"}>שמירת האיחוד (${f.ids.length} שלוחות)</button>${f.ids.length < 2 ? '<span class="muted">בוחרים לפחות שתי שלוחות</span>' : ""}</div>` : ""}`;
   return `<div class="decision">
-    <div class="q2"><b>לאיזו שלוחה בעץ הנוכחי שייך "${esc(n.title)}"?</b>
-      ${st === "not_found" && !cands.length ? '<span class="muted">המערכת לא מצאה שלוחה מתאימה.</span>' : ""}</div>
-    ${cands.length ? `<div class="cands">${cands.map(candHtml).join("")}</div>` : ""}
-    <div class="other-row">
-      <button class="choose none" id="dec-none"${ro}><span aria-hidden="true">✕</span> אין לה שלוחה קיימת</button>
-      <button class="ghost${pstate.panel === "search" ? " on" : ""}" id="dec-other">שלוחה אחרת…</button>
-      <button class="ghost${pstate.panel === "adv" ? " on" : ""}" id="dec-adv">אפשרויות נוספות</button>
-    </div>
-    ${pstate.panel === "search" ? `<div class="pick"><label class="field" for="pick-q">${ICON_SEARCH}<input id="pick-q" type="search" placeholder="שם או נתיב של שלוחה" autocomplete="off"></label><div class="results" id="pick-r"></div></div>` : ""}
-    ${pstate.panel === "adv" ? advHtml(n, f) : ""}
+    <div class="q2"><b>מה הסוג של "${esc(n.title)}"?</b></div>
+    <div class="kinds" role="radiogroup" aria-label="סוג השיוך">${KINDS.map(([k, l]) =>
+      `<label class="kind${kind === k ? " on" : ""}"><input type="radio" name="kind" value="${k}"${kind === k ? " checked" : ""}>${l}</label>`).join("")}</div>
+    <div class="muted">${kindHint}</div>
+    ${body}
     <div class="dec-foot">${d ? '<button class="ghost" id="dec-cancel">ביטול השינוי</button>' : ""}<button class="ghost" id="dec-next">${d ? "להחלטה הבאה" : "דילוג"} ←</button>
       <span class="muted" id="dec-msg" role="status"></span></div>
   </div>`;
 }
-function advHtml(n, f) {
-  const adv = ["rebuild", "merge", "split"];
-  if (!adv.includes(f.action)) f.action = "rebuild";
-  const act = ACTIONS[f.action], chosen = f.ids.map(id => EXT.get(id)).filter(Boolean);
-  const valid = f.ids.length >= act.min && f.ids.length <= act.max;
-  return `<div class="adv">
-    <div class="seg" role="radiogroup" aria-label="סוג השיוך">${adv.map(k => `<label class="${f.action === k ? "on" : ""}"><input type="radio" name="act" value="${k}"${f.action === k ? " checked" : ""}>${ACTIONS[k].label}</label>`).join("")}</div>
-    <div class="muted">${act.help}</div>
-    <div class="chips">${chosen.map(e => `<span class="chip teal"><span class="path">${esc(e.path)}</span> ${esc(e.name || "")}<button class="x" data-rm="${e.id}" aria-label="הסרה">×</button></span>`).join("") || '<span class="muted">בוחרים שלוחה מהחיפוש:</span>'}</div>
-    ${chosen.length < act.max ? `<label class="field" for="adv-q">${ICON_SEARCH}<input id="adv-q" type="search" placeholder="שם או נתיב של שלוחה" autocomplete="off"></label><div class="results" id="adv-r"></div>` : ""}
-    <label class="field" for="dec-note"><input id="dec-note" type="text" placeholder="הערה (לא חובה)" value="${esc(f.note)}"></label>
-    <div><button class="cta" id="adv-save"${valid && CAN_WRITE !== false ? "" : " disabled"}>שמירה</button></div></div>`;
+function decisionTargets(d, n) {
+  const exts = (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean);
+  if (!exts.length) return "";
+  const list = exts.map(e => `<span class="path">${esc(e.path)}</span> ${esc(e.name || "")}`).join("، ");
+  const move = d.action === "same" && exts[0].path !== n.path ? ` · תעבור מ-<span class="path">${esc(exts[0].path)}</span> ל-<span class="path">${esc(n.path || "?")}</span>` : "";
+  return `: ${list}${move}`;
 }
 function searchInto(input, box, onPick) {
   input?.addEventListener("input", () => {
@@ -1021,40 +1052,41 @@ function searchInto(input, box, onPick) {
     box.innerHTML = hits.map(e => `<button data-add="${e.id}"><span class="path">${esc(e.path)}</span> ${esc(e.name || "בלי שם")}<span class="pick-go">בחירה</span></button>`).join("") || '<div class="muted">לא נמצאו שלוחות.</div>';
     box.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => onPick(+b.dataset.add)));
   });
-  input?.focus();
 }
 function wireDecision(n) {
   const el = $("#pdetail");
-  const decide = async (action, ids, note) => {
-    const wasQueue = nodeState(n) === "needs_decision" || nodeState(n) === "not_found" || nodeState(n) === "suggested";
+  const f = pstate.form;
+  const decide = async (action, ids) => {
+    const st = nodeState(n), wasQueue = ["needs_decision", "not_found", "suggested"].includes(st);
     const prev = DEC.get(n.id);
-    const ok = await saveDecision(n.id, { action, ids, note: note || "" }, "manual");
-    pstate.editing = false; pstate.panel = null; pstate.form = null;
+    const ok = await saveDecision(n.id, { action, ids, note: f?.note || "" }, "manual");
+    pstate.editing = false; pstate.form = null;
     drawQueueBar();
-    const label = action === "none" ? "אין לה שלוחה קיימת" : `${ACTIONS[action].label}: ${ids.map(pathOf).join(", ")}`;
+    const label = KIND_LABEL[action] + (ids.length ? ": " + ids.map(pathOf).join(", ") : "");
     toast(`${ok ? "נשמר" : DB ? "השמירה נכשלה" : "נשמר בתצוגה הזו בלבד"} · "${n.title}" · ${label}`, ok || !DB ? () => undoDecision(n.id, prev) : null);
     const q = queue();
     if (wasQueue && q.length) selectNode(q.find(id => posOf(id) > posOf(n.id)) ?? q[0], true);
     else { drawPlanTree(); renderPlanDetail(); }
   };
-  el.querySelectorAll("[data-choose]").forEach(b => b.addEventListener("click", () => decide("same", [+b.dataset.choose])));
-  $("#dec-none")?.addEventListener("click", () => decide("none", []));
-  $("#dec-other")?.addEventListener("click", () => { pstate.panel = pstate.panel === "search" ? null : "search"; renderPlanDetail(); });
-  $("#dec-adv")?.addEventListener("click", () => { pstate.panel = pstate.panel === "adv" ? null : "adv"; renderPlanDetail(); });
+  el.querySelectorAll('input[name="kind"]').forEach(r => r.addEventListener("change", () => {
+    f.action = r.value;
+    if (f.action === "none") f.ids = [];
+    else if (f.action !== "merge" && f.ids.length > 1) f.ids = f.ids.slice(0, 1);
+    renderPlanDetail();
+  }));
+  el.querySelectorAll("[data-choose]").forEach(b => b.addEventListener("click", () => decide(f.action, [+b.dataset.choose])));
+  el.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("click", () => {
+    const id = +b.dataset.toggle; f.ids = f.ids.includes(id) ? f.ids.filter(x => x !== id) : [...f.ids, id]; renderPlanDetail();
+  }));
+  searchInto($("#pick-q"), $("#pick-r"), id => {
+    if (f.action === "merge") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; renderPlanDetail(); }
+    else decide(f.action, [id]);
+  });
+  $("#dec-new")?.addEventListener("click", () => decide("none", []));
+  $("#dec-merge")?.addEventListener("click", () => decide("merge", f.ids));
   $("#dec-edit")?.addEventListener("click", () => { pstate.editing = true; renderPlanDetail(); });
-  $("#dec-cancel")?.addEventListener("click", () => { pstate.editing = false; pstate.panel = null; renderPlanDetail(); });
+  $("#dec-cancel")?.addEventListener("click", () => { pstate.editing = false; pstate.form = null; renderPlanDetail(); });
   $("#dec-next")?.addEventListener("click", () => nextInQueue());
-  searchInto($("#pick-q"), $("#pick-r"), id => decide("same", [id]));
-  if (pstate.panel === "adv") {
-    const f = pstate.form;
-    el.querySelectorAll('input[name="act"]').forEach(r => r.addEventListener("change", () => {
-      f.action = r.value; const a = ACTIONS[f.action]; if (f.ids.length > a.max) f.ids = f.ids.slice(0, a.max); renderPlanDetail();
-    }));
-    el.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { f.ids = f.ids.filter(x => x !== +b.dataset.rm); renderPlanDetail(); }));
-    $("#dec-note")?.addEventListener("input", e => { f.note = e.target.value; });
-    searchInto($("#adv-q"), $("#adv-r"), id => { const a = ACTIONS[f.action]; f.ids = a.max === 1 ? [id] : [...new Set([...f.ids, id])].slice(0, a.max); renderPlanDetail(); });
-    $("#adv-save")?.addEventListener("click", () => decide(f.action, f.ids, f.note));
-  }
 }
 async function undoDecision(nodeId, prev) {
   if (prev) { await saveDecision(nodeId, { action: prev.action, ids: prev.sclass_ids || [], note: prev.note }, prev.source || "manual"); }

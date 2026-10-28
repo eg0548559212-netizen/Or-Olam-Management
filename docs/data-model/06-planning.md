@@ -225,6 +225,7 @@
 
 ### החלטות שיוך מהדף (D-113)
 
+- **סוגי השיוך (D-115):** `none` (שלוחה חדשה), `same` (שלוחה קיימת), `merge` (איחוד) ו-`split` (פיצול).
 - **מבנה ההחלטה:** כל החלטה היא מסמך `decisions/<node_id>` עם השדות `action`, `sclass_ids[]`, `note`, `decided_by`, `decided_at` ו-`source` (`manual` / `bulk`).
 - **החלה על בסיס הנתונים** (`apply_decisions.py`):
   - השורות האוטומטיות של הצומת מסומנות `rejected`.

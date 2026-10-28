@@ -7,7 +7,7 @@
 פעולות בדף → mapping_row:
 - same    → keep (אותו נתיב) או move (נתיב אחר)
 - rebuild / merge / split → אותו relation
-- none    → כל שורה אוטומטית של הצומת מסומנת rejected, ואין שורה מאושרת
+- none    → שלוחה חדשה: כל שורה אוטומטית של הצומת מסומנת rejected, ואין שורה מאושרת
 הרצה חוזרת של המיפוי האוטומטי לא נוגעת בשורות approved / rejected.
 """
 import argparse
