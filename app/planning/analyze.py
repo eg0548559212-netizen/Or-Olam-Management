@@ -304,7 +304,7 @@ def gap_report(db, plan_id, draft_id, weak=None):
                 setting_key=ref["setting_key"], old_target=ref["target_text"], new_target=nodes[m["node_id"]]["full_path"])
 
     for note in db.execute(
-        "SELECT note_id, node_id, scope, text FROM draft_note WHERE draft_id = ? AND note_kind = 'question' AND status = 'open'",
+        "SELECT note_id, node_id, scope, text FROM draft_note WHERE draft_id = ? AND status = 'open'",
         (draft_id,)):
         add("open_note", "info", note["node_id"], None, note_id=note["note_id"], scope=note["scope"], text=note["text"])
 

@@ -70,7 +70,7 @@
 |---|---|
 | `note_id`, `draft_id`, `node_id` | `node_id` ריק אם ההערה על כל הטיוטה |
 | `scope` | `global` / `section` / `node` / `open_question` |
-| `note_kind` | `question` (אדום) / `build_note` (כתום) / `comment` (נכתבה במערכת) |
+| `note_kind` | מאז D-120 תמיד `comment`. הערכים `question` / `build_note` נשארו בסכמה מהגרסה הקודמת. הצבע המקורי נשמר ב-`source_color` |
 | `text`, `source_color` | |
 | `status` | `open` / `resolved` / `wont_do` |
 | `author`, `created_at`, `resolved_by`, `resolved_at` | |

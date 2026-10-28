@@ -404,9 +404,13 @@ td .linkish:hover { text-decoration: underline; }
 .eye:hover, .eye.on { opacity: 1; }
 .note { align-items: center; }
 .ndot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-.ndot.question { background: var(--bad); }
-.ndot.build_note { background: var(--warn); }
-.ndot.comment { background: var(--ink-3); }
+.ndot { background: var(--warn); }
+.notebox { background: var(--warn-soft); border-radius: var(--r-inner); padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+.notebox-h { display: flex; align-items: center; gap: 10px; }
+.notebox-h b { color: var(--warn); flex: 1; }
+.notebox ul { margin: 0; padding: 0 18px 0 0; display: flex; flex-direction: column; gap: 3px; }
+.notebox .eye { color: var(--warn); margin: 0; }
+.notebox textarea { border: 1px solid var(--warn); border-radius: 12px; background: var(--surface); padding: 8px 12px; resize: vertical; font: inherit; color: var(--ink); }
 .ind-sb { flex: none; font-size: 11px; font-weight: 600; color: var(--special); border: 1px solid var(--special); border-radius: 6px; padding: 0 6px; }
 .ctype.faint { background: none; border: 1px dashed var(--line); color: var(--ink-3); }
 .kinds.k4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -634,8 +638,7 @@ function renderHome() {
         <div class="kpi"><small>בנייה מיוחדת</small><b class="sm" style="color:var(--special)">${ns.new_special_build}</b></div>
       </div>
       <div class="legend">
-        <span class="chip bad"><span class="dot"></span>${D.notes.filter(n => n[2] === "question").length} שאלות</span>
-        <span class="chip warn"><span class="dot"></span>${D.notes.filter(n => n[2] === "build_note").length} הערות בנייה</span>
+        <span class="chip warn"><span class="dot"></span>${D.notes.length} הערות</span>
         <span class="chip"><span class="dot"></span>${D.nodes.filter(n => n[2] == null).length} צמתים בלי מספר</span>
       </div>
       <button class="ghost" onclick="pstate.f='all';go('plan')">פתיחת הטיוטה ←</button>
@@ -786,7 +789,7 @@ function refHtml(r, dir) {
    סוג שלוחה (planned_type, מאותה רשימה של העץ הנוכחי) וסטטוס שיוך (ללא / חדשה / קיימת / מאוחדת).
    סוג "תפריט מורחב" לא צריך שיוך. "בנייה מיוחדת" היא תגית, והערות מקבלות חיווי בעץ רק לפי בחירה.
    שמירה: decisions/<node_id> (שיוך) ו-nodeprops/<node_id> (סוג, תגית, חיווי הערות). */
-const DEC = new Map(), PROPS = new Map();
+const DEC = new Map((D.linked || []).map(d => [d.node_id, d])), PROPS = new Map();
 let DB = null, USER = null, CAN_WRITE = null, MY_ID = null;
 const NAMES = {};
 const ROUTING_TYPES = new Set(["LMENU"]);  /* תפריט מורחב: בלי הקלטות, ולכן בלי שיוך */
@@ -820,7 +823,9 @@ function linkStatus(n) {
   return n.link || "unset";
 }
 const specialBuild = n => { const p = PROPS.get(n.id); return p && "special_build" in p ? !!p.special_build : !!n.special; };
-const noteMarks = n => PROPS.get(n.id)?.note_marks || [];
+/* D-120: סוג הערה אחד. ההערות של צומת מאוחדות לרשימה אחת, וניתנות לעריכה (nodeprops.notes) */
+const nodeNotes = n => { const p = PROPS.get(n.id); return p && Array.isArray(p.notes) ? p.notes : (NOTES_BY.get(n.id) || []).map(x => x.text); };
+const noteMark = n => { const p = PROPS.get(n.id) || {}; return "note_mark" in p ? !!p.note_mark : (p.note_marks || []).length > 0; };
 function usedBy(extId, exceptNode) {
   const out = [];
   for (const d of DEC.values()) if (d.node_id !== exceptNode && (d.sclass_ids || []).includes(extId) && d.action !== "routing") out.push(NODES.get(d.node_id));
@@ -832,7 +837,7 @@ const suggestedOpen = () => [...MAP_BY_NODE.values()].filter(m => m.status === "
 
 function revealNode(id) { let p = NODES.get(id)?.parent; while (p != null) { pstate.open.add(p); p = NODES.get(p)?.parent; } }
 function selectNode(id, scroll) {
-  pstate.sel = id; pstate.form = null; pstate.bulkAsk = false; pstate.tab = null;
+  pstate.sel = id; pstate.form = null; pstate.bulkAsk = false; pstate.tab = null; pstate.editNotes = false;
   revealNode(id); drawPlanTree(); renderPlanDetail();
   if (scroll) requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "nearest" }));
   if (innerWidth < 1180 && scroll !== "tree") $("#pdetail")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -905,15 +910,14 @@ function saveNotice() {
 
 function prowHtml(n, depth, flat) {
   const kids = NKIDS.get(n.id) || [];
-  const notes = NOTES_BY.get(n.id) || [], marks = noteMarks(n);
-  const marked = notes.filter((x, i) => marks.includes(i));
+  const notes = nodeNotes(n), marked = notes.length && noteMark(n);
   const t = effType(n).t, routing = ROUTING_TYPES.has(t), ls = linkStatus(n);
   const showLink = n.parent != null && n.title && !routing && n.kind === "extension";
   return `<button class="trow${pstate.sel === n.id ? " sel" : ""}" data-nid="${n.id}" style="padding-inline-start:${8 + depth * 18}px">
     <span class="tw${pstate.open.has(n.id) ? " open" : ""}" data-tw="${kids.length && !flat ? n.id : ""}">${kids.length && !flat ? ICON_CHEV : ""}</span>
     <span class="digit sm ${n.digit == null ? "none" : "existing"}">${esc(n.digit ?? "–")}</span>
     ${flat ? `<span class="path">${esc(n.path || "")}</span>` : ""}<span class="nm${n.title ? "" : " empty"}">${esc(n.title || "(ריק)")}</span>
-    ${marked.map(x => `<span class="ndot ${x.kind}" title="${esc(x.text)}"></span>`).join("")}
+    ${marked ? `<span class="ndot" title="${esc(notes.join(" · "))}"></span>` : ""}
     ${specialBuild(n) ? '<span class="ind-sb" title="בנייה מיוחדת">בנייה מיוחדת</span>' : ""}
     ${n.parent != null ? (t ? typeChip(t) : '<span class="ctype faint">בלי סוג</span>') : ""}
     ${showLink ? `<span class="chip sm ${(DEC.get(n.id)?.sclass_ids || []).some(i => EXCLUDED(pathOf(i) || "")) ? "bad" : LINK[ls][1]}">${LINK[ls][0]}</span>` : ""}</button>`;
@@ -927,7 +931,7 @@ function drawPlanTree() {
     if (f === "routing") return isNodeRow(n) && isRouting(n);
     if (f === "notype") return isNodeRow(n) && !effType(n).t;
     if (f === "special") return specialBuild(n);
-    if (f === "notes") return NOTES_BY.has(n.id);
+    if (f === "notes") return nodeNotes(n).length > 0;
     return isNodeRow(n) && !isRouting(n) && linkStatus(n) === f;
   };
   if (q || f !== "all") {
@@ -971,7 +975,7 @@ function renderPlanDetail() {
   const n = NODES.get(pstate.sel);
   if (!n || n.parent == null) { el.innerHTML = globalNotesHtml(); return; }
   const crumbs = []; let p = n.parent; while (p != null && NODES.get(p).parent != null) { crumbs.unshift(NODES.get(p)); p = NODES.get(p).parent; }
-  const notes = NOTES_BY.get(n.id) || [], marks = noteMarks(n);
+  const notes = nodeNotes(n), mark = noteMark(n);
   const h = n.hints || {};
   const facts = [h.episodes && `${h.episodes} פרקים`, h.closed_series && "סדרה סגורה", h.renewal && "מתחדשת", h.copy_to && `להעתיק גם ל-${h.copy_to}`, h.redirect_to && `מעבר לשלוחה ${h.redirect_to}`].filter(Boolean);
   const et = effType(n), routing = ROUTING_TYPES.has(et.t), ls = linkStatus(n), sb = specialBuild(n);
@@ -995,8 +999,14 @@ function renderPlanDetail() {
       <div class="prop"><span>תגיות</span>
         <button class="tagbtn${sb ? " on" : ""}" id="p-sb"${ro}>${sb ? "✓ בנייה מיוחדת" : "+ בנייה מיוחדת"}</button></div>
     </div>` : ""}
-    ${notes.length ? `<div class="notes">${notes.map((x, i) => `<div class="note ${x.kind}"><b>${NOTE_KIND[x.kind]}</b><span>${esc(x.text)}</span>
-      <button class="eye${marks.includes(i) ? " on" : ""}" data-mark="${i}" aria-pressed="${marks.includes(i)}" title="${marks.includes(i) ? "הסתרת החיווי בעץ" : "הצגת חיווי בעץ"}"${ro}>${marks.includes(i) ? "מוצג בעץ" : "הצגה בעץ"}</button></div>`).join("")}</div>` : ""}
+    ${pstate.editNotes ? `<div class="notebox"><div class="notebox-h"><b>הערות</b><span class="muted">כל שורה היא הערה</span></div>
+        <textarea id="notes-ta" rows="${Math.max(3, notes.length + 1)}">${esc(notes.join("\n"))}</textarea>
+        <div class="dec-foot"><button class="cta" id="notes-save"${ro}>שמירה</button><button class="ghost" id="notes-cancel">ביטול</button></div></div>`
+      : notes.length ? `<div class="notebox"><div class="notebox-h"><b>הערות</b>
+        <button class="eye${mark ? " on" : ""}" id="note-mark" aria-pressed="${mark}"${ro}>${mark ? "✓ מוצג בעץ" : "הצגה בעץ"}</button>
+        <button class="eye" id="notes-edit"${ro}>עריכה</button></div>
+        <ul>${notes.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`
+      : row ? `<div><button class="eye" id="notes-edit"${ro}>+ הוספת הערה</button></div>` : ""}
     ${row && !routing ? linkHtml(n, ls) : ""}
     <div class="dec-foot"><button class="ghost" id="dec-next">לצומת הבא בלי שיוך ←</button><span class="muted" id="dec-msg" role="status"></span></div>`;
   el.querySelectorAll(".crumbs [data-nid]").forEach(b => b.addEventListener("click", () => selectNode(+b.dataset.nid, true)));
@@ -1068,11 +1078,14 @@ function wireDetail(n) {
     pstate.tab = null; drawQueueBar(); drawPlanTree(); renderPlanDetail();
   });
   $("#p-sb")?.addEventListener("click", async () => { await saveProps(n.id, { special_build: !specialBuild(n) }); drawPlanTree(); renderPlanDetail(); });
-  el.querySelectorAll("[data-mark]").forEach(b => b.addEventListener("click", async () => {
-    const i = +b.dataset.mark, cur = noteMarks(n);
-    await saveProps(n.id, { note_marks: cur.includes(i) ? cur.filter(x => x !== i) : [...cur, i] });
-    drawPlanTree(); renderPlanDetail();
-  }));
+  $("#note-mark")?.addEventListener("click", async () => { await saveProps(n.id, { note_mark: !noteMark(n) }); drawPlanTree(); renderPlanDetail(); });
+  $("#notes-edit")?.addEventListener("click", () => { pstate.editNotes = true; renderPlanDetail(); $("#notes-ta")?.focus(); });
+  $("#notes-cancel")?.addEventListener("click", () => { pstate.editNotes = false; renderPlanDetail(); });
+  $("#notes-save")?.addEventListener("click", async () => {
+    const list = $("#notes-ta").value.split("\n").map(x => x.trim()).filter(Boolean);
+    await saveProps(n.id, { notes: list });
+    pstate.editNotes = false; toast(`"${n.title}" · ההערות נשמרו`); drawPlanTree(); renderPlanDetail();
+  });
   el.querySelectorAll('input[name="link"]').forEach(r => r.addEventListener("change", () => { pstate.tab = r.value; renderPlanDetail(); }));
   const f = pstate.form;
   const decide = async (action, ids) => {

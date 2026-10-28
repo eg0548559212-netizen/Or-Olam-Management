@@ -12,7 +12,8 @@
 draft_node.link_status מתעדכן: none → new, same/split → existing, merge → merged.
 
 מאפייני צומת (D-118) נשמרים באוסף nodeprops ומוחלים עם --props <תיקייה>:
-planned_type → draft_node.planned_cls_type, special_build → draft_node.special_build.
+planned_type → draft_node.planned_cls_type, special_build → draft_node.special_build,
+notes (D-120, רשימת הערות ערוכה) → מחליפה את הערות הצומת ב-draft_note.
 הרצה חוזרת של המיפוי האוטומטי לא נוגעת בשורות approved / rejected.
 """
 import argparse
@@ -84,6 +85,14 @@ def apply_props(src_dir, db_file):
         if sets:
             db.execute(f"UPDATE draft_node SET {', '.join(sets)} WHERE draft_id = ? AND node_id = ?",
                        (*args, draft_id, int(d["node_id"])))
+        if isinstance(d.get("notes"), list):
+            db.execute("DELETE FROM draft_note WHERE draft_id = ? AND node_id = ?", (draft_id, int(d["node_id"])))
+            for text in d["notes"]:
+                db.execute(
+                    """INSERT INTO draft_note (draft_id, node_id, scope, note_kind, text, status, author, created_at)
+                       VALUES (?, ?, 'node', 'comment', ?, 'open', ?, ?)""",
+                    (draft_id, int(d["node_id"]), text, d.get("updated_by"), d.get("updated_at")))
+        if sets or isinstance(d.get("notes"), list):
             n += 1
     db.commit()
     return {"props_applied": n}

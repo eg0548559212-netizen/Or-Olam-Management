@@ -23,13 +23,14 @@ import docx
 from app.db.connect import connect, now
 
 COLOR_STATUS = {None: "existing", "FF00FF": "new", "0000FF": "new_special_build"}
-NOTE_COLORS = {"FF0000": "question", "FF9900": "build_note"}
+# D-120: סוג הערה אחד (comment). הצבע המקורי (אדום / כתום) נשמר ב-source_color
+NOTE_COLORS = {"FF0000": "FF0000", "FF9900": "FF9900"}
 
 SECTION_RE = re.compile(r"^שלוחה\s+(\d+)\s*:\s*(.*)$")
 NUMBER_RE = re.compile(r"^\s*((?:\d+\.)+)\s*")
 GLOBAL_BLOCKS = {
     "בכל הקו": ("global", None),
-    "שאלות שנותרו": ("open_question", "question"),
+    "שאלות שנותרו": ("open_question", None),
     "דרושים מוסרים": ("global", "comment"),
 }
 
@@ -294,8 +295,8 @@ def insert_draft(db, plan_id, kind, file_id, based_on, label, ts, nodes, notes):
         db.execute(
             """INSERT INTO draft_note (draft_id, node_id, scope, note_kind, text, source_color, status, author, created_at)
                VALUES (?, ?, ?, ?, ?, ?, 'open', 'import', ?)""",
-            (draft_id, node_id, scope, kind, text,
-             color or {"question": "FF0000", "build_note": "FF9900"}.get(kind), ts),
+            (draft_id, node_id, scope, "comment", text,
+             color or (kind if kind in ("FF0000", "FF9900") else None), ts),
         )
     return draft_id
 
