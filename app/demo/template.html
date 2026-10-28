@@ -415,6 +415,11 @@ td .linkish:hover { text-decoration: underline; }
 .ctype.faint { background: none; border: 1px dashed var(--line); color: var(--ink-3); }
 .kinds.k4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 760px) { .props { grid-template-columns: minmax(0, 1fr); } .kinds.k4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .trow .ind-sb { display: none; } }
+/* ── ייצוא (D-121) ── */
+.xpanel { display: flex; flex-direction: column; gap: 10px; background: var(--teal-softer); border: 1px solid var(--teal-soft); border-radius: var(--r-inner); padding: 14px 16px; }
+.xopts { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.xopt { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+.xopt input { accent-color: var(--teal); width: 16px; height: 16px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -855,7 +860,8 @@ function renderPlan() {
     <div class="split">
       <section class="card">
         <div class="card-h"><h2>טיוטת העץ החדש</h2><span class="sub">${esc(D.meta.draft_label || "")}</span>
-          <button class="ghost" id="gnotes">הערות כלליות</button></div>
+          <button class="ghost" id="gnotes">הערות כלליות</button><button class="ghost" id="xbtn">ייצוא לאישור</button></div>
+        <div id="xslot"></div>
         <div class="toolbar">
           <label class="field" for="q-plan">${ICON_SEARCH}<input id="q-plan" type="search" placeholder="חיפוש בטיוטה" value="${esc(pstate.q)}" autocomplete="off"></label>
           <select class="ghost" id="f-plan" aria-label="סינון">${filters.map(([k, l]) => `<option value="${k}"${pstate.f === k ? " selected" : ""}>${l}</option>`).join("")}</select>
@@ -875,6 +881,7 @@ function renderPlan() {
   $("#q-plan").addEventListener("input", e => { pstate.q = e.target.value; drawPlanTree(); });
   $("#f-plan").addEventListener("change", e => { pstate.f = e.target.value; drawPlanTree(); });
   $("#gnotes").addEventListener("click", () => { pstate.sel = null; drawPlanTree(); renderPlanDetail(); });
+  $("#xbtn").addEventListener("click", () => { const x = $("#xslot"); x.innerHTML = x.innerHTML ? "" : exportPanelHtml(); if (x.innerHTML) wireExport(); });
 }
 
 function drawQueueBar() {
@@ -1180,6 +1187,94 @@ async function initDecisions() {
   }, () => {});
   if (location.hash === "#plan") drawQueueBar();
 }
+/* ── ייצוא לאישור (D-121) ── */
+/* הטיוטה כפי שהיא בדף, כקובץ Word לשליחה לאישור. הספרייה נטענת רק בלחיצה. */
+const exportOpts = { links: true, types: true, notes: true, global: true };
+let DOWNLOADS;
+async function loadDocx() {
+  if (window.docx) return window.docx;
+  await new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.iife.js";
+    s.onload = res; s.onerror = () => rej(new Error("load"));
+    document.head.appendChild(s);
+  });
+  return window.docx;
+}
+async function buildDocx(opts) {
+  const X = await loadDocx();
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } = X;
+  const C = { ink: "1A2433", grey: "6B7785", new: "B8388F", special: "3B68CF", note: "C9681A" };
+  const R = (text, o = {}) => new TextRun({ text, rightToLeft: o.ltr ? false : true, font: "Arial", size: o.size || 22, bold: o.bold, color: o.color || C.ink });
+  const P = (children, o = {}) => new Paragraph({ bidirectional: true, alignment: AlignmentType.START, children, spacing: { after: o.after ?? 60 },
+    indent: o.indent ? { start: o.indent } : undefined, heading: o.heading });
+  const body = [];
+  const today = new Date().toLocaleDateString("he-IL");
+  body.push(P([R("קו אור עולם – סידור פנימי מלא", { size: 36, bold: true })], { heading: HeadingLevel.TITLE, after: 120 }));
+  body.push(P([R(`טיוטת עבודה מתוך מערכת הניהול · ${today}`, { color: C.grey })], { after: 120 }));
+  const legend = [R("מקרא: ", { bold: true }), R("שחור – שלוחה קיימת · "), R("מג'נטה – שלוחה חדשה", { color: C.new }), R(" · "), R("כחול – בנייה מיוחדת", { color: C.special }),
+    ...(opts.notes ? [R(" · "), R("כתום – הערות", { color: C.note })] : []), ...(opts.links || opts.types ? [R(" · "), R("אפור – סוג ושיוך לעץ הנוכחי", { color: C.grey })] : [])];
+  body.push(P(legend, { after: 240 }));
+  if (opts.global) {
+    const g = k => NOTES_BY.get("global:" + k) || [];
+    const blocks = [["בכל הקו", g("global").filter(n => !n.text.startsWith("דרושים מוסרים")).map(n => n.text)],
+      ["שאלות שנותרו", g("open_question").map(n => n.text)],
+      ["דרושים מוסרים", g("global").filter(n => n.text.startsWith("דרושים מוסרים")).map(n => n.text.replace(/^דרושים מוסרים:\s*/, ""))]];
+    for (const [t, list] of blocks) {
+      if (!list.length) continue;
+      body.push(P([R(t, { bold: true, size: 26 })], { heading: HeadingLevel.HEADING_2, after: 80 }));
+      for (const x of list) body.push(P([R("• " + x, { color: C.note })], { indent: 360 }));
+    }
+  }
+  const line = (n, depth) => {
+    const top = depth === 0;
+    const t = effType(n).t, routing = ROUTING_TYPES.has(t), ls = linkStatus(n), d = DEC.get(n.id);
+    const runs = [];
+    if (n.path) runs.push(R(n.path, { ltr: true, color: C.grey, bold: top, size: top ? 26 : 22 }), R("  "));
+    runs.push(R(n.title || "(ריק)", { bold: top, size: top ? 26 : 22, color: ls === "new" && !routing ? C.new : C.ink }));
+    if (specialBuild(n)) runs.push(R("  [בנייה מיוחדת]", { color: C.special, size: 20 }));
+    const meta = [];
+    if (opts.types && t) meta.push(TYPE_NAME(t).replace(/\s*\(.*\)\s*$/, ""));
+    if (opts.links && isNodeRow(n) && !routing) {
+      const linked = d ? (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean) : [];
+      meta.push(linked.length ? `${LINK[ls][0]}: ${linked.map(e => `${e.path} ${e.name || ""}`.trim()).join("، ")}` : ls === "new" ? "חדשה" : "ללא שיוך");
+    }
+    if (meta.length) runs.push(R("  · " + meta.join(" · "), { color: C.grey, size: 18 }));
+    body.push(P(runs, { indent: depth * 400, after: top ? 80 : 40, heading: top ? HeadingLevel.HEADING_2 : undefined }));
+    if (top && n.hints?.description) body.push(P([R(n.hints.description, { color: C.grey })], { indent: 0, after: 100 }));
+    if (opts.notes) for (const x of nodeNotes(n)) body.push(P([R("• " + x, { color: C.note, size: 20 })], { indent: depth * 400 + 360 }));
+  };
+  const walk = (ids, depth) => { for (const id of ids) { const n = NODES.get(id); line(n, depth); walk(NKIDS.get(id) || [], depth + 1); } };
+  for (const rootId of NKIDS.get(null) || []) walk(NKIDS.get(rootId) || [], 0);
+  const doc = new Document({ creator: "מערכת ניהול אור עולם", title: "סידור פנימי – טיוטה", sections: [{ properties: { page: { margin: { top: 1000, bottom: 1000, left: 1000, right: 1000 } } }, children: body }] });
+  return Packer.toBlob(doc);
+}
+function exportPanelHtml() {
+  const box = (k, l) => `<label class="xopt"><input type="checkbox" data-xopt="${k}"${exportOpts[k] ? " checked" : ""}> ${l}</label>`;
+  return `<div class="xpanel" id="xpanel"><b>ייצוא הטיוטה לאישור</b>
+    <div class="xopts">${box("links", "שיוך לעץ הנוכחי")}${box("types", "סוג שלוחה")}${box("notes", "הערות")}${box("global", "הערות כלליות")}</div>
+    <div class="dec-foot"><button class="cta" id="x-go">הורדה כקובץ Word</button><button class="ghost" id="x-close">סגירה</button><span class="muted" id="x-msg" role="status"></span></div></div>`;
+}
+function wireExport() {
+  document.querySelectorAll("[data-xopt]").forEach(c => c.addEventListener("change", () => { exportOpts[c.dataset.xopt] = c.checked; }));
+  $("#x-close")?.addEventListener("click", () => { $("#xpanel")?.remove(); });
+  $("#x-go")?.addEventListener("click", async () => {
+    const msg = $("#x-msg"), btn = $("#x-go");
+    btn.disabled = true; msg.textContent = "מכינה את הקובץ…";
+    try {
+      const blob = await buildDocx(exportOpts);
+      if (DOWNLOADS === undefined) { try { DOWNLOADS = await window.claude?.use?.("downloads"); } catch (e) { DOWNLOADS = null; } }
+      if (!DOWNLOADS) { msg.textContent = "הורדה לא זמינה בתצוגה הזו. פותחים את הדף מתוך claude.ai."; btn.disabled = false; return; }
+      const name = `or-olam-tree-draft-${new Date().toISOString().slice(0, 10)}.docx`;
+      await DOWNLOADS.save({ filename: name, data: blob });
+      msg.textContent = "הקובץ נשמר";
+    } catch (e) {
+      msg.textContent = e && e.code === "declined" ? "ההורדה בוטלה" : e && e.message === "load" ? "לא הצלחתי לטעון את רכיב הייצוא. אפשר לנסות שוב." : "הייצוא נכשל. אפשר לנסות שוב.";
+    }
+    btn.disabled = false;
+  });
+}
+
 /* ── דוח פערים ── */
 function gapText(kind, d, nodeId, sid) {
   const ext = sid != null ? EXT.get(sid) : null;
