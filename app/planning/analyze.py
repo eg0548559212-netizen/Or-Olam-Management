@@ -102,7 +102,7 @@ def automap(db, plan_id, draft_id):
         if n["parent_node_id"] is None and n["full_path"] in by_path:
             mapped.setdefault(n["node_id"], by_path[n["full_path"]])
 
-    claimed = set(decided.values())
+    claimed = set(decided.values()) | set(mapped.values())  # כולל השורש, שמופה לפי הנתיב
     for n in nodes.values():  # לפי position: אב לפני ילד
         if n["node_id"] in decided or n["parent_node_id"] is None:
             continue

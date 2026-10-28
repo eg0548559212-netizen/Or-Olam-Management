@@ -19,6 +19,7 @@ rm -f data/or-olam.db
 python3 -m app.importers.scan_import data/scan/or-olam-full-tree-settings.json
 python3 -m app.importers.draft_import data/draft/draft-2026-10-21.docx
 python3 -m app.planning.analyze
+python3 -m app.demo.build      # דף ההצגה: data/demo/or-olam-demo.html
 ```
 
 ## מה כל שלב עושה
@@ -27,6 +28,7 @@ python3 -m app.planning.analyze
 |---|---|---|
 | ייבוא הסריקה | `importers/scan_import.py` | `extension_type`, `extension`, `extension_path_alias`, `extension_sensitive_setting`, `tree_sync_run`, `tree_sync_raw`, `extension_setting_ref`, `extension_link` |
 | ייבוא הטיוטה | `importers/draft_import.py` | `migration_plan`, `base_tree_snapshot`, `uploaded_file`, `draft` (`imported` + `working`), `draft_node`, `draft_note` |
+| דף ההצגה (D-112) | `demo/build.py`, `demo/template.html` | קורא בלבד. לא כולל ערכים מוצפנים, ומסתיר טלפונים בשמות |
 | מיפוי ודוח פערים | `planning/analyze.py` | `mapping_row`, `mapping_source`, `mapping_target`, `gap_report`, `gap_item`, `validation_result` |
 
 - קטלוג מפתחות ההפניה והשדות הרגישים: `settings_catalog.py`.

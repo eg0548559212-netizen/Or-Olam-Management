@@ -1,0 +1,808 @@
+<title>אור עולם · ניהול הקו</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=Assistant:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: מעטפת ניהול — פס אייקונים בצד ימין, סרגל עליון, ותוכן בכרטיסים רכים ומעוגלים */
+:root {
+  --bg: #edf2f1;
+  --surface: #ffffff;
+  --surface-2: #f4f8f7;
+  --ink: #142233;
+  --ink-2: #5a6876;
+  --ink-3: #8b97a3;
+  --line: #e0e8e6;
+  --teal: #2ea6a8;
+  --teal-strong: #1d7f81;
+  --teal-soft: #d6efee;
+  --teal-softer: #ebf7f6;
+  --sun: #f2b42c;
+  --sun-strong: #a8740a;
+  --sun-soft: #fcefc8;
+  --navy: #182437;
+  --on-navy: #f3f6f8;
+  --ok: #2b9a68;
+  --ok-soft: #dcf2e7;
+  --warn: #d4721f;
+  --warn-soft: #fbe7d6;
+  --bad: #cf4848;
+  --bad-soft: #f8dede;
+  --new: #b8388f;
+  --new-soft: #f6dcee;
+  --special: #3b68cf;
+  --special-soft: #dfe7fa;
+  --shadow: 0 1px 2px rgba(20, 34, 51, .04), 0 8px 24px rgba(20, 34, 51, .05);
+  --f-display: "Rubik", "Assistant", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Assistant", "Rubik", "Segoe UI", system-ui, sans-serif;
+  --f-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r-card: 26px;
+  --r-inner: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1520; --surface: #152132; --surface-2: #1b293d; --ink: #e7eef3; --ink-2: #a2b0bd; --ink-3: #75838f;
+    --line: #243349; --teal: #4cc2c3; --teal-strong: #7fd8d8; --teal-soft: #173d45; --teal-softer: #142f38;
+    --sun: #f5c24c; --sun-strong: #f5c24c; --sun-soft: #3a3120; --navy: #0a111b; --on-navy: #e7eef3;
+    --ok: #55c08f; --ok-soft: #173a2c; --warn: #eb9a52; --warn-soft: #3d2a19; --bad: #ec7676; --bad-soft: #3e1f23;
+    --new: #e27cc3; --new-soft: #3b1f34; --special: #84a6f2; --special-soft: #1f2b47;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .25), 0 8px 24px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1520; --surface: #152132; --surface-2: #1b293d; --ink: #e7eef3; --ink-2: #a2b0bd; --ink-3: #75838f;
+  --line: #243349; --teal: #4cc2c3; --teal-strong: #7fd8d8; --teal-soft: #173d45; --teal-softer: #142f38;
+  --sun: #f5c24c; --sun-strong: #f5c24c; --sun-soft: #3a3120; --navy: #0a111b; --on-navy: #e7eef3;
+  --ok: #55c08f; --ok-soft: #173a2c; --warn: #eb9a52; --warn-soft: #3d2a19; --bad: #ec7676; --bad-soft: #3e1f23;
+  --new: #e27cc3; --new-soft: #3b1f34; --special: #84a6f2; --special-soft: #1f2b47;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .25), 0 8px 24px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.num { font-family: var(--f-display); font-variant-numeric: tabular-nums; }
+.path { font-family: var(--f-mono); font-size: .86em; direction: ltr; unicode-bidi: isolate; letter-spacing: -.01em; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 500; margin: 0; text-wrap: balance; }
+
+/* ── מעטפת ── */
+.app { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 20px; min-height: 100vh;
+  padding-block: 20px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1500px; margin: 0 auto; }
+.rail { background: var(--surface); border-radius: 999px; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center;
+  gap: 8px; padding: 14px 0; position: sticky; top: max(20px, env(safe-area-inset-top, 0px)); height: calc(100vh - 40px); }
+.brand-dot { width: 54px; height: 54px; border-radius: 50%; background: var(--navy); display: grid; place-items: center; margin-bottom: 12px; }
+.rail a { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-2); position: relative; text-decoration: none; }
+.rail a:hover { background: var(--surface-2); color: var(--ink); }
+.rail a.on { background: var(--teal); color: #fff; }
+.rail a .soon { position: absolute; top: 9px; left: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--sun); }
+.rail .spacer { flex: 1; }
+.rail svg { width: 22px; height: 22px; }
+.rail a[data-tip]:hover::after { content: attr(data-tip); position: absolute; right: 58px; white-space: nowrap; background: var(--navy); color: var(--on-navy);
+  font-size: 13px; padding: 5px 12px; border-radius: 999px; z-index: 5; pointer-events: none; }
+
+.main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+.top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.wordmark { display: flex; align-items: center; gap: 10px; margin-left: 8px; }
+.wordmark b { font-family: var(--f-display); font-weight: 600; font-size: 21px; letter-spacing: -.01em; }
+.wordmark span { color: var(--ink-3); font-size: 13px; display: block; margin-top: -3px; }
+.search { flex: 1 1 260px; max-width: 460px; display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 999px; padding: 0 18px; height: 50px; box-shadow: var(--shadow); }
+.search input { border: 0; background: none; outline: none; flex: 1; min-width: 0; }
+.search svg { width: 19px; color: var(--ink-3); flex: none; }
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 50px; padding: 0 20px; border-radius: 999px; border: 0; background: var(--surface); box-shadow: var(--shadow); white-space: nowrap; }
+.pill.teal { background: var(--teal-soft); color: var(--teal-strong); box-shadow: none; font-weight: 600; }
+.top .grow { flex: 1; }
+.user { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 999px; padding: 6px 6px 6px 16px; box-shadow: var(--shadow); }
+.avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--sun-soft); color: var(--sun-strong); display: grid; place-items: center; font-family: var(--f-display); font-weight: 600; }
+.user small { display: block; color: var(--ink-3); font-size: 12px; margin-top: -3px; }
+.badge-role { background: var(--sun-soft); color: var(--sun-strong); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+.icon-btn { width: 50px; height: 50px; border-radius: 50%; border: 0; background: var(--surface); box-shadow: var(--shadow); display: grid; place-items: center; color: var(--ink-2); }
+.icon-btn svg { width: 20px; }
+
+/* ── כרטיסים ── */
+.grid { display: grid; gap: 20px; grid-template-columns: repeat(12, minmax(0, 1fr)); }
+.card { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 22px 24px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.card.tint { background: var(--teal-softer); box-shadow: none; }
+.card.sun { background: var(--sun-soft); box-shadow: none; }
+.card-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.card-h h2 { font-size: 19px; flex: 1; min-width: 0; }
+.card-h .sub { color: var(--ink-3); font-size: 13px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 11px; font-size: 13px; font-weight: 600; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.teal { background: var(--teal-soft); color: var(--teal-strong); }
+.chip.sun { background: var(--sun-soft); color: var(--sun-strong); }
+.chip.new { background: var(--new-soft); color: var(--new); }
+.chip.special { background: var(--special-soft); color: var(--special); }
+.chip.line { background: none; border: 1px solid var(--line); font-weight: 500; }
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.ghost { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 6px 14px; font-size: 13px; color: var(--ink-2); }
+.ghost:hover { background: var(--surface-2); color: var(--ink); }
+.ghost.on { background: var(--navy); color: var(--on-navy); border-color: var(--navy); }
+.cta { border: 0; border-radius: 999px; padding: 10px 20px; background: var(--teal); color: #fff; font-weight: 600; }
+.cta:hover { background: var(--teal-strong); }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; }
+.kpi small { color: var(--ink-3); font-size: 13px; display: block; }
+.kpi b { font-family: var(--f-display); font-weight: 500; font-size: 28px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.kpi b.sm { font-size: 22px; }
+
+.stack { display: flex; height: 44px; border-radius: 14px; overflow: hidden; gap: 3px; }
+.stack > div { min-width: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-left: 6px; vertical-align: -1px; }
+
+.bars { display: flex; flex-direction: column; gap: 9px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 3.5em; gap: 10px; align-items: center; font-size: 14px; border: 0; background: none; padding: 0; text-align: right; }
+.bar-row .track { height: 12px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.bar-row .fill { height: 100%; border-radius: 999px; }
+.bar-row .n { text-align: left; }
+button.bar-row:hover .track { outline: 1px solid var(--line); }
+
+.health { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.health > div { background: var(--surface-2); border-radius: var(--r-inner); padding: 14px 16px; }
+.health small { color: var(--ink-2); font-size: 13px; display: block; }
+.health b { font-family: var(--f-display); font-weight: 500; font-size: 24px; font-variant-numeric: tabular-nums; }
+.health .of { color: var(--ink-3); font-size: 13px; }
+
+.ai { background: var(--navy); color: var(--on-navy); }
+.ai .card-h .sub { color: rgba(243, 246, 248, .6); }
+.ai-orb { height: 120px; border-radius: var(--r-inner); background:
+  radial-gradient(circle at 30% 40%, rgba(242, 180, 44, .85), transparent 42%),
+  radial-gradient(circle at 70% 60%, rgba(46, 166, 168, .9), transparent 46%),
+  radial-gradient(circle at 50% 50%, rgba(46, 166, 168, .25), transparent 70%); }
+.ai-input { display: flex; gap: 10px; align-items: center; background: rgba(255, 255, 255, .08); border-radius: 18px; padding: 10px 14px; font-size: 14px; color: rgba(243, 246, 248, .75); }
+.ai-input span { flex: 1; }
+.ai-input .go { width: 36px; height: 36px; border-radius: 50%; background: var(--sun); color: #182437; display: grid; place-items: center; flex: none; }
+
+/* ── עץ ── */
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.field { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border-radius: 999px; padding: 0 14px; height: 40px; flex: 1 1 180px; min-width: 0; }
+.field input { border: 0; background: none; outline: none; flex: 1; min-width: 0; }
+.field svg { width: 16px; color: var(--ink-3); flex: none; }
+select.ghost { appearance: none; padding-left: 28px; background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%), linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position: 14px 52%, 19px 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+.tree { max-height: calc(100vh - 290px); min-height: 420px; overflow: auto; margin-inline: -10px; padding-inline: 10px; }
+.trow { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; text-align: right; padding: 6px 8px; border-radius: 12px; min-height: 38px; }
+.trow:hover { background: var(--surface-2); }
+.trow.sel { background: var(--teal-soft); }
+.trow .tw { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); flex: none; }
+.trow .tw svg { width: 14px; transition: transform .15s; }
+.trow .tw.open svg { transform: rotate(-90deg); }
+.trow .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trow .nm.empty { color: var(--ink-3); font-style: italic; }
+.trow .path { color: var(--ink-3); flex: none; }
+.ctype { font-family: var(--f-mono); font-size: 11px; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); color: var(--ink-2); flex: none; }
+.trow.sel .ctype { background: var(--surface); }
+.mark-bad { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); flex: none; }
+.empty-note { color: var(--ink-3); padding: 24px 8px; text-align: center; }
+
+.detail-h { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.detail-h .big { font-family: var(--f-mono); font-size: 26px; direction: ltr; unicode-bidi: isolate; background: var(--teal-soft); color: var(--teal-strong); border-radius: 18px; padding: 8px 16px; }
+.detail-h h2 { font-size: 24px; }
+.detail-h .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.crumbs { display: flex; flex-wrap: wrap; gap: 4px; font-size: 13px; color: var(--ink-3); }
+.crumbs button { border: 0; background: none; color: var(--ink-2); padding: 0; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.crumbs button:hover { color: var(--teal-strong); }
+.sec h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; display: flex; gap: 8px; align-items: center; }
+.sec h3 .chip { font-weight: 500; }
+.kv { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); border: 1px solid var(--line); border-radius: var(--r-inner); overflow: hidden; }
+.kv > div { padding: 9px 14px; border-top: 1px solid var(--line); font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+.kv > div:nth-child(-n+2) { border-top: 0; }
+.kv .k { color: var(--ink-2); background: var(--surface-2); }
+.kv .k code { display: block; font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); direction: ltr; text-align: right; }
+.kv .v code { font-family: var(--f-mono); font-size: 12px; direction: ltr; unicode-bidi: isolate; white-space: pre-wrap; }
+.refs { display: flex; flex-direction: column; gap: 6px; }
+.ref { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 9px 14px; border-radius: 14px; background: var(--surface-2); font-size: 14px; }
+.ref .what { color: var(--ink-2); font-size: 13px; }
+.ref button.to { border: 0; background: none; padding: 0; color: var(--teal-strong); text-align: right; }
+.ref button.to:hover { text-decoration: underline; }
+.muted { color: var(--ink-3); font-size: 13px; }
+
+/* ── תכנון ── */
+.plan-row { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 14px; align-items: start; padding: 8px 10px; border-radius: 14px; }
+.plan-row:hover { background: var(--surface-2); }
+.plan-node { display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
+.digit { min-width: 30px; height: 30px; padding: 0 6px; border-radius: 10px; display: grid; place-items: center; font-family: var(--f-display); font-weight: 600; font-size: 14px; flex: none; }
+.digit.existing { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+.digit.new { background: var(--new-soft); color: var(--new); }
+.digit.new_special_build { background: var(--special-soft); color: var(--special); }
+.digit.unknown { background: var(--surface-2); color: var(--ink-3); }
+.digit.none { background: none; border: 1px dashed var(--ink-3); color: var(--ink-3); }
+.plan-node .t { min-width: 0; }
+.plan-node .t b { font-weight: 600; }
+.plan-node .t .path { color: var(--ink-3); margin-inline-start: 6px; }
+.plan-node.heading .t b { font-family: var(--f-display); font-size: 17px; font-weight: 500; }
+.notes { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.note { font-size: 13px; padding: 5px 10px; border-radius: 10px; display: flex; gap: 8px; align-items: baseline; }
+.note.question { background: var(--bad-soft); color: var(--bad); }
+.note.build_note { background: var(--warn-soft); color: var(--warn); }
+.note.comment { background: var(--surface-2); color: var(--ink-2); }
+.note b { font-weight: 600; flex: none; }
+.map { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border-radius: 14px; border: 1px solid var(--line); min-width: 0; }
+.map.none { border-style: dashed; color: var(--ink-3); font-size: 13px; }
+.map .line1 { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.map .line1 button { border: 0; background: none; padding: 0; color: var(--ink); text-align: right; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.map .line1 button:hover { color: var(--teal-strong); text-decoration: underline; }
+.conf { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); }
+.conf .track { flex: 1; height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; max-width: 120px; }
+.conf .fill { height: 100%; border-radius: 999px; }
+.reasons { font-size: 12px; color: var(--warn); }
+.plan-head { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 14px; padding: 0 10px; color: var(--ink-3); font-size: 13px; font-weight: 600; }
+.notes-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.notes-col { background: var(--surface-2); border-radius: var(--r-inner); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.notes-col h3 { font-size: 15px; font-weight: 600; }
+.notes-col ul { margin: 0; padding: 0 18px 0 0; font-size: 14px; color: var(--ink-2); display: flex; flex-direction: column; gap: 4px; }
+
+/* ── דוח פערים ── */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.tile { border: 0; text-align: right; background: var(--surface); box-shadow: var(--shadow); border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+.tile:hover { outline: 1px solid var(--line); }
+.tile.on { background: var(--navy); color: var(--on-navy); }
+.tile.on small { color: rgba(243, 246, 248, .7); }
+.tile b { font-family: var(--f-display); font-weight: 500; font-size: 26px; font-variant-numeric: tabular-nums; }
+.tile small { color: var(--ink-2); font-size: 13px; }
+.tile .sev { width: 8px; height: 8px; border-radius: 50%; }
+.table-wrap { overflow-x: auto; margin-inline: -8px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
+th { text-align: right; font-weight: 600; color: var(--ink-3); font-size: 13px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td .linkish { border: 0; background: none; padding: 0; color: var(--teal-strong); }
+td .linkish:hover { text-decoration: underline; }
+.pager { display: flex; gap: 8px; align-items: center; justify-content: center; font-size: 14px; color: var(--ink-2); }
+
+/* ── מסכים בהגדרה ── */
+.soon-card { align-items: flex-start; }
+.soon-card .tag { background: var(--sun-soft); color: var(--sun-strong); }
+.soon-list { margin: 0; padding: 0 20px 0 0; color: var(--ink-2); display: flex; flex-direction: column; gap: 6px; max-width: 65ch; }
+
+.c12 { grid-column: span 12; } .c8 { grid-column: span 8; } .c7 { grid-column: span 7; } .c6 { grid-column: span 6; } .c5 { grid-column: span 5; } .c4 { grid-column: span 4; } .c3 { grid-column: span 3; }
+@media (max-width: 1180px) { .c4, .c3 { grid-column: span 6; } .c8, .c7, .c5 { grid-column: span 12; } .split { grid-template-columns: minmax(0, 1fr); } .tree { max-height: 460px; min-height: 0; } }
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .rail { position: fixed; top: auto; bottom: max(10px, env(safe-area-inset-bottom, 0px)); left: max(10px, env(safe-area-inset-left, 0px)); right: max(10px, env(safe-area-inset-right, 0px));
+    height: auto; flex-direction: row; justify-content: space-around; padding: 8px; z-index: 20; overflow-x: auto; }
+  .rail .brand-dot, .rail .spacer, .rail .sec-only { display: none; }
+  .rail a { width: 44px; height: 44px; flex: none; }
+  .rail a[data-tip]:hover::after { display: none; }
+  .c6, .c4, .c3 { grid-column: span 12; }
+  .plan-row, .plan-head { grid-template-columns: minmax(0, 1fr); }
+  .plan-head span:last-child { display: none; }
+  .notes-grid { grid-template-columns: minmax(0, 1fr); }
+  .kv { grid-template-columns: minmax(0, 1fr); }
+  .kv > div:nth-child(2) { border-top: 1px solid var(--line); }
+  .kv .k { border-top: 1px solid var(--line); }
+  .user .who, .pill.teal span, .top .wordmark span { display: none; }
+  .card-h .sub { order: 3; flex-basis: 100%; }
+  .health { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app" dir="rtl" id="app">
+  <nav class="rail" aria-label="ניווט ראשי">
+    <div class="brand-dot" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke-width="2.6" stroke-linecap="round">
+        <path d="M6 24c0-7 2.5-12 7-16" stroke="#2ea6a8"/><path d="M10 24c0-5.5 2-9.5 5.5-12.5" stroke="#2ea6a8"/>
+        <path d="M24 24c0-7-2.5-12-7-16" stroke="#f2b42c"/><path d="M20 24c0-5.5-2-9.5-5.5-12.5" stroke="#f2b42c"/>
+      </svg>
+    </div>
+    <a href="#home" data-tip="ראשי" data-view="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg></a>
+    <a href="#tree" data-tip="עץ שלוחות" data-view="tree"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="5" rx="1.5"/><rect x="3" y="16" width="6" height="5" rx="1.5"/><rect x="15" y="16" width="6" height="5" rx="1.5"/><path d="M12 8v4M6 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg></a>
+    <a href="#plan" data-tip="תכנון העץ החדש" data-view="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg></a>
+    <a href="#gaps" data-tip="דוח פערים" data-view="gaps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 5h10M9 12h10M9 19h10"/><circle cx="4.5" cy="5" r="1.3"/><circle cx="4.5" cy="12" r="1.3"/><circle cx="4.5" cy="19" r="1.3"/></svg></a>
+    <a href="#stats" data-tip="סטטיסטיקה" data-view="stats"><span class="soon"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg></a>
+    <a href="#listeners" data-tip="מאזינים" data-view="listeners"><span class="soon"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.5-3.5 3-5.5 6-5.5s5.5 2 6 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.6.8 2.7 2.6 3 5.2"/></svg></a>
+    <a href="#lessons" data-tip="שיעורים ומרצים" data-view="lessons"><span class="soon"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5.5C6.5 4 9.5 4 12 5.5 14.5 4 17.5 4 20 5.5V19c-2.5-1.5-5.5-1.5-8 0-2.5-1.5-5.5-1.5-8 0z"/><path d="M12 5.5V19"/></svg></a>
+    <a href="#chat" data-tip="עוזר AI" data-view="chat"><span class="soon"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01" stroke-linecap="round" stroke-width="2.4"/></svg></a>
+    <div class="spacer"></div>
+    <a href="#admin" data-tip="משתמשים והרשאות" data-view="admin" class="sec-only"><span class="soon"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></a>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <div class="wordmark"><div><b>אור עולם</b><span>מערכת ניהול הקו</span></div></div>
+      <label class="search" for="q-global">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg>
+        <input id="q-global" type="search" placeholder="חיפוש שלוחה לפי שם או נתיב, למשל 1.9.9" autocomplete="off">
+      </label>
+      <span class="pill teal" title="מקור הנתונים"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z"/><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>סריקה 21.10.2026</span></span>
+      <div class="grow"></div>
+      <div class="user"><div class="avatar">מ</div><div class="who"><b>מנהלת הקו</b><small>אור עולם</small></div><span class="badge-role">מנהל ראשי</span></div>
+      <button class="icon-btn" id="theme-btn" aria-label="החלפת מצב תצוגה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></button>
+    </header>
+    <main id="view"></main>
+  </div>
+</div>
+
+<script>
+const D = /*__DATA__*/null;
+
+/* ── עזרים ── */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = n => Number(n).toLocaleString("he-IL");
+const $ = s => document.querySelector(s);
+const ICON_CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>';
+const ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg>';
+
+/* ── אינדקסים ── */
+const EXT = new Map(), KIDS = new Map(), BYPATH = new Map();
+for (const [id, parent, path, name, type, settings, isOpen, phone, pin] of D.ext) {
+  EXT.set(id, { id, parent, path, name, type, settings, isOpen, phone, pin });
+  BYPATH.set(path, id);
+  if (!KIDS.has(parent)) KIDS.set(parent, []);
+  KIDS.get(parent).push(id);
+}
+const sortKey = p => p.split(".").map(s => s.padStart(5, "0")).join(".");
+for (const list of KIDS.values()) list.sort((a, b) => sortKey(EXT.get(a).path) < sortKey(EXT.get(b).path) ? -1 : 1);
+const ROOTS = KIDS.get(null) || [];
+const REFS_OUT = new Map(), REFS_IN = new Map();
+for (const r of D.refs) {
+  const [from, key, kind, text, form, to, status] = r;
+  const o = { from, key, kind, text, form, to, status };
+  if (!REFS_OUT.has(from)) REFS_OUT.set(from, []);
+  REFS_OUT.get(from).push(o);
+  if (to != null && to !== from) { if (!REFS_IN.has(to)) REFS_IN.set(to, []); REFS_IN.get(to).push(o); }
+}
+const BROKEN = new Set(D.refs.filter(r => r[6] === "broken").map(r => r[0]));
+const ALIAS = new Map(D.aliases.map(([old, id]) => [id, old]));
+const NODES = new Map(), NKIDS = new Map();
+for (const [id, parent, digit, path, title, status, kind, hints] of D.nodes) {
+  NODES.set(id, { id, parent, digit, path, title, status, kind, hints });
+  if (!NKIDS.has(parent)) NKIDS.set(parent, []);
+  NKIDS.get(parent).push(id);
+}
+const NOTES_BY = new Map();
+for (const [node, scope, kind, text] of D.notes) {
+  const k = node ?? "global:" + scope;
+  if (!NOTES_BY.has(k)) NOTES_BY.set(k, []);
+  NOTES_BY.get(k).push({ scope, kind, text });
+}
+const MAP_BY_NODE = new Map(), MAP_BY_EXT = new Map();
+for (const [node, ext, relation, conf, status, reasons] of D.maps) {
+  const m = { node, ext, relation, conf, status, reasons };
+  MAP_BY_NODE.set(node, m); MAP_BY_EXT.set(ext, m);
+}
+
+const TYPE_NAME = t => (D.types[t] && D.types[t].n) || t || "—";
+const STATUS_LABEL = { ok: ["תקינה", "ok"], broken: ["שבורה", "bad"], by_name: ["לפי שם", "teal"], ambiguous_name: ["שם לא חד-משמעי", "warn"],
+  external: ["קו אחר", "line"], pattern: ["תבנית", "line"], hangup: ["ניתוק", "line"], unparsed: ["לא פוענח", "warn"] };
+const REF_KIND = { record_to: "הקלטה אל", publish_to: "פרסום גם אל", play_from: "השמעה מתוך", play_from_all: "השמעה מכל השלוחות", exclude: "החרגה",
+  zintuk_source: "רשומים לצינתוק מתוך", register_to: "רישום אל", move_to: "מעבר אל", external_line: "קו חיצוני", hangup: "ניתוק" };
+const NODE_STATUS = { existing: ["קיימת", ""], new: ["חדשה", "new"], new_special_build: ["בנייה מיוחדת", "special"], unknown: ["לא ידוע", ""] };
+const MAP_STATUS = { suggested: ["הוצע", "ok"], needs_decision: ["דורש החלטה", "warn"], approved: ["אושר", "teal"], rejected: ["נדחה", "bad"] };
+const NOTE_KIND = { question: "שאלה", build_note: "הערת בנייה", comment: "הערה" };
+const GAP = {
+  added: ["צמתים חדשים", "info"], existing_not_found: ["קיימת שלא נמצאה", "warning"], moved: ["הזזות", "info"], renamed: ["שם השתנה", "info"],
+  current_not_planned: ["לא מופיע בטיוטה", "warning"], ref_needs_rewrite: ["הפניות לשכתוב", "warning"], number_conflict: ["התנגשויות מספור", "warning"],
+  unnumbered: ["צמתים בלי מספר", "warning"], pattern_deviation: ["חריגה מדפוס 1/7/8/9/0", "warning"], open_note: ["שאלות פתוחות בטיוטה", "info"], removed: ["הוסרו", "info"]
+};
+const SEV = { info: "var(--teal)", warning: "var(--warn)", error: "var(--bad)" };
+const pathOf = id => EXT.get(id)?.path;
+
+/* ── ניתוב ── */
+const VIEWS = { home: renderHome, tree: renderTree, plan: renderPlan, gaps: renderGaps, stats: renderSoon, listeners: renderSoon, lessons: renderSoon, chat: renderSoon, admin: renderSoon };
+const state = { sel: null, open: new Set(), q: "", type: "", brokenOnly: false, planFilter: "all", gapKind: "", gapQ: "", gapPage: 0 };
+for (const r of ROOTS) state.open.add(r);
+state.sel = BYPATH.get("1");
+function route() {
+  const v = (location.hash || "#home").slice(1);
+  const view = VIEWS[v] ? v : "home";
+  document.querySelectorAll(".rail a").forEach(a => a.classList.toggle("on", a.dataset.view === view));
+  VIEWS[view](view);
+  try { localStorage.setItem("oo-view", view); } catch (e) {}
+}
+function go(view) { if (location.hash === "#" + view) route(); else location.hash = view; }
+function openExt(id) {
+  state.sel = id; state.q = "";
+  let p = EXT.get(id)?.parent;
+  while (p != null) { state.open.add(p); p = EXT.get(p)?.parent; }
+  go("tree");
+  requestAnimationFrame(() => document.querySelector(`.trow[data-id="${id}"]`)?.scrollIntoView({ block: "center" }));
+}
+
+/* ── ראשי ── */
+function renderHome() {
+  const log = D.meta.run_log;
+  const typeCounts = {};
+  for (const e of EXT.values()) typeCounts[e.type] = (typeCounts[e.type] || 0) + 1;
+  const sorted = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
+  const top = sorted.slice(0, 5), rest = sorted.slice(5).reduce((s, x) => s + x[1], 0);
+  const palette = ["var(--teal)", "var(--sun)", "var(--teal-soft)", "var(--sun-soft)", "var(--special-soft)", "var(--surface-2)"];
+  const segs = [...top, ["אחר", rest]];
+  const total = EXT.size;
+  const depths = new Array(10).fill(0);
+  for (const e of EXT.values()) depths[e.path.split(".").length - 1]++;
+  const ms = { suggested: 0, needs_decision: 0 };
+  for (const m of MAP_BY_NODE.values()) ms[m.status] = (ms[m.status] || 0) + 1;
+  const notFound = D.gaps.filter(g => g[0] === "existing_not_found").length;
+  const mapTotal = ms.suggested + ms.needs_decision + notFound;
+  const ns = { existing: 0, new: 0, new_special_build: 0 };
+  for (const n of NODES.values()) if (n.parent != null) ns[n.status] = (ns[n.status] || 0) + 1;
+  const gapCounts = {};
+  for (const g of D.gaps) gapCounts[g[0]] = (gapCounts[g[0]] || 0) + 1;
+  const gapMax = Math.max(...Object.values(gapCounts));
+  const refsTotal = D.refs.length;
+  const broken = D.refs.filter(r => r[6] === "broken").length;
+  const queue = [...MAP_BY_NODE.values()].filter(m => m.status === "needs_decision").sort((a, b) => b.conf - a.conf).slice(0, 4);
+
+  // גרף עומק בקנה מידה אחד
+  const W = 520, H = 190, padB = 28, padT = 22, bw = 34, gap = (W - 20 - bw * 10) / 9;
+  const maxD = Math.max(...depths);
+  const ticks = [0, 250, 500, 750].filter(t => t <= maxD);
+  const y = v => H - padB - (v / maxD) * (H - padB - padT);
+  const depthSvg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="מספר שלוחות לפי עומק">
+    ${ticks.map(t => `<line x1="10" x2="${W - 10}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-width="1"/>`).join("")}
+    ${depths.map((v, i) => { const x = W - 10 - bw - i * (bw + gap); const hi = i === depths.indexOf(maxD);
+      return `<rect x="${x}" y="${y(v)}" width="${bw}" height="${Math.max(2, H - padB - y(v))}" rx="10" fill="${hi ? "var(--teal)" : "var(--teal-soft)"}"/>
+      <text x="${x + bw / 2}" y="${y(v) - 6}" text-anchor="middle" font-size="12" fill="var(--ink-2)" font-family="Rubik, sans-serif">${v}</text>
+      <text x="${x + bw / 2}" y="${H - 8}" text-anchor="middle" font-size="12" fill="var(--ink-3)" font-family="Rubik, sans-serif">${i}</text>`; }).join("")}
+  </svg>`;
+
+  $("#view").innerHTML = `<div class="grid">
+    <section class="card c8">
+      <div class="card-h"><h2>העץ הנוכחי</h2><span class="sub">סריקה מ-21.10.2026 · ${fmt(log.extensions)} שלוחות</span>
+        <button class="ghost" onclick="go('tree')">לעץ המלא ←</button></div>
+      <div class="kpis">
+        <div class="kpi"><small>שלוחות</small><b>${fmt(total)}</b></div>
+        <div class="kpi"><small>סוגי שלוחות</small><b>${Object.keys(typeCounts).length}</b></div>
+        <div class="kpi"><small>שורשים</small><b>${ROOTS.length}</b></div>
+        <div class="kpi"><small>עומק מרבי</small><b>${depths.findLastIndex(v => v > 0)}</b></div>
+        <div class="kpi"><small>הפניות בין שלוחות</small><b>${fmt(refsTotal)}</b></div>
+      </div>
+      <div class="stack" role="img" aria-label="התפלגות לפי סוג שלוחה">${segs.map(([t, n], i) =>
+        `<div style="flex:${n};background:${palette[i]}" title="${esc(TYPE_NAME(t))}: ${n}">${n / total > .06 ? Math.round(n / total * 100) + "%" : ""}</div>`).join("")}</div>
+      <div class="legend">${segs.map(([t, n], i) => `<span><i style="background:${palette[i]}"></i>${esc(t === "אחר" ? `${sorted.length - 5} סוגים נוספים` : TYPE_NAME(t))} · ${fmt(n)}</span>`).join("")}</div>
+    </section>
+
+    <section class="card c4">
+      <div class="card-h"><h2>תקינות העץ</h2><span class="sub">בדיקות אוטומטיות</span></div>
+      <div class="health">
+        <div><small>הפניות שבורות</small><b style="color:var(--bad)">${fmt(broken)}</b> <span class="of">מתוך ${fmt(refsTotal)}</span></div>
+        <div><small>חריגות מדפוס 1/7/8/9/0</small><b style="color:var(--warn)">${fmt(D.meta.validation.pattern_17890 || 0)}</b> <span class="of">אזהרה</span></div>
+        <div><small>שלוחות שזזו (כינויים)</small><b>${D.aliases.length}</b></div>
+        <div><small>ילדים חסרים בסריקה</small><b>9</b> <span class="of">תחת <span class="path">1.5.9.2</span></span></div>
+      </div>
+      <button class="ghost" onclick="state.brokenOnly=true;go('tree')">הצגת השלוחות עם הפניות שבורות</button>
+    </section>
+
+    <section class="card c5">
+      <div class="card-h"><h2>מיפוי העץ הקיים לטיוטה</h2><span class="sub">${mapTotal} צמתים קיימים</span></div>
+      <div class="kpis">
+        <div class="kpi"><small>הוצעו</small><b style="color:var(--ok)">${ms.suggested}</b></div>
+        <div class="kpi"><small>דורש החלטה</small><b style="color:var(--warn)">${ms.needs_decision}</b></div>
+        <div class="kpi"><small>לא נמצאו</small><b style="color:var(--ink-3)">${notFound}</b></div>
+      </div>
+      <div class="stack" style="height:16px" role="img" aria-label="מצב המיפוי">
+        <div style="flex:${ms.suggested};background:var(--ok)"></div><div style="flex:${ms.needs_decision};background:var(--sun)"></div><div style="flex:${notFound};background:var(--line)"></div></div>
+      <div class="sec"><h3>בראש התור "דורש החלטה"</h3>
+        <div class="refs">${queue.map(m => { const n = NODES.get(m.node), e = EXT.get(m.ext);
+          return `<div class="ref"><div><b>${esc(n.title)}</b> <span class="path muted">${esc(n.path || "")}</span><div class="what">הוצעה: ${esc(e.name || "בלי שם")} · <span class="path">${esc(e.path)}</span></div></div>
+          <span class="chip sun num">${Math.round(m.conf * 100)}%</span></div>`; }).join("")}</div></div>
+      <button class="cta" onclick="state.planFilter='needs_decision';go('plan')">לתור ההחלטות</button>
+    </section>
+
+    <section class="card c7">
+      <div class="card-h"><h2>שלוחות לפי עומק</h2><span class="sub">0 = שורש · רוב העץ בעומק 4–7</span></div>
+      ${depthSvg}
+    </section>
+
+    <section class="card c4 tint">
+      <div class="card-h"><h2>הטיוטה מ-21.10</h2><span class="sub">${esc(D.meta.draft_label || "")}</span></div>
+      <div class="kpis">
+        <div class="kpi"><small>קיימות</small><b class="sm">${ns.existing}</b></div>
+        <div class="kpi"><small>חדשות</small><b class="sm" style="color:var(--new)">${ns.new}</b></div>
+        <div class="kpi"><small>בנייה מיוחדת</small><b class="sm" style="color:var(--special)">${ns.new_special_build}</b></div>
+      </div>
+      <div class="legend">
+        <span class="chip bad"><span class="dot"></span>${D.notes.filter(n => n[2] === "question").length} שאלות</span>
+        <span class="chip warn"><span class="dot"></span>${D.notes.filter(n => n[2] === "build_note").length} הערות בנייה</span>
+        <span class="chip"><span class="dot"></span>${D.nodes.filter(n => n[2] == null).length} צמתים בלי מספר</span>
+      </div>
+      <button class="ghost" onclick="state.planFilter='all';go('plan')">פתיחת הטיוטה ←</button>
+    </section>
+
+    <section class="card c5">
+      <div class="card-h"><h2>דוח פערים</h2><span class="sub">טיוטת העבודה מול העץ הנוכחי</span></div>
+      <div class="bars">${Object.entries(gapCounts).sort((a, b) => b[1] - a[1]).map(([k, n]) =>
+        `<button class="bar-row" onclick="state.gapKind='${k}';state.gapPage=0;go('gaps')"><span>${GAP[k]?.[0] || k}</span>
+        <span class="track"><span class="fill" style="display:block;width:${n / gapMax * 100}%;background:${SEV[GAP[k]?.[1]] || "var(--teal)"}"></span></span><span class="n num">${fmt(n)}</span></button>`).join("")}</div>
+    </section>
+
+    <section class="card c3 ai">
+      <div class="card-h"><h2>עוזר AI</h2><span class="sub">בשלב הבא (D-002)</span></div>
+      <div class="ai-orb" aria-hidden="true"></div>
+      <div class="ai-input"><span>"כמה שלוחות מפנות לנתיבים שלא קיימים, ובאילו ענפים?"</span><span class="go" aria-hidden="true">←</span></div>
+      <small style="color:rgba(243,246,248,.6)">דוגמה לשאלה. הצ'אט עוד לא מחובר.</small>
+    </section>
+  </div>`;
+}
+
+/* ── עץ ── */
+function treeRows() {
+  const out = [];
+  const q = state.q.trim().toLowerCase();
+  if (q || state.type || state.brokenOnly) {
+    const hits = [];
+    for (const e of EXT.values()) {
+      if (state.type && e.type !== state.type) continue;
+      if (state.brokenOnly && !BROKEN.has(e.id)) continue;
+      if (q && !((e.name || "").toLowerCase().includes(q) || e.path.startsWith(q) || String(e.id) === q)) continue;
+      hits.push(e);
+    }
+    hits.sort((a, b) => sortKey(a.path) < sortKey(b.path) ? -1 : 1);
+    return { flat: true, rows: hits.slice(0, 400).map(e => ({ e, depth: 0 })), total: hits.length };
+  }
+  const walk = (ids, depth) => { for (const id of ids) { const e = EXT.get(id); out.push({ e, depth }); if (state.open.has(id)) walk(KIDS.get(id) || [], depth + 1); } };
+  walk(ROOTS, 0);
+  return { flat: false, rows: out, total: out.length };
+}
+function rowHtml({ e, depth }, flat) {
+  const kids = KIDS.get(e.id) || [];
+  return `<button class="trow${state.sel === e.id ? " sel" : ""}" data-id="${e.id}" style="padding-inline-start:${8 + depth * 18}px">
+    <span class="tw${state.open.has(e.id) ? " open" : ""}" data-tw="${kids.length && !flat ? e.id : ""}">${kids.length && !flat ? ICON_CHEV : ""}</span>
+    <span class="path">${esc(e.path)}</span>
+    <span class="nm${e.name ? "" : " empty"}">${esc(e.name || "בלי שם")}</span>
+    ${BROKEN.has(e.id) ? '<span class="mark-bad" title="יש הפניה שבורה"></span>' : ""}
+    <span class="ctype">${esc(e.type || "—")}</span></button>`;
+}
+function renderTree() {
+  const types = [...new Set([...EXT.values()].map(e => e.type))].filter(Boolean).sort();
+  $("#view").innerHTML = `<div class="split">
+    <section class="card">
+      <div class="card-h"><h2>עץ השלוחות</h2><span class="sub">${fmt(EXT.size)} שלוחות</span></div>
+      <div class="toolbar">
+        <label class="field" for="q-tree">${ICON_SEARCH}<input id="q-tree" type="search" placeholder="שם, נתיב או מזהה" value="${esc(state.q)}" autocomplete="off"></label>
+        <select class="ghost" id="f-type" aria-label="סינון לפי סוג"><option value="">כל הסוגים</option>${types.map(t => `<option value="${t}"${state.type === t ? " selected" : ""}>${esc(TYPE_NAME(t))}${D.types[t]?.n ? " · " + t : ""}</option>`).join("")}</select>
+        <button class="ghost${state.brokenOnly ? " on" : ""}" id="f-broken">הפניות שבורות</button>
+      </div>
+      <div class="tree" id="tree"></div>
+    </section>
+    <section class="card" id="detail"></section>
+  </div>`;
+  const draw = () => {
+    const { flat, rows, total } = treeRows();
+    $("#tree").innerHTML = rows.length ? rows.map(r => rowHtml(r, flat)).join("") + (flat && total > rows.length ? `<div class="empty-note">מוצגות ${rows.length} מתוך ${fmt(total)} תוצאות. כדאי לצמצם את החיפוש.</div>` : "")
+      : `<div class="empty-note">לא נמצאו שלוחות.</div>`;
+  };
+  draw(); renderDetail();
+  $("#tree").addEventListener("click", ev => {
+    const tw = ev.target.closest("[data-tw]");
+    if (tw && tw.dataset.tw) { const id = +tw.dataset.tw; state.open.has(id) ? state.open.delete(id) : state.open.add(id); draw(); return; }
+    const row = ev.target.closest(".trow"); if (!row) return;
+    state.sel = +row.dataset.id; if ((KIDS.get(state.sel) || []).length) state.open.add(state.sel);
+    draw(); renderDetail();
+    if (innerWidth < 1180) $("#detail").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  $("#q-tree").addEventListener("input", e => { state.q = e.target.value; draw(); });
+  $("#f-type").addEventListener("change", e => { state.type = e.target.value; draw(); });
+  $("#f-broken").addEventListener("click", e => { state.brokenOnly = !state.brokenOnly; e.target.classList.toggle("on", state.brokenOnly); draw(); });
+}
+function fmtVal(v, enumTitles) {
+  if (v && typeof v === "object" && !Array.isArray(v)) {
+    if (v.$hidden) return '<span class="chip sun">מוסתר · נחשף רק למנהל הראשי</span>';
+    if (v.$secret) return `<span class="chip line">סיסמה חיצונית · ${v.$secret === "present" ? "יש ערך" : v.$secret === "absent" ? "אין ערך" : "לא ידוע"} · לא נשמרת</span>`;
+    if (v.$unknown) return '<span class="chip line">לא ידוע (הושחר בייצוא)</span>';
+  }
+  if (enumTitles) { const t = enumTitles[JSON.stringify(v)]; if (t) return esc(t); }
+  if (v === true) return '<span class="chip ok">כן</span>';
+  if (v === false) return '<span class="chip">לא</span>';
+  if (v === null || v === "") return '<span class="muted">ריק</span>';
+  if (typeof v === "object") {
+    const s = JSON.stringify(v, (k, x) => x && typeof x === "object" && x.$hidden ? "‹מוסתר›" : x, 1);
+    return `<code>${esc(s.length > 700 ? s.slice(0, 700) + " …" : s)}</code>`;
+  }
+  return esc(v);
+}
+function renderDetail() {
+  const el = $("#detail"); if (!el) return;
+  const e = EXT.get(state.sel);
+  if (!e) { el.innerHTML = `<div class="empty-note">בוחרים שלוחה מהעץ כדי לראות את ההגדרות וההפניות שלה.</div>`; return; }
+  const crumbs = []; let p = e.parent; while (p != null) { crumbs.unshift(EXT.get(p)); p = EXT.get(p).parent; }
+  const titles = D.types[e.type]?.k || {};
+  const settings = e.settings ? Object.entries(e.settings) : null;
+  const out = REFS_OUT.get(e.id) || [], inn = REFS_IN.get(e.id) || [];
+  const m = MAP_BY_EXT.get(e.id); const mn = m && NODES.get(m.node);
+  const pinLabel = { yes: ["יש קוד PIN", "sun"], no: ["אין קוד PIN", ""], unknown: ["קוד PIN לא ידוע", "line"] }[e.pin] || ["", ""];
+  el.innerHTML = `
+    <div class="crumbs">${crumbs.map(c => `<button data-go="${c.id}">${esc(c.name || c.path)}</button><span>›</span>`).join("")}</div>
+    <div class="detail-h"><span class="big">${esc(e.path)}</span>
+      <div style="flex:1;min-width:0"><h2>${esc(e.name || "בלי שם")}</h2>
+        <div class="meta">
+          <span class="chip teal">${esc(TYPE_NAME(e.type))}${D.types[e.type]?.n ? ` · ${e.type}` : ""}</span>
+          <span class="chip line num">מזהה ${e.id}</span>
+          ${e.isOpen === 0 ? '<span class="chip bad">סגורה</span>' : e.isOpen === 1 ? '<span class="chip ok">פתוחה</span>' : ""}
+          <span class="chip ${pinLabel[1]}">${pinLabel[0]}</span>
+          <span class="chip ${e.phone === "yes" ? "sun" : ""}">${e.phone === "yes" ? "יש טלפון מרצה · מוסתר" : "אין טלפון מרצה"}</span>
+          ${ALIAS.has(e.id) ? `<span class="chip warn">נתיב קודם <span class="path">${esc(ALIAS.get(e.id))}</span></span>` : ""}
+        </div></div></div>
+    ${mn ? `<div class="sec"><h3>בטיוטה החדשה</h3><div class="ref"><div><b>${esc(mn.title)}</b> <span class="path muted">${esc(mn.path || "בלי נתיב")}</span>
+      <div class="what">${m.relation === "keep" ? "נשארת במקום" : "עוברת למיקום חדש"} · ביטחון ${Math.round(m.conf * 100)}%</div></div>
+      <span class="chip ${MAP_STATUS[m.status][1]}">${MAP_STATUS[m.status][0]}</span></div></div>` : ""}
+    <div class="sec"><h3>הפניות יוצאות <span class="chip line num">${out.length}</span></h3>
+      ${out.length ? `<div class="refs">${out.map(r => refHtml(r, "out")).join("")}</div>` : '<div class="muted">אין הפניות בהגדרות.</div>'}</div>
+    ${inn.length ? `<div class="sec"><h3>שלוחות שמפנות לכאן <span class="chip line num">${inn.length}</span></h3><div class="refs">${inn.slice(0, 40).map(r => refHtml(r, "in")).join("")}</div>
+      ${inn.length > 40 ? `<div class="muted">ועוד ${inn.length - 40}.</div>` : ""}</div>` : ""}
+    <div class="sec"><h3>הגדרות <span class="chip line num">${settings ? settings.length : 0}</span></h3>
+      ${settings === null ? '<div class="muted">המקור החזיר <span class="path">settings: null</span> לשלוחה הזו.</div>'
+        : settings.length ? `<p class="muted" style="margin:0 0 8px">מוצגות רק הגדרות ששונו מברירת המחדל של הסוג.</p><div class="kv">${settings.map(([k, v]) =>
+          `<div class="k">${esc(titles[k]?.t || k)}${titles[k]?.t ? `<code>${esc(k)}</code>` : ""}</div><div class="v">${fmtVal(v, titles[k]?.e)}</div>`).join("")}</div>`
+        : '<div class="muted">כל ההגדרות בברירת המחדל.</div>'}</div>`;
+  el.querySelectorAll(".crumbs [data-go]").forEach(b => b.addEventListener("click", () => openExt(+b.dataset.go)));
+}
+function refHtml(r, dir) {
+  const [label, cls] = STATUS_LABEL[r.status] || [r.status, "line"];
+  const otherId = dir === "out" ? r.to : r.from;
+  const other = otherId != null ? EXT.get(otherId) : null;
+  const target = dir === "out"
+    ? (other ? `<button class="to" data-go="${other.id}"><span class="path">${esc(other.path)}</span> ${esc(other.name || "")}</button>` : `<span class="path">${esc(r.text)}</span>`)
+    : `<button class="to" data-go="${other.id}"><span class="path">${esc(other.path)}</span> ${esc(other.name || "")}</button>`;
+  const keyTitle = D.types[EXT.get(r.from)?.type]?.k?.[r.key.split(/[.\[]/)[0]]?.t;
+  return `<div class="ref"><div>${target}<div class="what">${REF_KIND[r.kind] || r.kind} · ${esc(keyTitle || r.key)}${r.form === "parent_relative" ? ` · נכתב <span class="path">${esc(r.text)}</span>` : ""}</div></div>
+    <span class="chip ${cls}">${label}</span></div>`;
+}
+
+/* ── תכנון ── */
+function renderPlan() {
+  const filters = [["all", "הכול"], ["needs_decision", "דורש החלטה"], ["suggested", "הוצע"], ["not_found", "קיימת שלא נמצאה"], ["new", "חדשות ובנייה מיוחדת"], ["notes", "עם הערות"]];
+  const g = k => NOTES_BY.get("global:" + k) || [];
+  $("#view").innerHTML = `<div class="grid">
+    <section class="card c12">
+      <div class="card-h"><h2>טיוטת העץ החדש</h2><span class="sub">טיוטת עבודה · ${esc(D.meta.draft_label || "")} · ${NODES.size - 1} צמתים</span></div>
+      <div class="legend">
+        <span class="chip"><span class="dot"></span>קיימת</span><span class="chip new"><span class="dot"></span>חדשה</span><span class="chip special"><span class="dot"></span>בנייה מיוחדת</span>
+        <span class="chip bad"><span class="dot"></span>שאלה</span><span class="chip warn"><span class="dot"></span>הערת בנייה</span>
+      </div>
+      <div class="notes-grid">
+        <div class="notes-col"><h3>בכל הקו</h3><ul>${g("global").filter(n => !n.text.startsWith("דרושים מוסרים")).map(n => `<li>${esc(n.text)}</li>`).join("")}</ul></div>
+        <div class="notes-col"><h3>שאלות שנותרו</h3><ul>${g("open_question").map(n => `<li>${esc(n.text)}</li>`).join("")}</ul></div>
+        <div class="notes-col"><h3>דרושים מוסרים</h3><ul>${g("global").filter(n => n.text.startsWith("דרושים מוסרים")).map(n => `<li>${esc(n.text.replace(/^דרושים מוסרים:\s*/, ""))}</li>`).join("")}</ul></div>
+      </div>
+    </section>
+    <section class="card c12">
+      <div class="toolbar">${filters.map(([k, l]) => `<button class="ghost${state.planFilter === k ? " on" : ""}" data-f="${k}">${l}</button>`).join("")}</div>
+      <div class="plan-head"><span>הטיוטה</span><span>שלוחה בעץ הנוכחי (מיפוי אוטומטי)</span></div>
+      <div id="plan-list"></div>
+    </section></div>`;
+  const draw = () => {
+    const f = state.planFilter, rows = [];
+    const keep = n => {
+      const m = MAP_BY_NODE.get(n.id);
+      if (f === "all") return true;
+      if (f === "needs_decision" || f === "suggested") return m && m.status === f;
+      if (f === "not_found") return !m && n.status === "existing" && n.kind === "extension" && n.title && n.parent != null;
+      if (f === "new") return n.status === "new" || n.status === "new_special_build";
+      if (f === "notes") return NOTES_BY.has(n.id);
+    };
+    const walk = (ids, depth) => { for (const id of ids) { const n = NODES.get(id); if (n.parent != null && keep(n)) rows.push([n, depth]); walk(NKIDS.get(id) || [], depth + 1); } };
+    walk(NKIDS.get(null) || [], -1);
+    $("#plan-list").innerHTML = rows.length ? rows.map(([n, d]) => planRow(n, f === "all" ? d : 0)).join("") : '<div class="empty-note">אין צמתים במסנן הזה.</div>';
+    $("#plan-list").querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => openExt(+b.dataset.go)));
+  };
+  draw();
+  document.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => {
+    state.planFilter = b.dataset.f; document.querySelectorAll("[data-f]").forEach(x => x.classList.toggle("on", x === b)); draw();
+  }));
+}
+function planRow(n, depth) {
+  const m = MAP_BY_NODE.get(n.id), e = m && EXT.get(m.ext);
+  const notes = NOTES_BY.get(n.id) || [];
+  const isSection = n.parent != null && NODES.get(n.parent).parent == null;
+  const cls = n.digit == null ? "none" : n.status;
+  let mapHtml = "";
+  if (n.status === "existing" && n.kind === "extension" && n.title) {
+    if (m) {
+      const c = Math.round(m.conf * 100), col = m.status === "suggested" ? "var(--ok)" : "var(--sun)";
+      mapHtml = `<div class="map"><div class="line1"><span class="path muted">${esc(e.path)}</span><button data-go="${e.id}">${esc(e.name || "בלי שם")}</button>
+        <span class="chip ${MAP_STATUS[m.status][1]}">${MAP_STATUS[m.status][0]}</span></div>
+        <div class="conf"><span class="track"><span class="fill" style="display:block;width:${c}%;background:${col}"></span></span><span class="num">${c}%</span><span>${m.relation === "keep" ? "נשארת במקום" : "הזזה"}</span></div>
+        ${m.reasons.length ? `<div class="reasons">${m.reasons.map(esc).join(" · ")}</div>` : ""}</div>`;
+    } else mapHtml = '<div class="map none">לא נמצאה שלוחה מתאימה</div>';
+  } else if (n.status !== "existing") mapHtml = `<div class="map none">${n.status === "new" ? "שלוחה חדשה" : "שלוחה חדשה, בנייה מיוחדת"}</div>`;
+  const stated = n.hints?.stated_path && n.path && n.hints.stated_path !== n.path ? `<span class="chip warn">בטיוטה כתוב <span class="path">${esc(n.hints.stated_path)}</span></span>` : "";
+  const desc = n.hints?.description ? `<div class="muted">${esc(n.hints.description)}</div>` : "";
+  return `<div class="plan-row"><div class="plan-node${isSection ? " heading" : ""}" style="padding-inline-start:${Math.max(0, depth) * 22}px">
+      <span class="digit ${cls}">${esc(n.digit ?? "–")}</span>
+      <div class="t"><b>${esc(n.title || "(ריק)")}</b> <span class="path">${esc(n.path || "")}</span> ${stated}${desc}
+        ${notes.length ? `<div class="notes">${notes.map(x => `<div class="note ${x.kind}"><b>${NOTE_KIND[x.kind]}</b><span>${esc(x.text)}</span></div>`).join("")}</div>` : ""}</div></div>
+    <div>${mapHtml}</div></div>`;
+}
+
+/* ── דוח פערים ── */
+function gapText(kind, d, nodeId, sid) {
+  const ext = sid != null ? EXT.get(sid) : null;
+  const p = x => x ? `<span class="path">${esc(x)}</span>` : "";
+  switch (kind) {
+    case "added": return `${p(d.path)} ${esc(d.title || "")} · ${NODE_STATUS[d.node_status]?.[0] || ""}`;
+    case "existing_not_found": case "unnumbered": return `${p(d.path)} ${esc(d.title || "")}`;
+    case "number_conflict": return d.reason === "duplicate_digit" ? `${p(d.path)} ${esc(d.title || "")} · הספרה ${esc(d.digit)} מופיעה פעמיים` : `${esc(d.title || "")} · בטיוטה כתוב ${p(d.stated_path)}, לפי המיקום ${p(d.path)}`;
+    case "moved": return `${esc(d.title || "")}: ${p(d.old_path)} ← ${p(d.new_path) || "בלי נתיב"}`;
+    case "renamed": return `${p(d.path)} "${esc(d.old_name || "בלי שם")}" ← "${esc(d.new_title || "")}"`;
+    case "pattern_deviation": return `${p(d.path)} ${esc(d.title || "")} · חסרות: ${esc((d.missing || []).join(", "))}`;
+    case "current_not_planned": return `${p(d.path)} ${esc(d.name || "בלי שם")} · ${esc(d.cls_type || "")} · ${fmt(d.descendants)} צאצאים${d.note ? " · " + esc(d.note) : ""}`;
+    case "ref_needs_rewrite": return `${p(d.from_path)} · ${esc(d.setting_key)}: ${p(d.old_target)} ← ${p(d.new_target) || "?"}`;
+    case "open_note": return esc(d.text);
+    default: return esc(JSON.stringify(d));
+  }
+}
+function renderGaps() {
+  const counts = {};
+  for (const g of D.gaps) counts[g[0]] = (counts[g[0]] || 0) + 1;
+  $("#view").innerHTML = `<div class="grid">
+    <section class="c12" style="display:flex;flex-direction:column;gap:14px">
+      <div class="card-h" style="padding:0 6px"><h2 style="font-size:24px">דוח פערים</h2><span class="sub">טיוטת העבודה מול העץ הנוכחי · ${fmt(D.gaps.length)} פריטים</span></div>
+      <div class="tiles">${Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([k, n]) =>
+        `<button class="tile${state.gapKind === k ? " on" : ""}" data-k="${k}"><span class="sev" style="background:${SEV[GAP[k]?.[1]] || "var(--teal)"}"></span><b>${fmt(n)}</b><small>${GAP[k]?.[0] || k}</small></button>`).join("")}</div>
+    </section>
+    <section class="card c12">
+      <div class="toolbar"><label class="field" for="q-gap">${ICON_SEARCH}<input id="q-gap" type="search" placeholder="חיפוש בדוח" value="${esc(state.gapQ)}" autocomplete="off"></label>
+        <button class="ghost${state.gapKind ? "" : " on"}" id="g-all">כל הסוגים</button></div>
+      <div class="table-wrap"><table><thead><tr><th style="width:170px">סוג</th><th style="width:90px">חומרה</th><th>פירוט</th><th style="width:120px"></th></tr></thead><tbody id="gap-body"></tbody></table></div>
+      <div class="pager" id="gap-pager"></div>
+    </section></div>`;
+  const per = 50;
+  const draw = () => {
+    const q = state.gapQ.trim();
+    const list = D.gaps.filter(g => (!state.gapKind || g[0] === state.gapKind) && (!q || JSON.stringify(g[4]).includes(q)));
+    const pages = Math.max(1, Math.ceil(list.length / per)); state.gapPage = Math.min(state.gapPage, pages - 1);
+    const slice = list.slice(state.gapPage * per, state.gapPage * per + per);
+    const sevLabel = { info: ["מידע", "teal"], warning: ["אזהרה", "warn"], error: ["שגיאה", "bad"] };
+    $("#gap-body").innerHTML = slice.map(([k, sev, node, sid, d]) => `<tr><td>${GAP[k]?.[0] || k}</td><td><span class="chip ${sevLabel[sev][1]}">${sevLabel[sev][0]}</span></td>
+      <td>${gapText(k, d, node, sid)}</td><td>${sid != null && EXT.has(sid) ? `<button class="linkish" data-go="${sid}">לשלוחה בעץ</button>` : ""}</td></tr>`).join("")
+      || '<tr><td colspan="4" class="empty-note">אין פריטים.</td></tr>';
+    $("#gap-pager").innerHTML = pages > 1 ? `<button class="ghost" id="pg-prev" ${state.gapPage ? "" : "disabled"}>הקודם</button><span class="num">עמוד ${state.gapPage + 1} מתוך ${pages} · ${fmt(list.length)} פריטים</span><button class="ghost" id="pg-next" ${state.gapPage < pages - 1 ? "" : "disabled"}>הבא</button>` : `<span class="num">${fmt(list.length)} פריטים</span>`;
+    $("#pg-prev")?.addEventListener("click", () => { state.gapPage--; draw(); });
+    $("#pg-next")?.addEventListener("click", () => { state.gapPage++; draw(); });
+    $("#gap-body").querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => openExt(+b.dataset.go)));
+  };
+  draw();
+  document.querySelectorAll(".tile").forEach(t => t.addEventListener("click", () => {
+    state.gapKind = state.gapKind === t.dataset.k ? "" : t.dataset.k; state.gapPage = 0;
+    document.querySelectorAll(".tile").forEach(x => x.classList.toggle("on", x.dataset.k === state.gapKind)); $("#g-all").classList.toggle("on", !state.gapKind); draw();
+  }));
+  $("#g-all").addEventListener("click", () => { state.gapKind = ""; state.gapPage = 0; renderGaps(); });
+  $("#q-gap").addEventListener("input", e => { state.gapQ = e.target.value; state.gapPage = 0; draw(); });
+}
+
+/* ── מסכים בהגדרה ── */
+const SOON = {
+  stats: ["סטטיסטיקה", "מסכי האזנה לפי שלוחה, שיעור ותקופה.", ["שלוש רמות אירוע: כניסה, האזנה (30 שניות ומעלה) והאזנה מלאה (D-024)", "יום לפי חצות בשעון ישראל (D-025)", "ספירה לפי מספר טלפון, עם קישור מספרים של אותו אדם באישור מנהל (D-026)", "מאזינים חדשים ו\"חדש לשלוחה\" (D-027)"]],
+  listeners: ["מאזינים", "כרטיס מאזין, פעילות ושימור.", ["מצב פעילות לפי פער טיפוסי (D-028)", "מספרי טלפון מוסתרים, ונחשפים רק למורשים", "המסך יאופיין בסשן התכולה"]],
+  lessons: ["שיעורים ומרצים", "קטלוג השיעורים, ההקלטות והמרצים.", ["מזהה פנימי קבוע לכל שיעור (D-018)", "סיכום ברמת השיעור על פני כל השלוחות (D-014)", "טלפוני מרצים מוצפנים (D-102)", "בעבודה בסשן נפרד"]],
+  chat: ["עוזר AI", "צ'אט למנהלים על הנתונים.", ["נכלל כבר בשלב הראשון (D-002)", "כל תשובה מציינת לפי איזו רמת האזנה חושבה (D-024)", "לא נחשף לערכים רגישים (D-102)"]],
+  admin: ["משתמשים והרשאות", "תפקידים וגישה.", ["מנהל ראשי, עורכי תוכן ומרצים (D-010)", "יומן חשיפה של ערכים רגישים (D-102)"]]
+};
+function renderSoon(view) {
+  const [title, sub, items] = SOON[view];
+  $("#view").innerHTML = `<div class="grid"><section class="card c8 soon-card">
+    <span class="chip tag">בהגדרה</span><h2 style="font-size:26px">${title}</h2><p style="margin:0;color:var(--ink-2)">${sub} המסך עוד לא נבנה. אלה ההחלטות שכבר נקבעו לגביו:</p>
+    <ul class="soon-list">${items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>
+    <button class="ghost" onclick="go('home')">חזרה לראשי</button></section>
+    <section class="card c4 tint"><h2>מה כבר עובד</h2><div class="bars">
+      <button class="bar-row" style="grid-template-columns:1fr auto" onclick="go('tree')"><span>עץ השלוחות</span><span class="chip teal num">${fmt(EXT.size)}</span></button>
+      <button class="bar-row" style="grid-template-columns:1fr auto" onclick="go('plan')"><span>טיוטת העץ החדש</span><span class="chip teal num">${NODES.size - 1}</span></button>
+      <button class="bar-row" style="grid-template-columns:1fr auto" onclick="go('gaps')"><span>דוח פערים</span><span class="chip teal num">${fmt(D.gaps.length)}</span></button></div></section></div>`;
+}
+
+/* ── אתחול ── */
+$("#q-global").addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+  const v = e.target.value.trim(); if (!v) return;
+  if (BYPATH.has(v)) { openExt(BYPATH.get(v)); return; }
+  state.q = v; state.type = ""; state.brokenOnly = false; go("tree");
+});
+$("#theme-btn").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+});
+document.addEventListener("click", ev => { const b = ev.target.closest("#detail [data-go], .ref [data-go]"); if (b && !b.closest(".crumbs")) { ev.preventDefault(); openExt(+b.dataset.go); } });
+addEventListener("hashchange", route);
+document.documentElement.lang = "he";
+route();
+</script>
