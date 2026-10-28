@@ -779,6 +779,8 @@ const queue = () => {
   return out;
 };
 const suggestedOpen = () => [...MAP_BY_NODE.values()].filter(m => m.status === "suggested" && !DEC.has(m.node));
+/* D-114: שלוחות תחת השורש 2 לא משויכות לטיוטה */
+const EXCLUDED = p => p === "2" || p.startsWith("2.");
 const notFoundCands = new Map(D.gaps.filter(g => g[0] === "existing_not_found").map(g => [g[2], g[4].candidates || []]));
 
 function revealNode(id) {
@@ -1015,7 +1017,7 @@ function searchInto(input, box, onPick) {
   input?.addEventListener("input", () => {
     const v = input.value.trim();
     if (v.length < 2) { box.innerHTML = ""; return; }
-    const hits = [...EXT.values()].filter(e => (e.name || "").includes(v) || e.path.startsWith(v)).slice(0, 8);
+    const hits = [...EXT.values()].filter(e => !EXCLUDED(e.path) && ((e.name || "").includes(v) || e.path.startsWith(v))).slice(0, 8);
     box.innerHTML = hits.map(e => `<button data-add="${e.id}"><span class="path">${esc(e.path)}</span> ${esc(e.name || "בלי שם")}<span class="pick-go">בחירה</span></button>`).join("") || '<div class="muted">לא נמצאו שלוחות.</div>';
     box.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => onPick(+b.dataset.add)));
   });

@@ -23,6 +23,8 @@ MIN_CONFIDENCE = 0.4
 AMBIGUITY_MARGIN = 0.05
 GENERIC_NAME_COUNT = 5
 PATTERN_DIGITS = ["7", "8", "9", "0"]
+# D-114: שלוחות תחת השורש 2 (מאגר ההקלטות של השלוחות התאריכיות) לא משויכות לטיוטה בכלל.
+EXCLUDED_ROOTS = ("2",)
 GENERIC_PREFIXES = ("שיעורים", "הודעות", "חזרה", "צינתוק", "רישום", "קבלת צינתוק", "מקום אחרון", "הקלטת שיעורים", "עדכונים", "ארכיון", "הסבר")
 
 
@@ -51,6 +53,10 @@ def name_sim(title, name):
     """דמיון שם. משווה גם בלי הסוגריים (בטיוטה הם בדרך כלל שם המרצה)."""
     bare = re.sub(r"\([^)]*\)", " ", title or "")
     return max(_sim(title, name), _sim(bare, name))
+
+
+def is_excluded(path):
+    return any(path == r or path.startswith(r + ".") for r in EXCLUDED_ROOTS)
 
 
 def load(db, draft_id):
@@ -103,6 +109,7 @@ def automap(db, plan_id, draft_id):
             mapped.setdefault(n["node_id"], by_path[n["full_path"]])
 
     claimed = set(decided.values()) | set(mapped.values())  # כולל השורש, שמופה לפי הנתיב
+    claimed |= {sid for sid, e in exts.items() if is_excluded(e["path"])}
     weak = {}  # צמתים בלי התאמה מעל הסף: המועמדים החלשים, להצגה בדוח
     for n in nodes.values():  # לפי position: אב לפני ילד
         if n["node_id"] in decided or n["parent_node_id"] is None:
