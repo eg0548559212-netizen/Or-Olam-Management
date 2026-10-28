@@ -420,6 +420,11 @@ td .linkish:hover { text-decoration: underline; }
 .xopts { display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .xopt { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
 .xopt input { accent-color: var(--teal); width: 16px; height: 16px; }
+/* ── עריכת כותרת (D-122) ── */
+.title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.title-row .eye { font-size: 13px; font-family: var(--f-body); font-weight: 400; color: var(--ink-3); }
+.title-edit { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.title-edit input { flex: 1 1 220px; min-width: 0; font-family: var(--f-display); font-size: 20px; border: 1.5px solid var(--teal); border-radius: 14px; padding: 6px 12px; background: var(--surface); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -492,7 +497,7 @@ const BROKEN = new Set(D.refs.filter(r => r[6] === "broken").map(r => r[0]));
 const ALIAS = new Map(D.aliases.map(([old, id]) => [id, old]));
 const NODES = new Map(), NKIDS = new Map();
 for (const [id, parent, digit, path, title, status, kind, hints, link, special, planned] of D.nodes) {
-  NODES.set(id, { id, parent, digit, path, title, status, kind, hints, link, special, planned });
+  NODES.set(id, { id, parent, digit, path, title, title0: title, status, kind, hints, link, special, planned });
   if (!NKIDS.has(parent)) NKIDS.set(parent, []);
   NKIDS.get(parent).push(id);
 }
@@ -842,7 +847,7 @@ const suggestedOpen = () => [...MAP_BY_NODE.values()].filter(m => m.status === "
 
 function revealNode(id) { let p = NODES.get(id)?.parent; while (p != null) { pstate.open.add(p); p = NODES.get(p)?.parent; } }
 function selectNode(id, scroll) {
-  pstate.sel = id; pstate.form = null; pstate.bulkAsk = false; pstate.tab = null; pstate.editNotes = false;
+  pstate.sel = id; pstate.form = null; pstate.bulkAsk = false; pstate.tab = null; pstate.editNotes = false; pstate.editTitle = false;
   revealNode(id); drawPlanTree(); renderPlanDetail();
   if (scroll) requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "nearest" }));
   if (innerWidth < 1180 && scroll !== "tree") $("#pdetail")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -991,7 +996,10 @@ function renderPlanDetail() {
   el.innerHTML = `
     <div class="crumbs">${crumbs.map(c => `<button data-nid="${c.id}">${esc(c.title || c.path)}</button><span>›</span>`).join("")}</div>
     <div class="detail-h"><span class="big">${esc(n.path || "–")}</span>
-      <div style="flex:1;min-width:0"><h2>${esc(n.title || "(ריק)")}</h2>
+      <div style="flex:1;min-width:0">${pstate.editTitle
+        ? `<div class="title-edit"><input id="t-in" type="text" value="${esc(n.title || "")}" aria-label="כותרת השלוחה"><button class="cta" id="t-save"${ro}>שמירה</button><button class="ghost" id="t-cancel">ביטול</button></div>
+           ${n.title !== n.title0 ? `<div class="muted">בטיוטה המקורית: ${esc(n.title0 || "(ריק)")} · <button class="linkish" id="t-reset">חזרה למקור</button></div>` : ""}`
+        : `<h2 class="title-row">${esc(n.title || "(ריק)")}${row ? `<button class="eye" id="t-edit" title="עריכת הכותרת"${ro}>עריכה</button>` : ""}</h2>`}
         <div class="meta">
           ${row && !routing ? `<span class="chip ${LINK[ls][1]}">שיוך: ${LINK[ls][0]}</span>` : ""}
           ${sb ? '<span class="chip special">בנייה מיוחדת</span>' : ""}
@@ -1085,6 +1093,16 @@ function wireDetail(n) {
     pstate.tab = null; drawQueueBar(); drawPlanTree(); renderPlanDetail();
   });
   $("#p-sb")?.addEventListener("click", async () => { await saveProps(n.id, { special_build: !specialBuild(n) }); drawPlanTree(); renderPlanDetail(); });
+  $("#t-edit")?.addEventListener("click", () => { pstate.editTitle = true; renderPlanDetail(); $("#t-in")?.select(); });
+  $("#t-cancel")?.addEventListener("click", () => { pstate.editTitle = false; renderPlanDetail(); });
+  const saveTitle = async v => {
+    const t = (v || "").trim();
+    await saveProps(n.id, { title: t && t !== n.title0 ? t : null });
+    pstate.editTitle = false; toast(`הכותרת נשמרה: "${n.title}"`); drawPlanTree(); renderPlanDetail();
+  };
+  $("#t-save")?.addEventListener("click", () => saveTitle($("#t-in").value));
+  $("#t-in")?.addEventListener("keydown", e => { if (e.key === "Enter") saveTitle(e.target.value); if (e.key === "Escape") { pstate.editTitle = false; renderPlanDetail(); } });
+  $("#t-reset")?.addEventListener("click", () => saveTitle(""));
   $("#note-mark")?.addEventListener("click", async () => { await saveProps(n.id, { note_mark: !noteMark(n) }); drawPlanTree(); renderPlanDetail(); });
   $("#notes-edit")?.addEventListener("click", () => { pstate.editNotes = true; renderPlanDetail(); $("#notes-ta")?.focus(); });
   $("#notes-cancel")?.addEventListener("click", () => { pstate.editNotes = false; renderPlanDetail(); });
@@ -1137,10 +1155,12 @@ async function undoDecision(nodeId, prev, restore) {
   else await clearDecision(nodeId);
   drawQueueBar(); selectNode(nodeId, true);
 }
+/* D-122: כותרת ערוכה (nodeprops.title) גוברת על הכותרת מהטיוטה */
+function applyTitles() { for (const n of NODES.values()) { const t = PROPS.get(n.id)?.title; n.title = t ? t : n.title0; } }
 async function saveProps(nodeId, patch) {
   const cur = PROPS.get(nodeId) || {};
   const doc = { ...cur, ...patch, node_id: nodeId, updated_by: MY_ID, updated_at: new Date().toISOString() };
-  PROPS.set(nodeId, doc);
+  PROPS.set(nodeId, doc); applyTitles();
   if (!DB || CAN_WRITE === false) return false;
   try { await DB.doc("nodeprops/" + nodeId).set(doc); return true; } catch (e) { return false; }
 }
@@ -1183,7 +1203,7 @@ async function initDecisions() {
   DB.collection("nodeprops").onSnapshot(snap => {
     PROPS.clear();
     for (const s of snap.docs) { const v = s.data(); if (v && v.node_id != null) PROPS.set(+v.node_id, v); }
-    refresh();
+    applyTitles(); refresh();
   }, () => {});
   if (location.hash === "#plan") drawQueueBar();
 }

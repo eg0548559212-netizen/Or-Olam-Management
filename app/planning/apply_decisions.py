@@ -13,7 +13,8 @@ draft_node.link_status מתעדכן: none → new, same/split → existing, merg
 
 מאפייני צומת (D-118) נשמרים באוסף nodeprops ומוחלים עם --props <תיקייה>:
 planned_type → draft_node.planned_cls_type, special_build → draft_node.special_build,
-notes (D-120, רשימת הערות ערוכה) → מחליפה את הערות הצומת ב-draft_note.
+notes (D-120, רשימת הערות ערוכה) → מחליפה את הערות הצומת ב-draft_note,
+title (D-122, כותרת ערוכה) → draft_node.title.
 הרצה חוזרת של המיפוי האוטומטי לא נוגעת בשורות approved / rejected.
 """
 import argparse
@@ -80,6 +81,9 @@ def apply_props(src_dir, db_file):
         sets, args = [], []
         if "planned_type" in d:
             sets.append("planned_cls_type = ?"); args.append(d["planned_type"] or None)
+        if "title" in d:
+            # D-122: כותרת ערוכה. null מחזיר לכותרת מהטיוטה, שנשמרת ב-raw_text
+            sets.append("title = COALESCE(?, title)"); args.append(d["title"] or None)
         if "special_build" in d:
             sets.append("special_build = ?"); args.append(int(bool(d["special_build"])))
         if sets:
