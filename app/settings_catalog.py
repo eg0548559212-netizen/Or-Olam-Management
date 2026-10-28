@@ -65,7 +65,7 @@ REF_KEYS = {
 # D-107: לא נשמרים בכלל. נשמר רק "יש ערך / אין".
 SECRET_KEYS = {"masof_password", "api_password", "user_authorization"}
 
-# D-106: נשמרים מוצפנים, ומוסתרים בתצוגה.
+# D-106, D-111: נשמרים מוצפנים, ומוסתרים בתצוגה.
 HIDDEN_KEYS = {
     "send_msg_to_mail",
     "zintok_callerid",
@@ -73,6 +73,18 @@ HIDDEN_KEYS = {
     "caller_id",
     "more_public_to_lines[].phone",
     "more_public_to_lines[].code",
+    # D-111: טלפונים ומיילים נוספים שהתגלו בסריקה
+    "emails",
+    "emails_send_error",
+    "zintuk_tasks[].emails",
+    "replay_to",
+    "record_mail",
+    "destination",
+    "time_table[].destination_dial",
+    "time_table[].caller_phones",
+    "number_internal",
+    "queue_name",
+    "body",
 }
 
 # ערך שהושחר בעותק הייצוא. לא נשמר כערך אמיתי.

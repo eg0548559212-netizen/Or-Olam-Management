@@ -146,6 +146,7 @@
 | `teacher_phone` | נשמר במלואו, מוצפן ומוסתר. נחשף רק למנהל הראשי. משמש לשיוך מרצה לשלוחה |
 
 | ערכים אישיים בתוך `settings` (D-106) | `send_msg_to_mail`, `zintok_callerid`, `zintuk_tasks[].caller_id`, `caller_id`, `more_public_to_lines[].phone`, `more_public_to_lines[].code`. נשמרים מוצפנים, ובתצוגת ההגדרות מוחלפים ב"מוסתר". רשימת המפתחות מנוהלת לפי סוג שלוחה |
+| טלפונים ומיילים נוספים בתוך `settings` (D-111) | `emails`, `emails_send_error`, `zintuk_tasks[].emails`, `replay_to`, `record_mail`, `destination`, `time_table[].destination_dial`, `time_table[].caller_phones`, `number_internal`, `queue_name`, `body`. אותו טיפול כמו D-106. בסריקה: 855 ערכים מוצפנים בסך הכול |
 | סיסמאות ופרטי אישור של מערכות חיצוניות (D-107) | `masof_password`, `api_password`, `user_authorization`. **לא נשמרים בכלל**, גם לא בגולמי. הערך מוחלף בסימון "יש ערך / אין ערך" כבר בקליטה |
 
 - כל חשיפה נרשמת ביומן גישה.
