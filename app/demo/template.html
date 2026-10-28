@@ -337,6 +337,48 @@ td .linkish:hover { text-decoration: underline; }
 .notes-grid.one { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 1180px) { .qbar-in { grid-template-columns: minmax(0, 1fr) auto; } .qbar-t { grid-column: 1 / -1; } }
 @media (max-width: 760px) { .qbar-in { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── החלטה בלחיצה אחת ── */
+.q2 { display: flex; flex-direction: column; gap: 2px; }
+.q2 b { font-family: var(--f-display); font-weight: 500; font-size: 18px; }
+.cands { display: flex; flex-direction: column; gap: 8px; }
+.cand { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: var(--r-inner); padding: 10px 12px 10px 10px; }
+.cand.sugg { border-color: var(--teal); background: var(--teal-softer); }
+.cand-i { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cand-t { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.cand-t .path { color: var(--teal-strong); }
+.cand .linkish { border: 0; background: none; padding: 0; color: var(--ink-3); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.tag-s { align-self: flex-start; font-size: 11px; font-weight: 700; letter-spacing: .02em; color: var(--teal-strong); }
+.whyline { display: flex; flex-wrap: wrap; gap: 4px; }
+.wy { font-size: 12px; padding: 1px 8px; border-radius: 999px; }
+.wy.good { background: var(--ok-soft); color: var(--ok); }
+.wy.warn { background: var(--warn-soft); color: var(--warn); }
+.choose { flex: none; display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 20px; border-radius: 999px; border: 0; background: var(--teal); color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; box-shadow: 0 2px 6px rgba(29, 127, 129, .25); }
+.choose:hover { background: var(--teal-strong); }
+.choose.alt { background: var(--surface); color: var(--teal-strong); border: 1.5px solid var(--teal); box-shadow: none; }
+.choose.alt:hover { background: var(--teal-soft); }
+.choose.none { background: var(--surface); color: var(--ink); border: 1.5px solid var(--ink-3); box-shadow: none; }
+.choose.none:hover { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
+.choose:disabled { opacity: .45; cursor: default; }
+.other-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.other-row .ghost { height: 46px; padding: 0 18px; }
+.adv { display: flex; flex-direction: column; gap: 10px; background: var(--surface-2); border-radius: var(--r-inner); padding: 14px; }
+.adv .field { flex: none; background: var(--surface); }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; background: var(--surface); border-radius: 999px; padding: 4px; align-self: flex-start; }
+.seg label { padding: 6px 14px; border-radius: 999px; font-size: 14px; cursor: pointer; }
+.seg label.on { background: var(--navy); color: var(--on-navy); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:focus-within { outline: 2px solid var(--teal); }
+.results .pick-go { margin-inline-start: auto; color: var(--teal-strong); font-weight: 700; font-size: 13px; }
+.dec-foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.done { flex-direction: row; align-items: center; gap: 12px; }
+.done > div { flex: 1; min-width: 0; }
+.ok-ic { width: 32px; height: 32px; border-radius: 50%; background: var(--teal); color: #fff; display: grid; place-items: center; font-weight: 700; flex: none; }
+#toast { position: fixed; bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px)); left: 50%; transform: translateX(-50%); z-index: 40; background: var(--navy); color: var(--on-navy);
+  border-radius: 999px; padding: 10px 12px 10px 20px; display: flex; gap: 14px; align-items: center; box-shadow: var(--shadow); max-width: calc(100vw - 32px); font-size: 14px; }
+#toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+#toast button { border: 0; background: var(--sun); color: #182437; font-weight: 700; border-radius: 999px; padding: 6px 14px; flex: none; }
+@media (max-width: 760px) { .cand { flex-direction: column; align-items: stretch; } .choose { justify-content: center; } #toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -720,7 +762,7 @@ const NSTATE = {
   decided: ["הוחלט", "teal"], suggested: ["הצעה ודאית", "ok"], needs_decision: ["דורש החלטה", "sun"],
   not_found: ["לא נמצאה", "line"], new: ["חדשה", "new"], new_special_build: ["בנייה מיוחדת", "special"]
 };
-const pstate = { sel: null, open: new Set(), q: "", f: "all", form: null, dirty: false, bulkAsk: false };
+const pstate = { sel: null, open: new Set(), q: "", f: "all", form: null, dirty: false, bulkAsk: false, editing: false, panel: null };
 
 function nodeState(n) {
   if (n.parent == null) return "root";
@@ -744,7 +786,7 @@ function revealNode(id) {
   while (p != null) { pstate.open.add(p); p = NODES.get(p)?.parent; }
 }
 function selectNode(id, scroll) {
-  pstate.sel = id; pstate.form = null; pstate.dirty = false; pstate.bulkAsk = false;
+  pstate.sel = id; pstate.form = null; pstate.dirty = false; pstate.bulkAsk = false; pstate.editing = false; pstate.panel = null;
   revealNode(id);
   drawPlanTree(); renderPlanDetail();
   if (scroll) requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "center" }));
@@ -791,7 +833,7 @@ function drawQueueBar() {
   const done = total - q.length;
   el.innerHTML = `<div class="qbar-in">
     <div class="qbar-t"><h2>תור ההחלטות</h2>
-      <p>לכל צומת קיים בטיוטה צריך לקבוע לאיזו שלוחה בעץ הנוכחי הוא שייך. כך ההיסטוריה שלה עוברת איתו ביום המעבר. המערכת הציעה התאמות, ובמקרים שבהם היא לא בטוחה, ההחלטה שלך.</p></div>
+      <p>לכל צומת קיים בטיוטה בוחרים את השלוחה שלו בעץ הנוכחי, כדי שההיסטוריה שלה תעבור איתו.</p></div>
     <div class="qbar-n"><b class="num">${q.length}</b><small>נותרו להחלטה מתוך ${total}</small>
       <span class="track"><span class="fill" style="width:${total ? done / total * 100 : 0}%"></span></span></div>
     <div class="qbar-a">
@@ -869,17 +911,15 @@ function extCard(e, opts = {}) {
 function whyLines(n, sig, reasons) {
   const out = [];
   if (sig) {
-    if (sig.name_sim >= 0.95) out.push(["good", "השם זהה לשם בטיוטה"]);
-    else if (sig.name_sim >= 0.7) out.push(["good", "השם דומה לשם בטיוטה"]);
-    else out.push(["warn", "השם שונה מהשם בטיוטה"]);
-    if (sig.in_parent_branch) out.push(["good", "נמצאת מתחת לשלוחה שהוצעה לצומת שמעליו"]);
-    else if (n.parent != null && NODES.get(n.parent).parent != null) out.push(["warn", "נמצאת בענף אחר בעץ, לא מתחת לשלוחה שהוצעה לצומת שמעליו"]);
-    if (sig.digit_match) out.push(["good", `באותה ספרה (${n.digit})`]);
-    if (sig.lecturer_match) out.push(["good", "שם המרצה מהטיוטה מופיע בשם השלוחה"]);
+    if (sig.name_sim >= 0.95) out.push(["good", "השם זהה"]);
+    else if (sig.name_sim >= 0.7) out.push(["good", "השם דומה"]);
+    else out.push(["warn", "השם שונה"]);
+    if (sig.in_parent_branch) out.push(["good", "באותו ענף"]);
+    else if (n.parent != null && NODES.get(n.parent).parent != null) out.push(["warn", "בענף אחר"]);
+    if (sig.lecturer_match) out.push(["good", "שם המרצה מופיע"]);
   }
-  const R = { "מועמד שני קרוב": "יש שלוחה נוספת שמתאימה כמעט באותה מידה (מופיעה למטה)", "תלוי בהחלטה על האב": "קודם צריך להחליט על הצומת שמעליו",
-    "אותה שלוחה הוצעה לכמה צמתים": "אותה שלוחה הוצעה גם לצומת אחר", "ביטחון מתחת לסף": "ההתאמה חלקית" };
-  for (const r of reasons || []) out.push(["warn", R[r] || r]);
+  const R = { "מועמד שני קרוב": "יש חלופה קרובה", "תלוי בהחלטה על האב": "תלוי בצומת שמעליו", "אותה שלוחה הוצעה לכמה צמתים": "הוצעה גם לצומת אחר" };
+  for (const r of reasons || []) if (R[r] && !(r === "תלוי בהחלטה על האב" && DEC.has(n.parent))) out.push(["warn", R[r]]);
   return out;
 }
 function formFor(n) {
@@ -921,71 +961,112 @@ function renderPlanDetail() {
   if (showDecision) wireDecision(n);
 }
 function decisionHtml(n, st, m, d) {
-  const f = formFor(n);
   const sig = m ? m.signals : null;
   const sugg = m ? EXT.get(m.ext) : null;
   const alts = (sig?.candidates || notFoundCands.get(n.id) || []).map(c => EXT.get(c.sclass_id)).filter(e => e && e.id !== sugg?.id);
+  const cands = [...(sugg ? [[sugg, whyLines(n, sig, m.reasons).slice(0, 4), true]] : []), ...alts.map(e => [e, [], false])];
   const who = d ? (d.decided_by === MY_ID ? "את" : (NAMES[d.decided_by] || "")) : "";
-  const intro = st === "suggested" ? "המערכת מצאה התאמה ודאית. מספיק לאשר אותה, או לבחור אחרת."
-    : st === "needs_decision" ? "המערכת מצאה התאמה אפשרית, אבל לא בטוחה בה. צריך לבחור מה נכון."
-    : st === "not_found" ? "המערכת לא מצאה שלוחה מתאימה. אם יש כזו, מחפשים אותה למטה. אם אין, בוחרים \"אין לה שלוחה קיימת\"."
-    : st === "decided" ? "" : "הצומת מסומן בטיוטה כחדש. אם בכל זאת יש לו שלוחה קיימת, אפשר לבחור אותה.";
-  const act = ACTIONS[f.action];
-  const chosen = f.ids.map(id => EXT.get(id)).filter(Boolean);
-  const moveTxt = f.action === "same" && chosen[0] ? (chosen[0].path === n.path ? "השלוחה נשארת באותו נתיב." : `השלוחה תעבור מ-<span class="path">${esc(chosen[0].path)}</span> ל-<span class="path">${esc(n.path || "?")}</span>.`) : "";
-  const valid = f.action && f.ids.length >= act.min && f.ids.length <= act.max;
+  if (d && !pstate.editing) {
+    return `<div class="decision"><div class="done"><span class="ok-ic" aria-hidden="true">✓</span><div><b>הוחלט:</b> ${decisionSummary(d, n)}
+      <div class="muted">${who ? esc(who) + " · " : ""}${new Date(d.decided_at).toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" })}${d.source === "bulk" ? " · באישור מרוכז" : ""}${d.note ? " · " + esc(d.note) : ""}</div></div>
+      <button class="ghost" id="dec-edit">שינוי</button></div>
+      <div class="dec-foot"><button class="ghost" id="dec-next">להחלטה הבאה ←</button></div></div>`;
+  }
+  const f = formFor(n);
+  const ro = CAN_WRITE === false ? " disabled" : "";
+  const candHtml = ([e, why, isSugg]) => {
+    const parent = e.parent != null ? EXT.get(e.parent) : null;
+    return `<div class="cand${isSugg ? " sugg" : ""}">
+      <div class="cand-i">${isSugg ? '<span class="tag-s">הצעת המערכת</span>' : ""}
+        <div class="cand-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b></div>
+        <div class="muted">${parent ? `תחת ${esc(parent.name || parent.path)}` : "שורש"} · <button class="linkish" data-go="${e.id}">פתיחה בעץ</button></div>
+        ${why.length ? `<div class="whyline">${why.map(w => `<span class="wy ${w[0]}">${esc(w[1])}</span>`).join("")}</div>` : ""}</div>
+      <button class="choose${isSugg ? "" : " alt"}" data-choose="${e.id}"${ro}><span aria-hidden="true">✓</span> זו השלוחה</button></div>`;
+  };
   return `<div class="decision">
-    <div class="q"><span class="qn">?</span><div><b>לאיזו שלוחה בעץ הנוכחי שייך "${esc(n.title)}"?</b><p>${intro}</p></div></div>
-    ${d ? `<div class="done"><b>הוחלט:</b> ${decisionSummary(d, n)}${d.note ? `<div class="muted">הערה: ${esc(d.note)}</div>` : ""}
-      <div class="muted">${who ? esc(who) + " · " : ""}${new Date(d.decided_at).toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" })}${d.source === "bulk" ? " · באישור מרוכז" : ""}</div></div>` : ""}
-    ${sugg ? `<div class="sec"><h3>ההצעה של המערכת</h3>${extCard(sugg, { why: whyLines(n, sig, d ? [] : m.reasons), pick: !f.ids.includes(sugg.id) })}</div>` : ""}
-    ${alts.length ? `<div class="sec"><h3>${sugg ? "שלוחות דומות נוספות" : "שלוחות דומות (התאמה חלשה)"}</h3><div class="xlist">${alts.map(e => extCard(e, { pick: !f.ids.includes(e.id) })).join("")}</div></div>` : ""}
-    <div class="sec"><h3>ההחלטה</h3>
-      <div class="opts" role="radiogroup" aria-label="מה קורה לשלוחה">${Object.entries(ACTIONS).map(([k, a]) =>
-        `<label class="opt${f.action === k ? " on" : ""}"><input type="radio" name="act" value="${k}"${f.action === k ? " checked" : ""}><b>${a.label}</b><span>${a.help}</span></label>`).join("")}</div>
-      ${!act || act.max > 0 ? `<div class="pick">
-        <div class="muted">${act && act.max > 1 ? "השלוחות שמתאחדות:" : "השלוחה:"}</div>
-        <div class="chips">${chosen.map(e => `<span class="chip teal"><span class="path">${esc(e.path)}</span> ${esc(e.name || "")}<button class="x" data-rm="${e.id}" aria-label="הסרה">×</button></span>`).join("") || '<span class="muted">עוד לא נבחרה שלוחה</span>'}</div>
-        ${chosen.length < (act ? act.max : 1) ? `<label class="field" for="pick-q">${ICON_SEARCH}<input id="pick-q" type="search" placeholder="חיפוש שלוחה אחרת לפי שם או נתיב" autocomplete="off"></label><div class="results" id="pick-r"></div>` : ""}
-        ${moveTxt ? `<div class="muted">${moveTxt}</div>` : ""}</div>` : ""}
-      <label class="note-in" for="dec-note"><span class="muted">הערה (לא חובה)</span><textarea id="dec-note" rows="2">${esc(f.note)}</textarea></label>
-      <div class="dec-a">
-        <button class="cta" id="dec-save" ${valid && CAN_WRITE !== false ? "" : "disabled"}>${d ? "עדכון ההחלטה" : "שמירת ההחלטה"}</button>
-        <button class="ghost" id="dec-next">${st === "needs_decision" && !d ? "דילוג" : "להחלטה הבאה"} ←</button>
-        ${!valid && f.action ? `<span class="muted">${act.min > 1 ? `צריך לבחור לפחות ${act.min} שלוחות` : "צריך לבחור שלוחה"}</span>` : ""}
-        <span class="muted" id="dec-msg" role="status"></span>
-      </div></div></div>`;
+    <div class="q2"><b>לאיזו שלוחה בעץ הנוכחי שייך "${esc(n.title)}"?</b>
+      ${st === "not_found" && !cands.length ? '<span class="muted">המערכת לא מצאה שלוחה מתאימה.</span>' : ""}</div>
+    ${cands.length ? `<div class="cands">${cands.map(candHtml).join("")}</div>` : ""}
+    <div class="other-row">
+      <button class="choose none" id="dec-none"${ro}><span aria-hidden="true">✕</span> אין לה שלוחה קיימת</button>
+      <button class="ghost${pstate.panel === "search" ? " on" : ""}" id="dec-other">שלוחה אחרת…</button>
+      <button class="ghost${pstate.panel === "adv" ? " on" : ""}" id="dec-adv">אפשרויות נוספות</button>
+    </div>
+    ${pstate.panel === "search" ? `<div class="pick"><label class="field" for="pick-q">${ICON_SEARCH}<input id="pick-q" type="search" placeholder="שם או נתיב של שלוחה" autocomplete="off"></label><div class="results" id="pick-r"></div></div>` : ""}
+    ${pstate.panel === "adv" ? advHtml(n, f) : ""}
+    <div class="dec-foot">${d ? '<button class="ghost" id="dec-cancel">ביטול השינוי</button>' : ""}<button class="ghost" id="dec-next">${d ? "להחלטה הבאה" : "דילוג"} ←</button>
+      <span class="muted" id="dec-msg" role="status"></span></div>
+  </div>`;
+}
+function advHtml(n, f) {
+  const adv = ["rebuild", "merge", "split"];
+  if (!adv.includes(f.action)) f.action = "rebuild";
+  const act = ACTIONS[f.action], chosen = f.ids.map(id => EXT.get(id)).filter(Boolean);
+  const valid = f.ids.length >= act.min && f.ids.length <= act.max;
+  return `<div class="adv">
+    <div class="seg" role="radiogroup" aria-label="סוג השיוך">${adv.map(k => `<label class="${f.action === k ? "on" : ""}"><input type="radio" name="act" value="${k}"${f.action === k ? " checked" : ""}>${ACTIONS[k].label}</label>`).join("")}</div>
+    <div class="muted">${act.help}</div>
+    <div class="chips">${chosen.map(e => `<span class="chip teal"><span class="path">${esc(e.path)}</span> ${esc(e.name || "")}<button class="x" data-rm="${e.id}" aria-label="הסרה">×</button></span>`).join("") || '<span class="muted">בוחרים שלוחה מהחיפוש:</span>'}</div>
+    ${chosen.length < act.max ? `<label class="field" for="adv-q">${ICON_SEARCH}<input id="adv-q" type="search" placeholder="שם או נתיב של שלוחה" autocomplete="off"></label><div class="results" id="adv-r"></div>` : ""}
+    <label class="field" for="dec-note"><input id="dec-note" type="text" placeholder="הערה (לא חובה)" value="${esc(f.note)}"></label>
+    <div><button class="cta" id="adv-save"${valid && CAN_WRITE !== false ? "" : " disabled"}>שמירה</button></div></div>`;
+}
+function searchInto(input, box, onPick) {
+  input?.addEventListener("input", () => {
+    const v = input.value.trim();
+    if (v.length < 2) { box.innerHTML = ""; return; }
+    const hits = [...EXT.values()].filter(e => (e.name || "").includes(v) || e.path.startsWith(v)).slice(0, 8);
+    box.innerHTML = hits.map(e => `<button data-add="${e.id}"><span class="path">${esc(e.path)}</span> ${esc(e.name || "בלי שם")}<span class="pick-go">בחירה</span></button>`).join("") || '<div class="muted">לא נמצאו שלוחות.</div>';
+    box.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => onPick(+b.dataset.add)));
+  });
+  input?.focus();
 }
 function wireDecision(n) {
-  const el = $("#pdetail"), f = pstate.form;
-  const redraw = () => { renderPlanDetail(); };
-  el.querySelectorAll('input[name="act"]').forEach(r => r.addEventListener("change", () => {
-    f.action = r.value; const a = ACTIONS[f.action]; if (f.ids.length > a.max) f.ids = f.ids.slice(0, a.max); pstate.dirty = true; redraw();
-  }));
-  el.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => {
-    const id = +b.dataset.pick; if (!f.action || ACTIONS[f.action].max === 0) f.action = "same";
-    const a = ACTIONS[f.action]; f.ids = a.max === 1 ? [id] : [...new Set([...f.ids, id])].slice(0, a.max); pstate.dirty = true; redraw();
-  }));
-  el.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { f.ids = f.ids.filter(x => x !== +b.dataset.rm); pstate.dirty = true; redraw(); }));
-  $("#dec-note")?.addEventListener("input", e => { f.note = e.target.value; pstate.dirty = true; });
-  const pq = $("#pick-q");
-  pq?.addEventListener("input", () => {
-    const v = pq.value.trim(); const r = $("#pick-r");
-    if (v.length < 2) { r.innerHTML = ""; return; }
-    const hits = [...EXT.values()].filter(e => (e.name || "").includes(v) || e.path.startsWith(v)).slice(0, 8);
-    r.innerHTML = hits.map(e => `<button data-add="${e.id}"><span class="path">${esc(e.path)}</span> ${esc(e.name || "בלי שם")} <span class="ctype">${esc(e.type || "")}</span></button>`).join("") || '<div class="muted">לא נמצאו שלוחות.</div>';
-    r.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => {
-      const id = +b.dataset.add; if (!f.action || ACTIONS[f.action].max === 0) f.action = "same"; const a = ACTIONS[f.action]; f.ids = a.max === 1 ? [id] : [...new Set([...f.ids, id])].slice(0, a.max); pstate.dirty = true; redraw();
+  const el = $("#pdetail");
+  const decide = async (action, ids, note) => {
+    const wasQueue = nodeState(n) === "needs_decision" || nodeState(n) === "not_found" || nodeState(n) === "suggested";
+    const prev = DEC.get(n.id);
+    const ok = await saveDecision(n.id, { action, ids, note: note || "" }, "manual");
+    pstate.editing = false; pstate.panel = null; pstate.form = null;
+    drawQueueBar();
+    const label = action === "none" ? "אין לה שלוחה קיימת" : `${ACTIONS[action].label}: ${ids.map(pathOf).join(", ")}`;
+    toast(`${ok ? "נשמר" : DB ? "השמירה נכשלה" : "נשמר בתצוגה הזו בלבד"} · "${n.title}" · ${label}`, ok || !DB ? () => undoDecision(n.id, prev) : null);
+    const q = queue();
+    if (wasQueue && q.length) selectNode(q.find(id => posOf(id) > posOf(n.id)) ?? q[0], true);
+    else { drawPlanTree(); renderPlanDetail(); }
+  };
+  el.querySelectorAll("[data-choose]").forEach(b => b.addEventListener("click", () => decide("same", [+b.dataset.choose])));
+  $("#dec-none")?.addEventListener("click", () => decide("none", []));
+  $("#dec-other")?.addEventListener("click", () => { pstate.panel = pstate.panel === "search" ? null : "search"; renderPlanDetail(); });
+  $("#dec-adv")?.addEventListener("click", () => { pstate.panel = pstate.panel === "adv" ? null : "adv"; renderPlanDetail(); });
+  $("#dec-edit")?.addEventListener("click", () => { pstate.editing = true; renderPlanDetail(); });
+  $("#dec-cancel")?.addEventListener("click", () => { pstate.editing = false; pstate.panel = null; renderPlanDetail(); });
+  $("#dec-next")?.addEventListener("click", () => nextInQueue());
+  searchInto($("#pick-q"), $("#pick-r"), id => decide("same", [id]));
+  if (pstate.panel === "adv") {
+    const f = pstate.form;
+    el.querySelectorAll('input[name="act"]').forEach(r => r.addEventListener("change", () => {
+      f.action = r.value; const a = ACTIONS[f.action]; if (f.ids.length > a.max) f.ids = f.ids.slice(0, a.max); renderPlanDetail();
     }));
-  });
-  $("#dec-next").addEventListener("click", () => nextInQueue());
-  $("#dec-save").addEventListener("click", async () => {
-    const btn = $("#dec-save"); btn.disabled = true; $("#dec-msg").textContent = "שומרת…";
-    const ok = await saveDecision(n.id, f, "manual");
-    pstate.dirty = false;
-    drawQueueBar(); drawPlanTree(); pstate.form = null; renderPlanDetail();
-    const msg = $("#dec-msg"); if (msg) msg.textContent = ok ? "ההחלטה נשמרה" : DB ? "השמירה נכשלה. אפשר לנסות שוב." : "ההחלטה נשמרה רק בתצוגה הזו, עד שהדף ייסגר.";
-  });
+    el.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { f.ids = f.ids.filter(x => x !== +b.dataset.rm); renderPlanDetail(); }));
+    $("#dec-note")?.addEventListener("input", e => { f.note = e.target.value; });
+    searchInto($("#adv-q"), $("#adv-r"), id => { const a = ACTIONS[f.action]; f.ids = a.max === 1 ? [id] : [...new Set([...f.ids, id])].slice(0, a.max); renderPlanDetail(); });
+    $("#adv-save")?.addEventListener("click", () => decide(f.action, f.ids, f.note));
+  }
+}
+async function undoDecision(nodeId, prev) {
+  if (prev) { await saveDecision(nodeId, { action: prev.action, ids: prev.sclass_ids || [], note: prev.note }, prev.source || "manual"); }
+  else { DEC.delete(nodeId); if (DB && CAN_WRITE !== false) { try { await DB.doc("decisions/" + nodeId).delete(); } catch (e) {} } }
+  drawQueueBar(); selectNode(nodeId, true);
+}
+let toastTimer = null;
+function toast(text, undo) {
+  let t = document.getElementById("toast");
+  if (!t) { t = document.createElement("div"); t.id = "toast"; t.setAttribute("role", "status"); document.getElementById("app").appendChild(t); }
+  t.innerHTML = `<span>${esc(text)}</span>${undo ? '<button id="toast-undo">ביטול</button>' : ""}`;
+  t.hidden = false;
+  if (undo) $("#toast-undo").addEventListener("click", () => { t.hidden = true; undo(); });
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 7000);
 }
 async function saveDecision(nodeId, f, source) {
   const doc = { node_id: nodeId, action: f.action, sclass_ids: f.ids, note: f.note || "", decided_by: MY_ID, decided_at: new Date().toISOString(), source };
