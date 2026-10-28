@@ -65,6 +65,8 @@
 
 **`extension_type`** · מ-`/api/sclass-types/`: `cls_type`, שם, קבוצה, סכמה.
 
+**הערות ל-`settings`:** נשמר כ-JSON כפי שהגיע, יחד עם הסכמה של הסוג מ-`extension_type`, לתצוגה עם כותרות בעברית.
+
 **`tree_sync_run`** · כל ריצת סנכרון עץ
 `run_id`, `started_at`, `finished_at`, `status`, `node_count`, `completeness_ok` (האם `count_sub_sclass` תאם למספר הילדים שנמצאו).
 התגובות הגולמיות של הריצה האחרונה נשמרות לבדיקה, בלי היסטוריה.
@@ -77,6 +79,24 @@
 3. **`unresolved`**: לא נמצא. ההאזנה נכנסת לרשימת "לא משויך", עם הנתיב והשם הגולמיים. מנהל יכול לשייך ידנית.
 
 **בדיקת שפיות:** אם השם בהאזנה שונה לגמרי מהשם הנוכחי של השלוחה, ההאזנה מסומנת לבדיקה. השיוך עצמו לא משתנה.
+
+**`extension_setting_ref`** · הפניות משלוחה לשלוחה מתוך `settings`. נגזרת, ומחושבת מחדש בכל סנכרון.
+בהגדרות של ידע פון, הקשרים בין שלוחות נשמרים כמחרוזת נתיב או שם, ולא כמזהה: `record_to`, `more_public_to`, `play_from_other_sclass` ועוד (פירוט ב-`docs/sources/api-samples.md`).
+| שדה | תיאור |
+|---|---|
+| `sclass_id`, `setting_key` | למשל `836681`, `more_public_to` |
+| `raw_value` | הערך כפי שהוא, למשל `1.1.1,2.6.1` |
+| `ref_kind` | `record_to` / `publish_to` / `play_from` / `play_from_all` (`*`) / `exclude` (`~`) / `zintuk_source` / `register_to` / `move_to` / `external_line` / `hangup` |
+| `target_text` | נתיב או שם בודד אחרי פיצול לפי פסיקים |
+| `target_sclass_id` | מזהה השלוחה שהטקסט מצביע עליה כרגע |
+| `status` | `ok` / `broken` (הנתיב לא קיים) / `by_name` / `external` (קו אחר) |
+
+**למה זה חשוב:**
+1. **שלוחות מקושרות (D-015) מתקבלות אוטומטית** מהנתונים: `extension_link` עם `source_kind = settings`, לצד קישורים ידניים.
+2. **הסבר לזרימת התוכן.** הקלטה שהוקלטה ב-`1.1.4.2` ונשמעת ב-`1.1.4.1`, כנראה בגלל `record_to` או `more_public_to`. זה מסייע לשיוך שיעורים (D-018) ולסיכום ברמת השיעור (D-014).
+3. **בדיקת תקינות:** הפניה לנתיב שלא קיים מקבלת `broken`.
+   - מועמדת לבדיקות התקינות (D-012, D-016).
+   - **קריטית במעבר לעץ החדש:** כל הפניה כזו צריכה להיכתב מחדש לנתיב החדש. מודול התכנון יפיק את רשימת ההפניות שצריך לעדכן.
 
 ## 4. העץ ההתחלתי
 
@@ -118,6 +138,7 @@
 - `copy_target`: "יועתקו גם ל-310".
 - `redirect`: "להרשמה מועבר ל-90".
 - `related`.
+- `source_kind`: `manual` או `settings`. קישורים מסוג `settings` נגזרים אוטומטית מ-`extension_setting_ref`, ומתעדכנים בכל סנכרון.
 
 **`attribute_change`** · יומן שינויים
 `entity`, `entity_id`, `field`, `old_value`, `new_value`, `changed_by`, `changed_at`.
@@ -144,3 +165,5 @@
 2. `parent=<id>` מחזיר רק ילדים ישירים, ו-`count_sub_sclass` סופר רק אותם.
 3. `id` של שלוחה לא ממוחזר.
 4. המשמעות של `conf_id` ו-`var_bool`.
+5. `cls_type` ב-`system/sclass` מגיע באותיות גדולות (`MB`, `LMENU`), כמו ב-`sclass-types`, ולא כמו בדוגמה בתיעוד (`menu`).
+6. ערכי ההפניה ב-`settings` הם נתיבים מלאים (`1.1.4.1`), ולא יחסיים.
