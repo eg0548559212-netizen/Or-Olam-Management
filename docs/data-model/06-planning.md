@@ -151,3 +151,15 @@
 - ⚠️ קריאת צבעים: אפשרית מ-docx, מ-Google Docs ומ-HTML. לא אפשרית מ-PDF. בטיוטה מ-21.10 גם הסדר של הספרות התהפך ב-PDF.
 - החילוץ מהטקסט (מרצים, תדירות) מייצר הצעות בלבד. הוא לא מייצר מאפיינים סופיים.
 - `split_rule` תלוי במודל השיעורים (מסמך 02).
+
+## 6. מימוש (D-109, D-110)
+
+הסכמה נמצאת ב-`app/db/schema.sql`. אלה הפרטים שהמסמך לא קבע, והוכרעו במימוש:
+
+- **`base_tree_snapshot`** מחולק לכותרת (`snapshot_id`, `plan_id`, `taken_at`) ולשורות ב-**`base_tree_snapshot_node`**. אין בהן מפתח זר ל-`extension`, כדי שישרדו את מחיקת העץ.
+- **`mapping_row.sources[]` ו-`targets[]`** מנורמלים לטבלאות **`mapping_source`** (`sclass_id`, `path`, `name`) ו-**`mapping_target`** (`node_id`, `new_sclass_id`).
+- **`draft_node`:** המפתח הוא (`draft_id`, `node_id`), כי `node_id` חוזר בכל גרסה. נוסף `source_color`, הצבע הדומיננטי בקובץ, כמקור בלבד.
+- **טיוטת עבודה אחת לכל תכנית (D-108)** נאכפת באינדקס ייחודי.
+- **`uploaded_file.stored_path`:** הקובץ המקורי נשמר תחת `data/`, מחוץ למאגר.
+- **`gap_item.severity`:** `info` / `warning` / `error`. `pattern_deviation` הוא תמיד `warning` (D-016).
+- **`validation_rule`** מגיע עם קטלוג התחלתי של שישה כללים.

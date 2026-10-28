@@ -5,3 +5,13 @@ data/
 *.redacted.zip
 .env
 .env.*
+
+# בסיס הנתונים המקומי וקבצי ייצוא (D-110)
+*.zip
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+__pycache__/

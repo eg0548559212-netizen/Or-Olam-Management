@@ -206,3 +206,20 @@
 3. המשמעות של `var_bool`. בסריקה הוא `false` בכל השלוחות.
 4. ערכי ההפניה ב-`settings` הם נתיבים מלאים (`1.1.4.1`), ולא יחסיים.
 5. `settings` ברשימה זהה ל-`settings` בפרטי שלוחה בודדת.
+
+## 9. מימוש (D-109, D-110)
+
+הסכמה נמצאת ב-`app/db/schema.sql`. אלה הפרטים שהמסמך לא קבע, והוכרעו במימוש:
+
+- **`extension.path_sort`:** מקטעים מרופדים באפסים, למיון נכון. `path_segments` נשמר כ-JSON.
+- **`extension.sensitive_enc`:** JSON מוצפן של `teacher_phone` (רשימה), `pin_code_extension` ו-`pin_code_admin_only`. לצידו נשמרים הסימונים `has_teacher_phone`, `has_pin_code_extension` ו-`has_pin_code_admin_only`, עם הערכים `yes` / `no` / `unknown`.
+- **ערכים אישיים בתוך `settings` (D-106):** הערך המוצפן נשמר ב-**`extension_sensitive_setting`** (`sclass_id`, `json_path`, `value_enc`). ב-`extension.settings` הוא מוחלף בסימון `{"$hidden": true}`.
+- **סיסמאות חיצוניות (D-107):** ב-`settings` הערך מוחלף כבר בקליטה בסימון `{"$secret": "present"}` או `{"$secret": "absent"}`.
+- **`"[REDACTED]"` בעותק הייצוא:** מוחלף בסימון `{"$unknown": "redacted_in_export"}`. לא נשמר כערך.
+- **`sensitive_access_log`:** יומן החשיפות של D-102.
+- **`tree_sync_raw`:** התגובות הגולמיות של הריצה האחרונה, אחרי סינון D-107, **מוצפנות כולן**. כך הערכים של D-102 ו-D-106 לא נשמרים גלויים גם בשכבת הגולמי.
+- **`extension_setting_ref`:**
+  - נוספו השדות `target_path` (הנתיב אחרי פענוח `./x` ו-`~`) ו-`computed_at`.
+  - נוספו ערכים ל-`target_form`: `unparsed`.
+  - נוספו ערכים ל-`status`: `ambiguous_name` (שם שמתאים ליותר משלוחה אחת), `pattern` (קידומת `*` או `*` לבד), `hangup` ו-`unparsed`.
+- **`extension_path_alias.source`:** מאיפה התגלה הכינוי, למשל `scan_structure_vs_detail` לחמש השלוחות מהסריקה.
