@@ -279,10 +279,14 @@ def insert_draft(db, plan_id, kind, file_id, based_on, label, ts, nodes, notes):
     for n in nodes:
         db.execute(
             """INSERT INTO draft_node (draft_id, node_id, parent_node_id, position, digit, full_path, raw_number_text,
-                 raw_text, title, node_status, node_kind, planned_cls_type, hints, source_color, source_span)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL,?,?,?)""",
+                 raw_text, title, node_status, node_kind, planned_cls_type, link_status, special_build, hints, source_color,
+                 source_span)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL,?,?,?,?,?)""",
             (draft_id, n["node_id"], n["parent"]["node_id"] if n["parent"] else None, n["position"], n["digit"],
              n["full_path"], n["raw_number_text"], n["raw_text"], n["title"], n["node_status"], n["node_kind"],
+             # D-118: הצבע בטיוטה הוא ערך התחלתי של סטטוס השיוך ושל תגית "בנייה מיוחדת"
+             "new" if n["node_status"] in ("new", "new_special_build") else "unset",
+             int(n["node_status"] == "new_special_build"),
              json.dumps(n["hints"], ensure_ascii=False) if n["hints"] else None, n["source_color"],
              json.dumps(n["source_span"])),
         )

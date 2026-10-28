@@ -254,7 +254,9 @@ CREATE TABLE draft_node (
     title               TEXT,
     node_status         TEXT NOT NULL CHECK (node_status IN ('existing', 'new', 'new_special_build', 'unknown')),
     node_kind           TEXT NOT NULL CHECK (node_kind IN ('extension', 'heading', 'placeholder')),
-    planned_cls_type    TEXT,
+    planned_cls_type    TEXT,                   -- סוג השלוחה שייבנה (D-118)
+    link_status         TEXT NOT NULL DEFAULT 'unset' CHECK (link_status IN ('unset', 'new', 'existing', 'merged')),  -- D-118
+    special_build       INTEGER NOT NULL DEFAULT 0,  -- תגית "בנייה מיוחדת" (D-118)
     hints               TEXT,                   -- JSON
     source_color        TEXT,                   -- הצבע הדומיננטי בקובץ, כמקור בלבד
     source_span         TEXT,                   -- JSON: מיקום בקובץ המקור

@@ -354,6 +354,7 @@ td .linkish:hover { text-decoration: underline; }
 .wy { font-size: 12px; padding: 1px 8px; border-radius: 999px; }
 .wy.good { background: var(--ok-soft); color: var(--ok); }
 .wy.warn { background: var(--warn-soft); color: var(--warn); }
+.wy.bad { background: var(--bad-soft); color: var(--bad); font-weight: 600; }
 .choose { flex: none; display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 20px; border-radius: 999px; border: 0; background: var(--teal); color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; box-shadow: 0 2px 6px rgba(29, 127, 129, .25); }
 .choose:hover { background: var(--teal-strong); }
 .choose.alt { background: var(--surface); color: var(--teal-strong); border: 1.5px solid var(--teal); box-shadow: none; }
@@ -391,6 +392,25 @@ td .linkish:hover { text-decoration: underline; }
 .cand.picked { border-color: var(--teal); background: var(--teal-softer); }
 @media (max-width: 1180px) { .kinds { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ── מאפייני צומת (D-118) ── */
+.props { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; background: var(--surface-2); border-radius: var(--r-inner); padding: 12px 14px; }
+.prop { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.prop > span { font-size: 13px; color: var(--ink-3); font-weight: 600; }
+.prop select { background-color: var(--surface); padding-block: 8px; width: 100%; }
+.tagbtn { align-self: flex-start; border: 1px dashed var(--special); color: var(--special); background: none; border-radius: 999px; padding: 6px 14px; font-weight: 600; }
+.tagbtn.on { border-style: solid; background: var(--special-soft); }
+.eye { margin-inline-start: auto; flex: none; border: 0; background: none; color: inherit; opacity: .55; font-size: 12px; padding: 0 4px; text-decoration: underline; text-underline-offset: 3px; }
+.eye:hover, .eye.on { opacity: 1; }
+.note { align-items: center; }
+.ndot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ndot.question { background: var(--bad); }
+.ndot.build_note { background: var(--warn); }
+.ndot.comment { background: var(--ink-3); }
+.ind-sb { flex: none; font-size: 11px; font-weight: 600; color: var(--special); border: 1px solid var(--special); border-radius: 6px; padding: 0 6px; }
+.ctype.faint { background: none; border: 1px dashed var(--line); color: var(--ink-3); }
+.kinds.k4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 760px) { .props { grid-template-columns: minmax(0, 1fr); } .kinds.k4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .trow .ind-sb { display: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -462,8 +482,8 @@ for (const r of D.refs) {
 const BROKEN = new Set(D.refs.filter(r => r[6] === "broken").map(r => r[0]));
 const ALIAS = new Map(D.aliases.map(([old, id]) => [id, old]));
 const NODES = new Map(), NKIDS = new Map();
-for (const [id, parent, digit, path, title, status, kind, hints] of D.nodes) {
-  NODES.set(id, { id, parent, digit, path, title, status, kind, hints });
+for (const [id, parent, digit, path, title, status, kind, hints, link, special, planned] of D.nodes) {
+  NODES.set(id, { id, parent, digit, path, title, status, kind, hints, link, special, planned });
   if (!NKIDS.has(parent)) NKIDS.set(parent, []);
   NKIDS.get(parent).push(id);
 }
@@ -541,7 +561,8 @@ function renderHome() {
   const gapMax = Math.max(...Object.values(gapCounts));
   const refsTotal = D.refs.length;
   const broken = D.refs.filter(r => r[6] === "broken").length;
-  const queue = [...MAP_BY_NODE.values()].filter(m => m.status === "needs_decision" && !DEC.has(m.node)).slice(0, 4);
+  const lc = { unset: 0, new: 0, existing: 0, merged: 0, routing: 0, total: 0 };
+  for (const n of NODES.values()) { if (!isNodeRow(n)) continue; lc.total++; if (isRouting(n)) lc.routing++; else lc[linkStatus(n)]++; }
 
   // גרף עומק בקנה מידה אחד
   const W = 520, H = 190, padB = 28, padT = 22, bw = 34, gap = (W - 20 - bw * 10) / 9;
@@ -584,20 +605,20 @@ function renderHome() {
     </section>
 
     <section class="card c5">
-      <div class="card-h"><h2>מיפוי העץ הקיים לטיוטה</h2><span class="sub">${mapTotal} צמתים קיימים</span></div>
-      <div class="kpis">
-        <div class="kpi"><small>הוצעו</small><b style="color:var(--ok)">${ms.suggested}</b></div>
-        <div class="kpi"><small>דורש החלטה</small><b style="color:var(--warn)">${ms.needs_decision}</b></div>
-        <div class="kpi"><small>לא נמצאו</small><b style="color:var(--ink-3)">${notFound}</b></div>
-        <div class="kpi"><small>הוחלטו</small><b style="color:var(--teal-strong)">${DEC.size}</b></div>
+      <div class="card-h"><h2>שיוך הטיוטה לעץ הנוכחי</h2><span class="sub">${lc.total} צמתים, מתוכם ${lc.routing} תפריטים מורחבים בלי שיוך</span></div>
+      <div class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+        <div class="kpi"><small>ללא שיוך</small><b style="color:var(--sun-strong)">${lc.unset}</b></div>
+        <div class="kpi"><small>קיימת</small><b style="color:var(--teal-strong)">${lc.existing}</b></div>
+        <div class="kpi"><small>חדשה</small><b style="color:var(--new)">${lc.new}</b></div>
+        <div class="kpi"><small>מאוחדת</small><b style="color:var(--special)">${lc.merged}</b></div>
       </div>
-      <div class="stack" style="height:16px" role="img" aria-label="מצב המיפוי">
-        <div style="flex:${ms.suggested};background:var(--ok)"></div><div style="flex:${ms.needs_decision};background:var(--sun)"></div><div style="flex:${notFound};background:var(--line)"></div></div>
-      <div class="sec"><h3>בראש התור "דורש החלטה"</h3>
-        <div class="refs">${queue.map(m => { const n = NODES.get(m.node), e = EXT.get(m.ext);
-          return `<div class="ref" style="cursor:pointer" onclick="openNode(${n.id})"><div><b>${esc(n.title)}</b> <span class="path muted">${esc(n.path || "")}</span><div class="what">הוצעה: ${esc(e.name || "בלי שם")} · <span class="path">${esc(e.path)}</span></div></div>
-          <span class="chip sun">דורש החלטה</span></div>`; }).join("")}</div></div>
-      <button class="cta" onclick="pstate.f='all';pstate.sel=null;go('plan')">לתור ההחלטות</button>
+      <div class="stack" style="height:16px" role="img" aria-label="סטטוס שיוך">
+        <div style="flex:${lc.existing};background:var(--teal)"></div><div style="flex:${lc.merged};background:var(--special)"></div><div style="flex:${lc.new};background:var(--new)"></div><div style="flex:${lc.unset};background:var(--line)"></div></div>
+      <div class="sec"><h3>הבאים בתור, בלי שיוך</h3>
+        <div class="refs">${queue().slice(0, 4).map(id => { const n = NODES.get(id), m = MAP_BY_NODE.get(id), e = m && EXT.get(m.ext);
+          return `<div class="ref" style="cursor:pointer" onclick="openNode(${n.id})"><div><b>${esc(n.title)}</b> <span class="path muted">${esc(n.path || "")}</span><div class="what">${e ? `הצעה: ${esc(e.name || "בלי שם")} · <span class="path">${esc(e.path)}</span>` : "אין הצעה"}</div></div>
+          <span class="chip line">ללא</span></div>`; }).join("")}</div></div>
+      <button class="cta" onclick="pstate.f='all';pstate.sel=null;go('plan')">להמשך השיוך</button>
     </section>
 
     <section class="card c7">
@@ -761,59 +782,69 @@ function refHtml(r, dir) {
 }
 
 /* ── תכנון ── */
-/* ההחלטות נשמרות ב-db של הדף: decisions/<node_id>. Claude קורא אותן חזרה לבסיס הנתונים (mapping_row). */
-const DEC = new Map();
+/* D-118: לכל צומת בטיוטה שני מאפיינים נפרדים:
+   סוג שלוחה (planned_type, מאותה רשימה של העץ הנוכחי) וסטטוס שיוך (ללא / חדשה / קיימת / מאוחדת).
+   סוג "תפריט מורחב" לא צריך שיוך. "בנייה מיוחדת" היא תגית, והערות מקבלות חיווי בעץ רק לפי בחירה.
+   שמירה: decisions/<node_id> (שיוך) ו-nodeprops/<node_id> (סוג, תגית, חיווי הערות). */
+const DEC = new Map(), PROPS = new Map();
 let DB = null, USER = null, CAN_WRITE = null, MY_ID = null;
 const NAMES = {};
-const ACTIONS = {
-  same: { label: "זו אותה שלוחה", help: "אותו מזהה בידע פון. אם המיקום בטיוטה שונה, השלוחה תוזז אליו, וכל ההיסטוריה שלה נשארת איתה.", min: 1, max: 1 },
-  rebuild: { label: "תיבנה שלוחה חדשה במקומה", help: "תיבנה שלוחה חדשה במקום הזה, וההאזנות והמאפיינים של השלוחה הקיימת יעברו אליה.", min: 1, max: 1 },
-  merge: { label: "כמה שלוחות מתאחדות לכאן", help: "כמה שלוחות קיימות מתאחדות לצומת הזה, וההיסטוריה של כולן נספרת כאן.", min: 2, max: 20 },
-  split: { label: "רק חלק משלוחה קיימת", help: "שלוחה קיימת מתפצלת לכמה צמתים בטיוטה. ההיסטוריה תתחלק לפי השיעורים, כשמודל השיעורים יהיה מוכן.", min: 1, max: 1 },
-  none: { label: "אין לה שלוחה קיימת", help: "הצומת ייבנה כשלוחה חדשה לגמרי, ושום היסטוריה לא עוברת אליו.", min: 0, max: 0 }
-};
-const NSTATE = {
-  decided: ["הוחלט", "teal"], suggested: ["הצעה ודאית", "ok"], needs_decision: ["דורש החלטה", "sun"],
-  not_found: ["לא נמצאה", "line"], new: ["חדשה", "new"], new_special_build: ["בנייה מיוחדת", "special"]
-};
-const pstate = { sel: null, open: new Set(), q: "", f: "all", form: null, dirty: false, bulkAsk: false, editing: false, panel: null };
-
-function nodeState(n) {
-  if (n.parent == null) return "root";
-  if (DEC.has(n.id)) return "decided";
-  if (n.status === "new" || n.status === "new_special_build") return n.status;
-  if (n.kind !== "extension" || !n.title) return "other";
-  const m = MAP_BY_NODE.get(n.id);
-  return m ? m.status : "not_found";
-}
-const queue = () => {
-  const out = [];
-  const walk = ids => { for (const id of ids) { const n = NODES.get(id); if (nodeState(n) === "needs_decision") out.push(id); walk(NKIDS.get(id) || []); } };
-  walk(NKIDS.get(null) || []);
-  return out;
-};
-const suggestedOpen = () => [...MAP_BY_NODE.values()].filter(m => m.status === "suggested" && !DEC.has(m.node));
+const ROUTING_TYPES = new Set(["LMENU"]);  /* תפריט מורחב: בלי הקלטות, ולכן בלי שיוך */
+const LINK = { unset: ["ללא", "line"], new: ["חדשה", "new"], existing: ["קיימת", "teal"], merged: ["מאוחדת", "special"] };
+const LINK_ACTION = { new: "none", existing: "same", merged: "merge" };
+const pstate = { sel: null, open: new Set(), q: "", f: "all", form: null, bulkAsk: false, tab: null };
+const POS = new Map(D.nodes.map((n, i) => [n[0], i]));
+const posOf = id => POS.get(id) ?? -1;
+const notFoundCands = new Map(D.gaps.filter(g => g[0] === "existing_not_found").map(g => [g[2], g[4].candidates || []]));
 /* D-114: שלוחות תחת השורש 2 לא משויכות לטיוטה */
 const EXCLUDED = p => p === "2" || p.startsWith("2.");
-const notFoundCands = new Map(D.gaps.filter(g => g[0] === "existing_not_found").map(g => [g[2], g[4].candidates || []]));
+const isNodeRow = n => n.parent != null && n.title && n.kind === "extension";
 
-function revealNode(id) {
-  let p = NODES.get(id)?.parent;
-  while (p != null) { pstate.open.add(p); p = NODES.get(p)?.parent; }
+function effType(n) {
+  const p = PROPS.get(n.id);
+  if (p && "planned_type" in p) return { t: p.planned_type || null, src: "manual" };
+  if (n.planned) return { t: n.planned, src: "db" };
+  const d = DEC.get(n.id);
+  if (d && d.action === "routing") return { t: "LMENU", src: "legacy" };
+  const linked = d && (d.sclass_ids || []).length ? EXT.get(d.sclass_ids[0]) : null;
+  if (linked) return { t: linked.type, src: "linked" };
+  const m = MAP_BY_NODE.get(n.id);
+  if (m && m.status === "suggested") return { t: EXT.get(m.ext)?.type, src: "suggested" };
+  if ((NKIDS.get(n.id) || []).length) return { t: "LMENU", src: "children" };
+  return { t: null, src: null };
 }
+const isRouting = n => ROUTING_TYPES.has(effType(n).t);
+function linkStatus(n) {
+  const d = DEC.get(n.id);
+  if (d) return { none: "new", same: "existing", split: "existing", rebuild: "existing", merge: "merged" }[d.action] || "unset";
+  return n.link || "unset";
+}
+const specialBuild = n => { const p = PROPS.get(n.id); return p && "special_build" in p ? !!p.special_build : !!n.special; };
+const noteMarks = n => PROPS.get(n.id)?.note_marks || [];
+function usedBy(extId, exceptNode) {
+  const out = [];
+  for (const d of DEC.values()) if (d.node_id !== exceptNode && (d.sclass_ids || []).includes(extId) && d.action !== "routing") out.push(NODES.get(d.node_id));
+  return out.filter(Boolean);
+}
+const inQueue = n => isNodeRow(n) && !isRouting(n) && linkStatus(n) === "unset";
+const queue = () => D.nodes.map(r => NODES.get(r[0])).filter(inQueue).map(n => n.id);
+const suggestedOpen = () => [...MAP_BY_NODE.values()].filter(m => m.status === "suggested" && inQueue(NODES.get(m.node)));
+
+function revealNode(id) { let p = NODES.get(id)?.parent; while (p != null) { pstate.open.add(p); p = NODES.get(p)?.parent; } }
 function selectNode(id, scroll) {
-  pstate.sel = id; pstate.form = null; pstate.dirty = false; pstate.bulkAsk = false; pstate.editing = false; pstate.panel = null;
-  revealNode(id);
-  drawPlanTree(); renderPlanDetail();
-  if (scroll) requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "center" }));
+  pstate.sel = id; pstate.form = null; pstate.bulkAsk = false; pstate.tab = null;
+  revealNode(id); drawPlanTree(); renderPlanDetail();
+  if (scroll) requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "nearest" }));
   if (innerWidth < 1180 && scroll !== "tree") $("#pdetail")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
-function openNode(id) { pstate.sel = id; revealNode(id); go("plan"); requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "center" })); }
+function openNode(id) { pstate.sel = id; pstate.tab = null; revealNode(id); go("plan"); requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "center" })); }
+function nextInQueue() { const q = queue(); if (!q.length) return; selectNode(q.find(id => posOf(id) > posOf(pstate.sel ?? -1)) ?? q[0], true); }
 
 function renderPlan() {
   for (const id of NKIDS.get(null) || []) { pstate.open.add(id); for (const c of NKIDS.get(id) || []) pstate.open.add(c); }
   if (pstate.sel == null) { const q = queue(); pstate.sel = q[0] ?? null; if (pstate.sel) revealNode(pstate.sel); }
-  const filters = [["all", "כל הטיוטה"], ["needs_decision", "דורש החלטה"], ["suggested", "הצעות ודאיות"], ["not_found", "לא נמצאה"], ["decided", "הוחלט"], ["new", "חדשות"], ["notes", "עם הערות"]];
+  const filters = [["all", "כל הטיוטה"], ["unset", "שיוך: ללא"], ["new", "שיוך: חדשה"], ["existing", "שיוך: קיימת"], ["merged", "שיוך: מאוחדת"],
+    ["routing", "תפריטים מורחבים"], ["notype", "בלי סוג"], ["special", "בנייה מיוחדת"], ["notes", "עם הערות"]];
   $("#view").innerHTML = `<div style="display:flex;flex-direction:column;gap:20px">
     <section class="card qbar" id="qbar"></section>
     <div class="split">
@@ -824,8 +855,6 @@ function renderPlan() {
           <label class="field" for="q-plan">${ICON_SEARCH}<input id="q-plan" type="search" placeholder="חיפוש בטיוטה" value="${esc(pstate.q)}" autocomplete="off"></label>
           <select class="ghost" id="f-plan" aria-label="סינון">${filters.map(([k, l]) => `<option value="${k}"${pstate.f === k ? " selected" : ""}>${l}</option>`).join("")}</select>
         </div>
-        <div class="legend"><span><i style="background:var(--surface-2);border:1px solid var(--ink-3)"></i>קיימת</span><span><i style="background:var(--new)"></i>חדשה</span>
-          <span><i style="background:var(--special)"></i>בנייה מיוחדת</span><span><i style="background:var(--bad)"></i>יש שאלה</span></div>
         <div class="tree" id="ptree"></div>
       </section>
       <section class="card" id="pdetail"></section>
@@ -845,66 +874,61 @@ function renderPlan() {
 
 function drawQueueBar() {
   const el = $("#qbar"); if (!el) return;
-  const q = queue(), total = D.maps.filter(m => m[4] === "needs_decision").length, sugg = suggestedOpen();
-  const done = total - q.length;
+  const all = D.nodes.map(r => NODES.get(r[0])).filter(n => isNodeRow(n) && !isRouting(n));
+  const q = all.filter(n => linkStatus(n) === "unset"), sugg = suggestedOpen();
+  const done = all.length - q.length;
   el.innerHTML = `<div class="qbar-in">
-    <div class="qbar-t"><h2>תור ההחלטות</h2>
-      <p>לכל צומת קיים בטיוטה בוחרים את השלוחה שלו בעץ הנוכחי, כדי שההיסטוריה שלה תעבור איתו.</p></div>
-    <div class="qbar-n"><b class="num">${q.length}</b><small>נותרו להחלטה מתוך ${total}</small>
-      <span class="track"><span class="fill" style="width:${total ? done / total * 100 : 0}%"></span></span></div>
+    <div class="qbar-t"><h2>שיוך לעץ הנוכחי</h2>
+      <p>לכל צומת בטיוטה קובעים סוג שלוחה וסטטוס שיוך. תפריט מורחב לא צריך שיוך.</p></div>
+    <div class="qbar-n"><b class="num">${q.length}</b><small>בלי שיוך, מתוך ${all.length}</small>
+      <span class="track"><span class="fill" style="width:${all.length ? done / all.length * 100 : 0}%"></span></span></div>
     <div class="qbar-a">
-      <button class="cta" id="q-next" ${q.length ? "" : "disabled"}>להחלטה הבאה ←</button>
+      <button class="cta" id="q-next" ${q.length ? "" : "disabled"}>לצומת הבא בלי שיוך ←</button>
       ${sugg.length ? (pstate.bulkAsk
-        ? `<span class="confirm">לאשר ${sugg.length} הצעות ודאיות כ"שלוחה קיימת"? <button class="ghost on" id="bulk-yes">כן, לאשר</button><button class="ghost" id="bulk-no">ביטול</button></span>`
-        : `<button class="ghost" id="bulk">אישור כל ${sugg.length} ההצעות הוודאיות</button>`) : ""}
-    </div></div>
-    ${saveNotice()}`;
+        ? `<span class="confirm">לשייך ${sugg.length} הצעות ודאיות כ"קיימת"? <button class="ghost on" id="bulk-yes">כן</button><button class="ghost" id="bulk-no">ביטול</button></span>`
+        : `<button class="ghost" id="bulk">אישור ${sugg.length} ההצעות הוודאיות</button>`) : ""}
+    </div></div>${saveNotice()}`;
   $("#q-next")?.addEventListener("click", () => nextInQueue());
   $("#bulk")?.addEventListener("click", () => { pstate.bulkAsk = true; drawQueueBar(); });
   $("#bulk-no")?.addEventListener("click", () => { pstate.bulkAsk = false; drawQueueBar(); });
   $("#bulk-yes")?.addEventListener("click", async () => {
     pstate.bulkAsk = false;
-    for (const m of suggestedOpen()) await saveDecision(m.node, { action: "same", ids: [m.ext], note: "" }, "bulk");
+    for (const m of suggestedOpen()) await saveDecision(m.node, { action: "same", ids: [m.ext] }, "bulk");
     drawQueueBar(); drawPlanTree(); renderPlanDetail();
   });
 }
 function saveNotice() {
-  if (DB === null) return `<div class="notice">ההחלטות בתצוגה הזו לא נשמרות. כדי לשמור, פותחים את הדף מתוך claude.ai כשמחוברים.</div>`;
-  if (CAN_WRITE === false) return `<div class="notice">יש לך הרשאת צפייה בלבד, ולכן אי אפשר לשמור החלטות.</div>`;
+  if (DB === null) return `<div class="notice">בתצוגה הזו שום דבר לא נשמר. כדי לשמור, פותחים את הדף מתוך claude.ai כשמחוברים.</div>`;
+  if (CAN_WRITE === false) return `<div class="notice">יש לך הרשאת צפייה בלבד, ולכן אי אפשר לשמור.</div>`;
   return "";
 }
-function nextInQueue() {
-  const q = queue(); if (!q.length) return;
-  const i = q.findIndex(id => id > -1 && posOf(id) > posOf(pstate.sel ?? -1));
-  selectNode(q[i >= 0 ? i : 0], true);
-}
-const POS = new Map(D.nodes.map((n, i) => [n[0], i]));
-const posOf = id => POS.get(id) ?? -1;
 
 function prowHtml(n, depth, flat) {
   const kids = NKIDS.get(n.id) || [];
-  const st = nodeState(n);
-  let [lbl, cls] = NSTATE[st] || [];
-  if (st === "decided") lbl = KIND_LABEL[DEC.get(n.id).action] || lbl;
-  const notes = NOTES_BY.get(n.id) || [];
-  const dcls = n.digit == null ? "none" : n.status;
+  const notes = NOTES_BY.get(n.id) || [], marks = noteMarks(n);
+  const marked = notes.filter((x, i) => marks.includes(i));
+  const t = effType(n).t, routing = ROUTING_TYPES.has(t), ls = linkStatus(n);
+  const showLink = n.parent != null && n.title && !routing && n.kind === "extension";
   return `<button class="trow${pstate.sel === n.id ? " sel" : ""}" data-nid="${n.id}" style="padding-inline-start:${8 + depth * 18}px">
     <span class="tw${pstate.open.has(n.id) ? " open" : ""}" data-tw="${kids.length && !flat ? n.id : ""}">${kids.length && !flat ? ICON_CHEV : ""}</span>
-    <span class="digit sm ${dcls}">${esc(n.digit ?? "–")}</span>
+    <span class="digit sm ${n.digit == null ? "none" : "existing"}">${esc(n.digit ?? "–")}</span>
     ${flat ? `<span class="path">${esc(n.path || "")}</span>` : ""}<span class="nm${n.title ? "" : " empty"}">${esc(n.title || "(ריק)")}</span>
-    ${notes.some(x => x.kind === "question") ? '<span class="mark-bad" title="יש שאלה פתוחה"></span>' : ""}
-    ${lbl ? `<span class="chip sm ${cls}">${lbl}</span>` : ""}</button>`;
+    ${marked.map(x => `<span class="ndot ${x.kind}" title="${esc(x.text)}"></span>`).join("")}
+    ${specialBuild(n) ? '<span class="ind-sb" title="בנייה מיוחדת">בנייה מיוחדת</span>' : ""}
+    ${n.parent != null ? (t ? typeChip(t) : '<span class="ctype faint">בלי סוג</span>') : ""}
+    ${showLink ? `<span class="chip sm ${(DEC.get(n.id)?.sclass_ids || []).some(i => EXCLUDED(pathOf(i) || "")) ? "bad" : LINK[ls][1]}">${LINK[ls][0]}</span>` : ""}</button>`;
 }
 function drawPlanTree() {
   const el = $("#ptree"); if (!el) return;
   const q = pstate.q.trim(), f = pstate.f;
   const match = n => {
     if (q && !((n.title || "").includes(q) || (n.path || "").startsWith(q))) return false;
-    const st = nodeState(n);
     if (f === "all") return true;
-    if (f === "new") return st === "new" || st === "new_special_build";
+    if (f === "routing") return isNodeRow(n) && isRouting(n);
+    if (f === "notype") return isNodeRow(n) && !effType(n).t;
+    if (f === "special") return specialBuild(n);
     if (f === "notes") return NOTES_BY.has(n.id);
-    return st === f;
+    return isNodeRow(n) && !isRouting(n) && linkStatus(n) === f;
   };
   if (q || f !== "all") {
     const rows = D.nodes.map(r => NODES.get(r[0])).filter(n => n.parent != null && match(n));
@@ -917,15 +941,6 @@ function drawPlanTree() {
   el.innerHTML = out.join("");
 }
 
-function extCard(e, opts = {}) {
-  if (!e) return "";
-  const parent = e.parent != null ? EXT.get(e.parent) : null;
-  return `<div class="xcard">
-    <div class="xcard-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b>${typeChip(e.type)}</div>
-    <div class="muted">${parent ? `תחת <span class="path">${esc(parent.path)}</span> ${esc(parent.name || "")}` : "שורש"}${(KIDS.get(e.id) || []).length ? ` · ${(KIDS.get(e.id) || []).length} תתי-שלוחות` : ""}</div>
-    ${opts.why ? `<ul class="why">${opts.why.map(w => `<li class="${w[0]}">${esc(w[1])}</li>`).join("")}</ul>` : ""}
-    <div class="xcard-a">${opts.pick ? `<button class="ghost" data-pick="${e.id}">זו השלוחה</button>` : ""}<button class="linkish" data-go="${e.id}">פתיחה בעץ</button></div></div>`;
-}
 function whyLines(n, sig, reasons) {
   const out = [];
   if (sig) {
@@ -940,115 +955,93 @@ function whyLines(n, sig, reasons) {
   for (const r of reasons || []) if (R[r] && !(r === "תלוי בהחלטה על האב" && DEC.has(n.parent))) out.push(["warn", R[r]]);
   return out;
 }
-function formFor(n) {
-  if (pstate.form && pstate.form.node === n.id) return pstate.form;
-  const d = DEC.get(n.id), m = MAP_BY_NODE.get(n.id);
-  pstate.form = d ? { node: n.id, action: d.action, ids: [...(d.sclass_ids || [])], note: d.note || "" }
-    : m && !(NKIDS.get(n.id) || []).length ? { node: n.id, action: "same", ids: [m.ext], note: "" }
-    : m ? { node: n.id, action: "routing", ids: [m.ext], note: "" }
-    : { node: n.id, action: (NKIDS.get(n.id) || []).length ? "routing" : n.status === "existing" ? "same" : "none", ids: [], note: "" };
-  if (pstate.form.action === "rebuild") pstate.form.action = "same";
-  return pstate.form;
-}
-function decisionSummary(d, n) {
-  const exts = (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean);
-  const names = exts.map(e => `<span class="path">${esc(e.path)}</span> ${esc(e.name || "")}`).join("، ");
-  const moveTxt = d.action === "same" && exts[0] ? (exts[0].path === n.path ? " · נשארת במקום" : ` · תעבור מ-<span class="path">${esc(exts[0].path)}</span> ל-<span class="path">${esc(n.path || "?")}</span>`) : "";
-  return `${ACTIONS[d.action]?.label || d.action}${names ? ": " + names : ""}${moveTxt}`;
-}
+const TYPE_OPTIONS = Object.keys(D.types).sort((a, b) => TYPE_NAME(a).localeCompare(TYPE_NAME(b), "he"));
+const TYPE_SRC = { manual: "נקבע ידנית", db: "נקבע ידנית", legacy: "לפי ההחלטה הקודמת", linked: "לפי השלוחה המשויכת",
+  suggested: "לפי השלוחה שהמערכת הציעה", children: "יש לו תתי-צמתים, ולכן תפריט" };
+
 function renderPlanDetail() {
   const el = $("#pdetail"); if (!el) return;
   const n = NODES.get(pstate.sel);
   if (!n || n.parent == null) { el.innerHTML = globalNotesHtml(); return; }
   const crumbs = []; let p = n.parent; while (p != null && NODES.get(p).parent != null) { crumbs.unshift(NODES.get(p)); p = NODES.get(p).parent; }
-  const notes = NOTES_BY.get(n.id) || [];
-  const st = nodeState(n), m = MAP_BY_NODE.get(n.id), d = DEC.get(n.id);
+  const notes = NOTES_BY.get(n.id) || [], marks = noteMarks(n);
   const h = n.hints || {};
   const facts = [h.episodes && `${h.episodes} פרקים`, h.closed_series && "סדרה סגורה", h.renewal && "מתחדשת", h.copy_to && `להעתיק גם ל-${h.copy_to}`, h.redirect_to && `מעבר לשלוחה ${h.redirect_to}`].filter(Boolean);
-  const showDecision = n.title && n.kind === "extension";
+  const et = effType(n), routing = ROUTING_TYPES.has(et.t), ls = linkStatus(n), sb = specialBuild(n);
+  const ro = CAN_WRITE === false ? " disabled" : "";
+  const row = isNodeRow(n);
   el.innerHTML = `
     <div class="crumbs">${crumbs.map(c => `<button data-nid="${c.id}">${esc(c.title || c.path)}</button><span>›</span>`).join("")}</div>
     <div class="detail-h"><span class="big">${esc(n.path || "–")}</span>
       <div style="flex:1;min-width:0"><h2>${esc(n.title || "(ריק)")}</h2>
-        <div class="meta"><span class="chip ${NODE_STATUS[n.status][1]}">${n.status === "existing" ? "קיימת לפי הטיוטה" : NODE_STATUS[n.status][0]}</span>
+        <div class="meta">
+          ${row && !routing ? `<span class="chip ${LINK[ls][1]}">שיוך: ${LINK[ls][0]}</span>` : ""}
+          ${sb ? '<span class="chip special">בנייה מיוחדת</span>' : ""}
           ${n.digit == null ? '<span class="chip warn">בלי מספר</span>' : ""}
           ${h.stated_path && n.path && h.stated_path !== n.path ? `<span class="chip warn">בטיוטה כתוב <span class="path">${esc(h.stated_path)}</span></span>` : ""}
           ${facts.map(f => `<span class="chip line">${esc(f)}</span>`).join("")}</div>
         ${h.description ? `<p class="muted" style="margin:8px 0 0">${esc(h.description)}</p>` : ""}</div></div>
-    ${notes.length ? `<div class="notes">${notes.map(x => `<div class="note ${x.kind}"><b>${NOTE_KIND[x.kind]}</b><span>${esc(x.text)}</span></div>`).join("")}</div>` : ""}
-    ${showDecision ? decisionHtml(n, st, m, d) : ""}`;
+    ${row ? `<div class="props">
+      <label class="prop" for="p-type"><span>סוג שלוחה</span>
+        <select id="p-type" class="ghost"${ro}><option value="">בלי סוג</option>${TYPE_OPTIONS.map(t => `<option value="${t}"${et.t === t ? " selected" : ""}>${esc(TYPE_NAME(t))}${D.types[t]?.p ? " (זמני)" : ""}</option>`).join("")}</select>
+        <small class="muted">${et.t ? (TYPE_SRC[et.src] || "") + (routing ? " · תפריט מורחב, בלי שיוך" : "") : "עוד לא נקבע"}</small></label>
+      <div class="prop"><span>תגיות</span>
+        <button class="tagbtn${sb ? " on" : ""}" id="p-sb"${ro}>${sb ? "✓ בנייה מיוחדת" : "+ בנייה מיוחדת"}</button></div>
+    </div>` : ""}
+    ${notes.length ? `<div class="notes">${notes.map((x, i) => `<div class="note ${x.kind}"><b>${NOTE_KIND[x.kind]}</b><span>${esc(x.text)}</span>
+      <button class="eye${marks.includes(i) ? " on" : ""}" data-mark="${i}" aria-pressed="${marks.includes(i)}" title="${marks.includes(i) ? "הסתרת החיווי בעץ" : "הצגת חיווי בעץ"}"${ro}>${marks.includes(i) ? "מוצג בעץ" : "הצגה בעץ"}</button></div>`).join("")}</div>` : ""}
+    ${row && !routing ? linkHtml(n, ls) : ""}
+    <div class="dec-foot"><button class="ghost" id="dec-next">לצומת הבא בלי שיוך ←</button><span class="muted" id="dec-msg" role="status"></span></div>`;
   el.querySelectorAll(".crumbs [data-nid]").forEach(b => b.addEventListener("click", () => selectNode(+b.dataset.nid, true)));
-  if (showDecision) wireDecision(n);
+  wireDetail(n);
 }
-/* סוג השיוך של צומת בטיוטה (D-115, D-116). הערכים נשמרים ב-action: routing / none / same / merge / split */
-const KINDS = [
-  ["routing", "שלוחת ניתוב", "תפריט שמפנה לתתי-שלוחות, בלי הקלטות משלו. לא צריך לשייך אותו לשלוחה קיימת."],
-  ["none", "שלוחה חדשה", "אין לה שלוחה קיימת. שום היסטוריה לא עוברת אליה."],
-  ["same", "שלוחה קיימת", "שלוחה אחת מהעץ הנוכחי עוברת לכאן, עם כל ההיסטוריה שלה."],
-  ["merge", "איחוד", "כמה שלוחות מהעץ הנוכחי מתאחדות לכאן. בוחרים לפחות שתיים."],
-  ["split", "פיצול", "שלוחה מהעץ הנוכחי מתחלקת בין כמה צמתים בטיוטה, וזה אחד מהם."]
-];
-const KIND_LABEL = Object.fromEntries(KINDS.map(k => [k[0], k[1]]));
-KIND_LABEL.rebuild = "בנייה מחדש";
-
-function usedBy(extId, exceptNode) {
-  const out = [];
-  for (const d of DEC.values()) if (d.node_id !== exceptNode && d.action !== "none" && d.action !== "routing" && (d.sclass_ids || []).includes(extId)) out.push(NODES.get(d.node_id));
-  return out.filter(Boolean);
-}
-function decisionHtml(n, st, m, d) {
-  const sig = m ? m.signals : null;
-  const sugg = m ? EXT.get(m.ext) : null;
-  const alts = (sig?.candidates || notFoundCands.get(n.id) || []).map(c => EXT.get(c.sclass_id)).filter(e => e && e.id !== sugg?.id);
-  const who = d ? (d.decided_by === MY_ID ? "את" : (NAMES[d.decided_by] || "")) : "";
-  if (d && !pstate.editing) {
-    return `<div class="decision"><div class="done"><span class="ok-ic" aria-hidden="true">✓</span><div><b>${KIND_LABEL[d.action] || d.action}</b>${decisionTargets(d, n)}
-      <div class="muted">${who ? esc(who) + " · " : ""}${new Date(d.decided_at).toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" })}${d.source === "bulk" ? " · באישור מרוכז" : ""}${d.note ? " · " + esc(d.note) : ""}</div></div>
-      <button class="ghost" id="dec-edit">שינוי</button></div>
-      <div class="dec-foot"><button class="ghost" id="dec-next">להחלטה הבאה ←</button></div></div>`;
-  }
-  const f = formFor(n);
+function linkHtml(n, ls) {
+  const m = MAP_BY_NODE.get(n.id), sig = m ? m.signals : null, sugg = m ? EXT.get(m.ext) : null;
+  const d = DEC.get(n.id);
+  const tab = pstate.tab || (ls !== "unset" ? ls : sugg || notFoundCands.get(n.id)?.length ? "existing" : "new");
+  pstate.tab = tab;
+  const f = pstate.form && pstate.form.node === n.id ? pstate.form
+    : (pstate.form = { node: n.id, ids: d && d.action === "merge" ? [...d.sclass_ids] : sugg ? [sugg.id] : [] });
   const ro = CAN_WRITE === false ? " disabled" : "";
-  const kind = f.action;
-  const multi = kind === "merge";
+  const linked = d ? (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean) : [];
+  const also = linked.flatMap(e => usedBy(e.id, n.id).map(o => [e, o]));
+  const current = linked.length ? `<div class="done"><span class="ok-ic" aria-hidden="true">✓</span><div>
+      <b>${LINK[ls][0]}:</b> ${linked.map(e => `<span class="path">${esc(e.path)}</span> ${esc(e.name || "")}`).join("، ")}
+      ${ls === "existing" && linked[0].path !== n.path ? `<div class="muted">תעבור מ-<span class="path">${esc(linked[0].path)}</span> ל-<span class="path">${esc(n.path || "?")}</span></div>` : ""}
+      ${also.length ? `<div class="wy warn" style="display:inline-block;margin-top:4px">השלוחה המשויכת מופיעה גם ב: ${also.map(([e, o]) => esc(o.title)).join(", ")}</div>` : ""}
+      ${linked.some(e => EXCLUDED(e.path)) ? '<div class="wy bad" style="display:inline-block;margin-top:4px">משויכת לשלוחה תחת השורש 2. לפי D-114 לא משייכים לשם, וצריך לבחור שלוחה אחרת.</div>' : ""}</div></div>`
+    : ls === "new" ? `<div class="done"><span class="ok-ic" aria-hidden="true">✓</span><div><b>חדשה:</b> בלי שלוחה קיימת. שום היסטוריה לא עוברת.${d ? "" : '<div class="muted">לפי הצבע בטיוטה</div>'}</div></div>` : "";
+  const alts = (sig?.candidates || notFoundCands.get(n.id) || []).map(c => EXT.get(c.sclass_id)).filter(e => e && e.id !== sugg?.id);
   const cands = [...(sugg ? [[sugg, whyLines(n, sig, m.reasons).slice(0, 4), true]] : []), ...alts.map(e => [e, [], false])];
   for (const id of f.ids) if (!cands.some(c => c[0].id === id) && EXT.get(id)) cands.push([EXT.get(id), [], false]);
+  const multi = tab === "merged";
   const candHtml = ([e, why, isSugg]) => {
-    const parent = e.parent != null ? EXT.get(e.parent) : null;
-    const sel = f.ids.includes(e.id), others = usedBy(e.id, n.id);
-    const btn = multi
-      ? `<button class="choose${sel ? "" : " alt"}" data-toggle="${e.id}"${ro}>${sel ? "✓ נבחרה" : "+ הוספה"}</button>`
-      : `<button class="choose${isSugg ? "" : " alt"}" data-choose="${e.id}"${ro}><span aria-hidden="true">✓</span> ${kind === "split" ? "פיצול מהשלוחה הזו" : "זו השלוחה"}</button>`;
+    const parent = e.parent != null ? EXT.get(e.parent) : null, sel = f.ids.includes(e.id), others = usedBy(e.id, n.id);
+    const isCurrent = linked.some(x => x.id === e.id) && !multi;
+    const btn = multi ? `<button class="choose${sel ? "" : " alt"}" data-toggle="${e.id}"${ro}>${sel ? "✓ נבחרה" : "+ הוספה"}</button>`
+      : isCurrent ? '<span class="chip teal">משויכת עכשיו</span>'
+      : `<button class="choose${isSugg ? "" : " alt"}" data-choose="${e.id}"${ro}><span aria-hidden="true">✓</span> זו השלוחה</button>`;
     return `<div class="cand${isSugg ? " sugg" : ""}${sel && multi ? " picked" : ""}">
       <div class="cand-i">${isSugg ? '<span class="tag-s">הצעת המערכת</span>' : ""}
         <div class="cand-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b>${typeChip(e.type)}</div>
         <div class="muted">${parent ? `תחת ${esc(parent.name || parent.path)}` : "שורש"} · <button class="linkish" data-go="${e.id}">פתיחה בעץ</button></div>
         ${why.length ? `<div class="whyline">${why.map(w => `<span class="wy ${w[0]}">${esc(w[1])}</span>`).join("")}</div>` : ""}
-        ${others.length ? `<div class="wy warn" style="align-self:flex-start">כבר משויכת גם ל: ${others.map(o => esc(o.title)).join(", ")}${kind === "same" ? " · אם היא מתחלקת, בוחרים פיצול" : ""}</div>` : ""}</div>
+        ${others.length ? `<div class="wy warn" style="align-self:flex-start">מופיעה גם ב: ${others.map(o => esc(o.title)).join(", ")}</div>` : ""}</div>
       ${btn}</div>`;
   };
-  const kindHint = KINDS.find(k => k[0] === kind)?.[2] || "";
-  const body = kind === "none" || kind === "routing"
-    ? `<div class="dec-foot"><button class="cta" id="dec-new" data-kind="${kind}"${ro}>שמירה: ${KIND_LABEL[kind]}</button></div>`
-    : `${cands.length ? `<div class="cands">${cands.map(candHtml).join("")}</div>` : `<div class="muted">המערכת לא מצאה שלוחה מתאימה. מחפשים אותה כאן:</div>`}
-      <div class="pick"><label class="field" for="pick-q">${ICON_SEARCH}<input id="pick-q" type="search" placeholder="חיפוש שלוחה אחרת לפי שם או נתיב" autocomplete="off"></label><div class="results" id="pick-r"></div></div>
-      ${multi ? `<div class="dec-foot"><button class="cta" id="dec-merge"${f.ids.length >= 2 && !ro ? "" : " disabled"}>שמירת האיחוד (${f.ids.length} שלוחות)</button>${f.ids.length < 2 ? '<span class="muted">בוחרים לפחות שתי שלוחות</span>' : ""}</div>` : ""}`;
+  const body = tab === "unset"
+    ? `<div class="dec-foot">${ls !== "unset" && d ? `<button class="ghost" id="dec-clear"${ro}>ניקוי השיוך</button>` : '<span class="muted">עוד לא נקבע שיוך.</span>'}</div>`
+    : tab === "new"
+    ? (ls === "new" && d ? "" : `<div class="dec-foot"><button class="cta" id="dec-new"${ro}>שמירה: שלוחה חדשה</button></div>`)
+    : `${cands.length ? `<div class="cands">${cands.map(candHtml).join("")}</div>` : '<div class="muted">המערכת לא מצאה שלוחה מתאימה. מחפשים כאן:</div>'}
+      <div class="pick"><label class="field" for="pick-q">${ICON_SEARCH}<input id="pick-q" type="search" placeholder="חיפוש שלוחה לפי שם או נתיב" autocomplete="off"></label><div class="results" id="pick-r"></div></div>
+      ${multi ? `<div class="dec-foot"><button class="cta" id="dec-merge"${f.ids.length >= 2 && !ro ? "" : " disabled"}>שמירת האיחוד (${f.ids.length} שלוחות)</button>${f.ids.length < 2 ? '<span class="muted">בוחרים לפחות שתיים</span>' : ""}</div>` : ""}`;
   return `<div class="decision">
-    <div class="q2"><b>מה הסוג של "${esc(n.title)}"?</b></div>
-    <div class="kinds" role="radiogroup" aria-label="סוג השיוך">${KINDS.map(([k, l]) =>
-      `<label class="kind${kind === k ? " on" : ""}"><input type="radio" name="kind" value="${k}"${kind === k ? " checked" : ""}>${l}</label>`).join("")}</div>
-    <div class="muted">${kindHint}</div>
-    ${body}
-    <div class="dec-foot">${d ? '<button class="ghost" id="dec-cancel">ביטול השינוי</button>' : ""}<button class="ghost" id="dec-next">${d ? "להחלטה הבאה" : "דילוג"} ←</button>
-      <span class="muted" id="dec-msg" role="status"></span></div>
-  </div>`;
-}
-function decisionTargets(d, n) {
-  const exts = (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean);
-  if (!exts.length) return "";
-  const list = exts.map(e => `<span class="path">${esc(e.path)}</span> ${esc(e.name || "")}`).join("، ");
-  const move = d.action === "same" && exts[0].path !== n.path ? ` · תעבור מ-<span class="path">${esc(exts[0].path)}</span> ל-<span class="path">${esc(n.path || "?")}</span>` : "";
-  return `: ${list}${move}`;
+    <div class="q2"><b>שיוך לעץ הנוכחי</b></div>
+    ${current}
+    <div class="kinds k4" role="radiogroup" aria-label="סטטוס שיוך">${Object.entries(LINK).map(([k, [l]]) =>
+      `<label class="kind${tab === k ? " on" : ""}"><input type="radio" name="link" value="${k}"${tab === k ? " checked" : ""}>${l}</label>`).join("")}</div>
+    ${body}</div>`;
 }
 function searchInto(input, box, onPick) {
   input?.addEventListener("input", () => {
@@ -1059,45 +1052,70 @@ function searchInto(input, box, onPick) {
     box.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => onPick(+b.dataset.add)));
   });
 }
-function wireDecision(n) {
+function wireDetail(n) {
   const el = $("#pdetail");
+  $("#dec-next")?.addEventListener("click", () => nextInQueue());
+  $("#p-type")?.addEventListener("change", async e => {
+    await saveProps(n.id, { planned_type: e.target.value || null });
+    toast(`"${n.title}" · סוג: ${e.target.value ? TYPE_NAME(e.target.value) : "בלי סוג"}`);
+    pstate.tab = null; drawQueueBar(); drawPlanTree(); renderPlanDetail();
+  });
+  $("#p-sb")?.addEventListener("click", async () => { await saveProps(n.id, { special_build: !specialBuild(n) }); drawPlanTree(); renderPlanDetail(); });
+  el.querySelectorAll("[data-mark]").forEach(b => b.addEventListener("click", async () => {
+    const i = +b.dataset.mark, cur = noteMarks(n);
+    await saveProps(n.id, { note_marks: cur.includes(i) ? cur.filter(x => x !== i) : [...cur, i] });
+    drawPlanTree(); renderPlanDetail();
+  }));
+  el.querySelectorAll('input[name="link"]').forEach(r => r.addEventListener("change", () => { pstate.tab = r.value; renderPlanDetail(); }));
   const f = pstate.form;
   const decide = async (action, ids) => {
-    const st = nodeState(n), wasQueue = ["needs_decision", "not_found", "suggested"].includes(st);
-    const prev = DEC.get(n.id);
-    const ok = await saveDecision(n.id, { action, ids, note: f?.note || "" }, "manual");
-    pstate.editing = false; pstate.form = null;
-    drawQueueBar();
-    const label = KIND_LABEL[action] + (ids.length ? ": " + ids.map(pathOf).join(", ") : "");
+    const wasQueue = inQueue(n), prev = DEC.get(n.id);
+    const ok = await saveDecision(n.id, { action, ids }, "manual");
+    pstate.form = null; pstate.tab = null; drawQueueBar();
+    const label = { none: "חדשה", same: "קיימת", merge: "מאוחדת" }[action] + (ids.length ? ": " + ids.map(pathOf).join(", ") : "");
     toast(`${ok ? "נשמר" : DB ? "השמירה נכשלה" : "נשמר בתצוגה הזו בלבד"} · "${n.title}" · ${label}`, ok || !DB ? () => undoDecision(n.id, prev) : null);
     const q = queue();
     if (wasQueue && q.length) selectNode(q.find(id => posOf(id) > posOf(n.id)) ?? q[0], true);
     else { drawPlanTree(); renderPlanDetail(); }
   };
-  el.querySelectorAll('input[name="kind"]').forEach(r => r.addEventListener("change", () => {
-    f.action = r.value;
-    if (f.action === "none" || f.action === "routing") f.ids = [];
-    else if (f.action !== "merge" && f.ids.length > 1) f.ids = f.ids.slice(0, 1);
-    renderPlanDetail();
-  }));
-  el.querySelectorAll("[data-choose]").forEach(b => b.addEventListener("click", () => decide(f.action, [+b.dataset.choose])));
+  el.querySelectorAll("[data-choose]").forEach(b => b.addEventListener("click", () => decide("same", [+b.dataset.choose])));
   el.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("click", () => {
     const id = +b.dataset.toggle; f.ids = f.ids.includes(id) ? f.ids.filter(x => x !== id) : [...f.ids, id]; renderPlanDetail();
   }));
   searchInto($("#pick-q"), $("#pick-r"), id => {
-    if (f.action === "merge") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; renderPlanDetail(); }
-    else decide(f.action, [id]);
+    if (pstate.tab === "merged") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; renderPlanDetail(); } else decide("same", [id]);
   });
-  $("#dec-new")?.addEventListener("click", e => decide(e.currentTarget.dataset.kind, []));
+  $("#dec-new")?.addEventListener("click", () => decide("none", []));
   $("#dec-merge")?.addEventListener("click", () => decide("merge", f.ids));
-  $("#dec-edit")?.addEventListener("click", () => { pstate.editing = true; renderPlanDetail(); });
-  $("#dec-cancel")?.addEventListener("click", () => { pstate.editing = false; pstate.form = null; renderPlanDetail(); });
-  $("#dec-next")?.addEventListener("click", () => nextInQueue());
+  $("#dec-clear")?.addEventListener("click", async () => {
+    const prev = DEC.get(n.id); await clearDecision(n.id);
+    toast(`"${n.title}" · השיוך נוקה`, () => undoDecision(n.id, null, prev));
+    pstate.tab = null; drawQueueBar(); drawPlanTree(); renderPlanDetail();
+  });
 }
-async function undoDecision(nodeId, prev) {
-  if (prev) { await saveDecision(nodeId, { action: prev.action, ids: prev.sclass_ids || [], note: prev.note }, prev.source || "manual"); }
-  else { DEC.delete(nodeId); if (DB && CAN_WRITE !== false) { try { await DB.doc("decisions/" + nodeId).delete(); } catch (e) {} } }
+async function saveDecision(nodeId, f, source) {
+  const doc = { node_id: nodeId, action: f.action, sclass_ids: f.ids || [], note: "", decided_by: MY_ID, decided_at: new Date().toISOString(), source };
+  DEC.set(nodeId, doc);
+  if (!DB || CAN_WRITE === false) return false;
+  try { await DB.doc("decisions/" + nodeId).set(doc); return true; }
+  catch (e) { if (e && e.code === "invalid_argument") CAN_WRITE = false; return false; }
+}
+async function clearDecision(nodeId) {
+  DEC.delete(nodeId);
+  if (DB && CAN_WRITE !== false) { try { await DB.doc("decisions/" + nodeId).delete(); } catch (e) {} }
+}
+async function undoDecision(nodeId, prev, restore) {
+  const back = restore || prev;
+  if (back) await saveDecision(nodeId, { action: back.action, ids: back.sclass_ids || [] }, back.source || "manual");
+  else await clearDecision(nodeId);
   drawQueueBar(); selectNode(nodeId, true);
+}
+async function saveProps(nodeId, patch) {
+  const cur = PROPS.get(nodeId) || {};
+  const doc = { ...cur, ...patch, node_id: nodeId, updated_by: MY_ID, updated_at: new Date().toISOString() };
+  PROPS.set(nodeId, doc);
+  if (!DB || CAN_WRITE === false) return false;
+  try { await DB.doc("nodeprops/" + nodeId).set(doc); return true; } catch (e) { return false; }
 }
 let toastTimer = null;
 function toast(text, undo) {
@@ -1107,13 +1125,6 @@ function toast(text, undo) {
   t.hidden = false;
   if (undo) $("#toast-undo").addEventListener("click", () => { t.hidden = true; undo(); });
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 7000);
-}
-async function saveDecision(nodeId, f, source) {
-  const doc = { node_id: nodeId, action: f.action, sclass_ids: f.ids, note: f.note || "", decided_by: MY_ID, decided_at: new Date().toISOString(), source };
-  DEC.set(nodeId, doc);
-  if (!DB || CAN_WRITE === false) return false;
-  try { await DB.doc("decisions/" + nodeId).set(doc); return true; }
-  catch (e) { if (e && e.code === "invalid_argument") CAN_WRITE = false; return false; }
 }
 function globalNotesHtml() {
   const g = k => NOTES_BY.get("global:" + k) || [];
@@ -1129,19 +1140,26 @@ async function initDecisions() {
   try { USER = await window.claude?.use?.("user"); } catch (e) { USER = null; }
   try { DB = await window.claude?.use?.("db"); } catch (e) { DB = null; }
   if (USER) { try { MY_ID = await USER.id(); } catch (e) {} try { CAN_WRITE = await USER.can("data.write"); } catch (e) {} }
+  const refresh = () => {
+    const view = (location.hash || "#home").slice(1);
+    if (view === "plan") { drawQueueBar(); drawPlanTree(); renderPlanDetail(); }
+    else if (view === "home") renderHome();
+  };
   if (!DB) { if (location.hash === "#plan") drawQueueBar(); return; }
   DB.collection("decisions").onSnapshot(async snap => {
     DEC.clear();
     for (const s of snap.docs) { const v = s.data(); if (v && v.node_id != null) DEC.set(+v.node_id, v); }
     const ids = [...new Set([...DEC.values()].map(v => v.decided_by).filter(Boolean))];
     if (USER && ids.length) { try { const ps = await USER.profiles(ids); for (const id of ids) NAMES[id] = ps[id]?.name || ""; } catch (e) {} }
-    const view = (location.hash || "#home").slice(1);
-    if (view === "plan") { drawQueueBar(); drawPlanTree(); if (!pstate.dirty) { pstate.form = null; renderPlanDetail(); } }
-    else if (view === "home") renderHome();
+    refresh();
+  }, () => {});
+  DB.collection("nodeprops").onSnapshot(snap => {
+    PROPS.clear();
+    for (const s of snap.docs) { const v = s.data(); if (v && v.node_id != null) PROPS.set(+v.node_id, v); }
+    refresh();
   }, () => {});
   if (location.hash === "#plan") drawQueueBar();
 }
-
 /* ── דוח פערים ── */
 function gapText(kind, d, nodeId, sid) {
   const ext = sid != null ? EXT.get(sid) : null;

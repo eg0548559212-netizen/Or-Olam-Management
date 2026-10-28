@@ -64,14 +64,14 @@ def build(db_file):
     plan = q("SELECT * FROM migration_plan ORDER BY plan_id LIMIT 1")[0]
     draft = q("SELECT * FROM draft WHERE plan_id = ? AND kind = 'working'", plan["plan_id"])[0]
     nodes = [[r["node_id"], r["parent_node_id"], r["digit"], r["full_path"], r["title"], r["node_status"], r["node_kind"],
-              json.loads(r["hints"]) if r["hints"] else None]
+              json.loads(r["hints"]) if r["hints"] else None, r["link_status"], r["special_build"], r["planned_cls_type"]]
              for r in q("SELECT * FROM draft_node WHERE draft_id = ? ORDER BY position", draft["draft_id"])]
     notes = [[r["node_id"], r["scope"], r["note_kind"], r["text"]]
              for r in q("SELECT * FROM draft_note WHERE draft_id = ? ORDER BY note_id", draft["draft_id"])]
     maps = [[r["node_id"], r["sclass_id"], r["relation"], r["confidence"], r["status"], json.loads(r["signals"])]
             for r in q("""SELECT t.node_id, s.sclass_id, m.relation, m.confidence, m.status, m.signals
                           FROM mapping_row m JOIN mapping_target t USING (mapping_id) JOIN mapping_source s USING (mapping_id)
-                          WHERE m.plan_id = ?""", plan["plan_id"])]
+                          WHERE m.plan_id = ? AND m.status IN ('suggested', 'needs_decision')""", plan["plan_id"])]
     report = q("SELECT * FROM gap_report WHERE draft_id = ? ORDER BY report_id DESC LIMIT 1", draft["draft_id"])[0]
     gaps = [[r["gap_kind"], r["severity"], r["draft_node_id"], r["sclass_id"], json.loads(r["detail"]) if r["detail"] else {}]
             for r in q("SELECT * FROM gap_item WHERE report_id = ? ORDER BY item_id", report["report_id"])]

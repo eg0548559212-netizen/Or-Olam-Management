@@ -8,7 +8,11 @@
 - same    → keep (אותו נתיב) או move (נתיב אחר)
 - rebuild / merge / split → אותו relation
 - none    → שלוחה חדשה: כל שורה אוטומטית של הצומת מסומנת rejected, ואין שורה מאושרת
-- routing → שלוחת ניתוב (D-116): כמו none, ובנוסף draft_node.node_kind = 'heading' (תפריט בלי הקלטות)
+- routing → (ישן, D-116, הוחלף ב-D-118) נקרא כסוג "תפריט מורחב" (LMENU), שלא צריך שיוך
+draft_node.link_status מתעדכן: none → new, same/split → existing, merge → merged.
+
+מאפייני צומת (D-118) נשמרים באוסף nodeprops ומוחלים עם --props <תיקייה>:
+planned_type → draft_node.planned_cls_type, special_build → draft_node.special_build.
 הרצה חוזרת של המיפוי האוטומטי לא נוגעת בשורות approved / rejected.
 """
 import argparse
@@ -39,7 +43,11 @@ def run(src_dir, db_file):
             db.execute("UPDATE mapping_row SET status = 'rejected', decided_by = ?, decided_at = ? WHERE mapping_id = ?",
                        (d.get("decided_by"), d.get("decided_at"), mid))
         if action == "routing":
-            db.execute("UPDATE draft_node SET node_kind = 'heading' WHERE draft_id = ? AND node_id = ?", (draft_id, node_id))
+            db.execute("UPDATE draft_node SET planned_cls_type = COALESCE(planned_cls_type, 'LMENU'), link_status = 'unset' "
+                       "WHERE draft_id = ? AND node_id = ?", (draft_id, node_id))
+        else:
+            status = {"none": "new", "same": "existing", "split": "existing", "rebuild": "existing", "merge": "merged"}[action]
+            db.execute("UPDATE draft_node SET link_status = ? WHERE draft_id = ? AND node_id = ?", (status, draft_id, node_id))
         if action not in ("none", "routing"):
             exts = [db.execute("SELECT sclass_id, path, name FROM extension WHERE sclass_id = ?", (i,)).fetchone() for i in ids]
             exts = [e for e in exts if e]
@@ -61,9 +69,33 @@ def run(src_dir, db_file):
     return {"applied": applied, "skipped": skipped}
 
 
+def apply_props(src_dir, db_file):
+    db = connect(db_file)
+    draft_id = db.execute("SELECT draft_id FROM draft WHERE kind = 'working' ORDER BY draft_id LIMIT 1").fetchone()[0]
+    n = 0
+    for f in sorted(glob.glob(os.path.join(src_dir, "*.json"))):
+        doc = json.load(open(f, encoding="utf-8"))
+        d = doc.get("data", doc)
+        sets, args = [], []
+        if "planned_type" in d:
+            sets.append("planned_cls_type = ?"); args.append(d["planned_type"] or None)
+        if "special_build" in d:
+            sets.append("special_build = ?"); args.append(int(bool(d["special_build"])))
+        if sets:
+            db.execute(f"UPDATE draft_node SET {', '.join(sets)} WHERE draft_id = ? AND node_id = ?",
+                       (*args, draft_id, int(d["node_id"])))
+            n += 1
+    db.commit()
+    return {"props_applied": n}
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("src_dir")
+    ap.add_argument("--props", help="תיקיית nodeprops (D-118)")
     ap.add_argument("--db", default="data/or-olam.db")
     a = ap.parse_args()
-    print(json.dumps(run(a.src_dir, a.db), ensure_ascii=False, indent=2))
+    out = run(a.src_dir, a.db)
+    if a.props:
+        out.update(apply_props(a.props, a.db))
+    print(json.dumps(out, ensure_ascii=False, indent=2))
