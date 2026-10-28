@@ -14,6 +14,7 @@ CREATE TABLE extension_type (
     cls_type        TEXT PRIMARY KEY,           -- באותיות גדולות, למשל MB
     api_type_id     INTEGER,                    -- id ב-/api/sclass-types/, אם ידוע
     name            TEXT,                       -- שם תצוגה בעברית, אם ידוע
+    name_source     TEXT CHECK (name_source IN ('api', 'provisional')),  -- D-117
     type_group      TEXT,                       -- group
     priority        INTEGER,
     schema_json     TEXT,                       -- JSON Schema של settings

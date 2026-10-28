@@ -23,6 +23,16 @@ KNOWN_TYPES = {
     "FORM": (21, "שאלון", "שלוחות נפוצות"),
 }
 
+# D-117: שמות זמניים לשאר הסוגים, שנגזרו מהסכמה ומשמות השלוחות. מוחלפים בשם הרשמי כשהוא מגיע.
+PROVISIONAL_TYPES = {
+    "ACAMP": "חיוג (לא מזוהה)", "API": "שלוחת API", "COM": "שינוי הודעת פתיחה", "CONF": "ועידה ושידור חי",
+    "DI": "העברה למספר", "DIAL": "חיוג והעברת שיחה", "DIQ": "תור נציגים", "DOC": "שליחת מסמך בפקס או במייל",
+    "GT": "ניתוב", "HEBD": "לפי תאריך עברי", "LL": "חזרה למיקום אחרון", "ONMSG": "הודעה בודדת",
+    "PCRED": "גבייה באשראי", "PD": "הקראת נתונים מגיליון", "PERS": "הודעות אישיות", "RNU": "רישום משתמש",
+    "SCORE": "השמעת ניקוד ונתונים", "SEARC": "חיפוש שלוחות", "SENDZ": "קבלת צינתוק", "SMOD": "מודול מיוחד",
+    "STARS": "מחסן אישי",
+}
+
 UNKNOWN = {"$unknown": "redacted_in_export"}
 HIDDEN = {"$hidden": True}
 
@@ -166,15 +176,19 @@ def run(scan_file, db_file):
     # ── סוגים וסכמות ──
     for cls_type, entry in scan["schemas"].items():
         api_id, name, group = KNOWN_TYPES.get(cls_type, (None, None, None))
+        source = "api" if name else None
+        if not name and cls_type in PROVISIONAL_TYPES:
+            name, source = PROVISIONAL_TYPES[cls_type], "provisional"
         db.execute(
-            """INSERT INTO extension_type (cls_type, api_type_id, name, type_group, schema_json, schema_source, updated_at)
-               VALUES (?, ?, ?, ?, ?, 'scan-2026-10-21', ?)
+            """INSERT INTO extension_type (cls_type, api_type_id, name, name_source, type_group, schema_json, schema_source, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, 'scan-2026-10-21', ?)
                ON CONFLICT (cls_type) DO UPDATE SET schema_json = excluded.schema_json,
                  schema_source = excluded.schema_source, updated_at = excluded.updated_at,
                  api_type_id = COALESCE(extension_type.api_type_id, excluded.api_type_id),
-                 name = COALESCE(extension_type.name, excluded.name),
+                 name = CASE WHEN extension_type.name_source = 'api' THEN extension_type.name ELSE excluded.name END,
+                 name_source = CASE WHEN extension_type.name_source = 'api' THEN 'api' ELSE excluded.name_source END,
                  type_group = COALESCE(extension_type.type_group, excluded.type_group)""",
-            (cls_type, api_id, name, group,
+            (cls_type, api_id, name, source, group,
              json.dumps(entry["response"]["data"]["schema"], ensure_ascii=False), ts),
         )
 

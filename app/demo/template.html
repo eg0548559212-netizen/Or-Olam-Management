@@ -177,7 +177,8 @@ select.ghost { appearance: none; padding-left: 28px; background-image: linear-gr
 .trow .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trow .nm.empty { color: var(--ink-3); font-style: italic; }
 .trow .path { color: var(--ink-3); flex: none; }
-.ctype { font-family: var(--f-mono); font-size: 11px; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); color: var(--ink-2); flex: none; }
+.ctype.prov { text-decoration: underline dotted; text-underline-offset: 3px; }
+.ctype { font-size: 12px; padding: 2px 8px; border-radius: 6px; background: var(--surface-2); color: var(--ink-2); flex: none; }
 .trow.sel .ctype { background: var(--surface); }
 .mark-bad { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); flex: none; }
 .empty-note { color: var(--ink-3); padding: 24px 8px; text-align: center; }
@@ -479,6 +480,8 @@ for (const [node, ext, relation, conf, status, signals] of D.maps) {
 }
 
 const TYPE_NAME = t => (D.types[t] && D.types[t].n) || t || "—";
+/* D-117: שם זמני מסומן בקו מנוקד, עם הקוד בהסבר */
+const typeChip = t => t ? `<span class="ctype${D.types[t]?.p ? " prov" : ""}" title="${esc(t)}${D.types[t]?.p ? " · שם זמני, עוד לא התקבל מידע פון" : ""} · ${esc(TYPE_NAME(t))}">${esc(TYPE_NAME(t).replace(/\s*\(.*\)\s*$/, ""))}</span>` : "";
 const STATUS_LABEL = { ok: ["תקינה", "ok"], broken: ["שבורה", "bad"], by_name: ["לפי שם", "teal"], ambiguous_name: ["שם לא חד-משמעי", "warn"],
   external: ["קו אחר", "line"], pattern: ["תבנית", "line"], hangup: ["ניתוק", "line"], unparsed: ["לא פוענח", "warn"] };
 const REF_KIND = { record_to: "הקלטה אל", publish_to: "פרסום גם אל", play_from: "השמעה מתוך", play_from_all: "השמעה מכל השלוחות", exclude: "החרגה",
@@ -659,10 +662,10 @@ function rowHtml({ e, depth }, flat) {
     <span class="path">${esc(e.path)}</span>
     <span class="nm${e.name ? "" : " empty"}">${esc(e.name || "בלי שם")}</span>
     ${BROKEN.has(e.id) ? '<span class="mark-bad" title="יש הפניה שבורה"></span>' : ""}
-    <span class="ctype">${esc(e.type || "—")}</span></button>`;
+    ${typeChip(e.type)}</button>`;
 }
 function renderTree() {
-  const types = [...new Set([...EXT.values()].map(e => e.type))].filter(Boolean).sort();
+  const types = [...new Set([...EXT.values()].map(e => e.type))].filter(Boolean).sort((a, b) => TYPE_NAME(a).localeCompare(TYPE_NAME(b), "he"));
   $("#view").innerHTML = `<div class="split">
     <section class="card">
       <div class="card-h"><h2>עץ השלוחות</h2><span class="sub">${fmt(EXT.size)} שלוחות</span></div>
@@ -724,7 +727,7 @@ function renderDetail() {
     <div class="detail-h"><span class="big">${esc(e.path)}</span>
       <div style="flex:1;min-width:0"><h2>${esc(e.name || "בלי שם")}</h2>
         <div class="meta">
-          <span class="chip teal">${esc(TYPE_NAME(e.type))}${D.types[e.type]?.n ? ` · ${e.type}` : ""}</span>
+          <span class="chip teal"${D.types[e.type]?.p ? ' title="שם זמני, עוד לא התקבל מידע פון"' : ""}>${esc(TYPE_NAME(e.type))}${D.types[e.type]?.p ? " (זמני)" : ""} · ${esc(e.type || "")}</span>
           <span class="chip line num">מזהה ${e.id}</span>
           ${e.isOpen === 0 ? '<span class="chip bad">סגורה</span>' : e.isOpen === 1 ? '<span class="chip ok">פתוחה</span>' : ""}
           <span class="chip ${pinLabel[1]}">${pinLabel[0]}</span>
@@ -918,7 +921,7 @@ function extCard(e, opts = {}) {
   if (!e) return "";
   const parent = e.parent != null ? EXT.get(e.parent) : null;
   return `<div class="xcard">
-    <div class="xcard-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b><span class="ctype">${esc(e.type || "")}</span></div>
+    <div class="xcard-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b>${typeChip(e.type)}</div>
     <div class="muted">${parent ? `תחת <span class="path">${esc(parent.path)}</span> ${esc(parent.name || "")}` : "שורש"}${(KIDS.get(e.id) || []).length ? ` · ${(KIDS.get(e.id) || []).length} תתי-שלוחות` : ""}</div>
     ${opts.why ? `<ul class="why">${opts.why.map(w => `<li class="${w[0]}">${esc(w[1])}</li>`).join("")}</ul>` : ""}
     <div class="xcard-a">${opts.pick ? `<button class="ghost" data-pick="${e.id}">זו השלוחה</button>` : ""}<button class="linkish" data-go="${e.id}">פתיחה בעץ</button></div></div>`;
@@ -1018,7 +1021,7 @@ function decisionHtml(n, st, m, d) {
       : `<button class="choose${isSugg ? "" : " alt"}" data-choose="${e.id}"${ro}><span aria-hidden="true">✓</span> ${kind === "split" ? "פיצול מהשלוחה הזו" : "זו השלוחה"}</button>`;
     return `<div class="cand${isSugg ? " sugg" : ""}${sel && multi ? " picked" : ""}">
       <div class="cand-i">${isSugg ? '<span class="tag-s">הצעת המערכת</span>' : ""}
-        <div class="cand-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b></div>
+        <div class="cand-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b>${typeChip(e.type)}</div>
         <div class="muted">${parent ? `תחת ${esc(parent.name || parent.path)}` : "שורש"} · <button class="linkish" data-go="${e.id}">פתיחה בעץ</button></div>
         ${why.length ? `<div class="whyline">${why.map(w => `<span class="wy ${w[0]}">${esc(w[1])}</span>`).join("")}</div>` : ""}
         ${others.length ? `<div class="wy warn" style="align-self:flex-start">כבר משויכת גם ל: ${others.map(o => esc(o.title)).join(", ")}${kind === "same" ? " · אם היא מתחלקת, בוחרים פיצול" : ""}</div>` : ""}</div>
