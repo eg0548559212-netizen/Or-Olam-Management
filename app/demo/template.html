@@ -381,13 +381,14 @@ td .linkish:hover { text-decoration: underline; }
 @media (max-width: 760px) { .cand { flex-direction: column; align-items: stretch; } .choose { justify-content: center; } #toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); } }
 
 /* ── סוג השיוך ── */
-.kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; background: var(--surface-2); border-radius: 18px; padding: 5px; }
+.kinds { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; background: var(--surface-2); border-radius: 18px; padding: 5px; }
 .kind { text-align: center; padding: 11px 6px; border-radius: 14px; font-weight: 600; cursor: pointer; color: var(--ink-2); }
 .kind:hover { background: var(--surface); color: var(--ink); }
 .kind.on { background: var(--navy); color: var(--on-navy); }
 .kind input { position: absolute; opacity: 0; pointer-events: none; }
 .kind:focus-within { outline: 2px solid var(--teal); outline-offset: 1px; }
 .cand.picked { border-color: var(--teal); background: var(--teal-softer); }
+@media (max-width: 1180px) { .kinds { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -940,8 +941,9 @@ function formFor(n) {
   if (pstate.form && pstate.form.node === n.id) return pstate.form;
   const d = DEC.get(n.id), m = MAP_BY_NODE.get(n.id);
   pstate.form = d ? { node: n.id, action: d.action, ids: [...(d.sclass_ids || [])], note: d.note || "" }
-    : m ? { node: n.id, action: "same", ids: [m.ext], note: "" }
-    : { node: n.id, action: n.status === "existing" ? "same" : "none", ids: [], note: "" };
+    : m && !(NKIDS.get(n.id) || []).length ? { node: n.id, action: "same", ids: [m.ext], note: "" }
+    : m ? { node: n.id, action: "routing", ids: [m.ext], note: "" }
+    : { node: n.id, action: (NKIDS.get(n.id) || []).length ? "routing" : n.status === "existing" ? "same" : "none", ids: [], note: "" };
   if (pstate.form.action === "rebuild") pstate.form.action = "same";
   return pstate.form;
 }
@@ -975,8 +977,9 @@ function renderPlanDetail() {
   el.querySelectorAll(".crumbs [data-nid]").forEach(b => b.addEventListener("click", () => selectNode(+b.dataset.nid, true)));
   if (showDecision) wireDecision(n);
 }
-/* סוג השיוך של צומת בטיוטה (D-115). הערכים נשמרים ב-action: none / same / merge / split */
+/* סוג השיוך של צומת בטיוטה (D-115, D-116). הערכים נשמרים ב-action: routing / none / same / merge / split */
 const KINDS = [
+  ["routing", "שלוחת ניתוב", "תפריט שמפנה לתתי-שלוחות, בלי הקלטות משלו. לא צריך לשייך אותו לשלוחה קיימת."],
   ["none", "שלוחה חדשה", "אין לה שלוחה קיימת. שום היסטוריה לא עוברת אליה."],
   ["same", "שלוחה קיימת", "שלוחה אחת מהעץ הנוכחי עוברת לכאן, עם כל ההיסטוריה שלה."],
   ["merge", "איחוד", "כמה שלוחות מהעץ הנוכחי מתאחדות לכאן. בוחרים לפחות שתיים."],
@@ -987,7 +990,7 @@ KIND_LABEL.rebuild = "בנייה מחדש";
 
 function usedBy(extId, exceptNode) {
   const out = [];
-  for (const d of DEC.values()) if (d.node_id !== exceptNode && d.action !== "none" && (d.sclass_ids || []).includes(extId)) out.push(NODES.get(d.node_id));
+  for (const d of DEC.values()) if (d.node_id !== exceptNode && d.action !== "none" && d.action !== "routing" && (d.sclass_ids || []).includes(extId)) out.push(NODES.get(d.node_id));
   return out.filter(Boolean);
 }
 function decisionHtml(n, st, m, d) {
@@ -1022,8 +1025,8 @@ function decisionHtml(n, st, m, d) {
       ${btn}</div>`;
   };
   const kindHint = KINDS.find(k => k[0] === kind)?.[2] || "";
-  const body = kind === "none"
-    ? `<div class="dec-foot"><button class="cta" id="dec-new"${ro}>שמירה: שלוחה חדשה</button></div>`
+  const body = kind === "none" || kind === "routing"
+    ? `<div class="dec-foot"><button class="cta" id="dec-new" data-kind="${kind}"${ro}>שמירה: ${KIND_LABEL[kind]}</button></div>`
     : `${cands.length ? `<div class="cands">${cands.map(candHtml).join("")}</div>` : `<div class="muted">המערכת לא מצאה שלוחה מתאימה. מחפשים אותה כאן:</div>`}
       <div class="pick"><label class="field" for="pick-q">${ICON_SEARCH}<input id="pick-q" type="search" placeholder="חיפוש שלוחה אחרת לפי שם או נתיב" autocomplete="off"></label><div class="results" id="pick-r"></div></div>
       ${multi ? `<div class="dec-foot"><button class="cta" id="dec-merge"${f.ids.length >= 2 && !ro ? "" : " disabled"}>שמירת האיחוד (${f.ids.length} שלוחות)</button>${f.ids.length < 2 ? '<span class="muted">בוחרים לפחות שתי שלוחות</span>' : ""}</div>` : ""}`;
@@ -1070,7 +1073,7 @@ function wireDecision(n) {
   };
   el.querySelectorAll('input[name="kind"]').forEach(r => r.addEventListener("change", () => {
     f.action = r.value;
-    if (f.action === "none") f.ids = [];
+    if (f.action === "none" || f.action === "routing") f.ids = [];
     else if (f.action !== "merge" && f.ids.length > 1) f.ids = f.ids.slice(0, 1);
     renderPlanDetail();
   }));
@@ -1082,7 +1085,7 @@ function wireDecision(n) {
     if (f.action === "merge") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; renderPlanDetail(); }
     else decide(f.action, [id]);
   });
-  $("#dec-new")?.addEventListener("click", () => decide("none", []));
+  $("#dec-new")?.addEventListener("click", e => decide(e.currentTarget.dataset.kind, []));
   $("#dec-merge")?.addEventListener("click", () => decide("merge", f.ids));
   $("#dec-edit")?.addEventListener("click", () => { pstate.editing = true; renderPlanDetail(); });
   $("#dec-cancel")?.addEventListener("click", () => { pstate.editing = false; pstate.form = null; renderPlanDetail(); });

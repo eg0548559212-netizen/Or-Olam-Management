@@ -8,6 +8,7 @@
 - same    → keep (אותו נתיב) או move (נתיב אחר)
 - rebuild / merge / split → אותו relation
 - none    → שלוחה חדשה: כל שורה אוטומטית של הצומת מסומנת rejected, ואין שורה מאושרת
+- routing → שלוחת ניתוב (D-116): כמו none, ובנוסף draft_node.node_kind = 'heading' (תפריט בלי הקלטות)
 הרצה חוזרת של המיפוי האוטומטי לא נוגעת בשורות approved / rejected.
 """
 import argparse
@@ -28,7 +29,7 @@ def run(src_dir, db_file):
         d = doc.get("data", doc)
         node_id, action, ids = int(d["node_id"]), d.get("action"), [int(x) for x in d.get("sclass_ids") or []]
         node = db.execute("SELECT full_path FROM draft_node WHERE draft_id = ? AND node_id = ?", (draft_id, node_id)).fetchone()
-        if node is None or action not in ("same", "rebuild", "merge", "split", "none"):
+        if node is None or action not in ("same", "rebuild", "merge", "split", "none", "routing"):
             skipped.append(os.path.basename(f))
             continue
         old = [r[0] for r in db.execute(
@@ -37,7 +38,9 @@ def run(src_dir, db_file):
         for mid in old:
             db.execute("UPDATE mapping_row SET status = 'rejected', decided_by = ?, decided_at = ? WHERE mapping_id = ?",
                        (d.get("decided_by"), d.get("decided_at"), mid))
-        if action != "none":
+        if action == "routing":
+            db.execute("UPDATE draft_node SET node_kind = 'heading' WHERE draft_id = ? AND node_id = ?", (draft_id, node_id))
+        if action not in ("none", "routing"):
             exts = [db.execute("SELECT sclass_id, path, name FROM extension WHERE sclass_id = ?", (i,)).fetchone() for i in ids]
             exts = [e for e in exts if e]
             relation = action
