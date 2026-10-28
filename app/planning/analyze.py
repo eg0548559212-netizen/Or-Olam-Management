@@ -103,6 +103,7 @@ def automap(db, plan_id, draft_id):
             mapped.setdefault(n["node_id"], by_path[n["full_path"]])
 
     claimed = set(decided.values()) | set(mapped.values())  # כולל השורש, שמופה לפי הנתיב
+    weak = {}  # צמתים בלי התאמה מעל הסף: המועמדים החלשים, להצגה בדוח
     for n in nodes.values():  # לפי position: אב לפני ילד
         if n["node_id"] in decided or n["parent_node_id"] is None:
             continue
@@ -142,10 +143,13 @@ def automap(db, plan_id, draft_id):
             continue
         scored.sort(key=lambda x: -x[0])
         best = scored[0]
+        # מועמדים נוספים, להצגה כחלופות במסך ההחלטה
+        alts = [{"sclass_id": c[1], "confidence": round(c[0], 3), **c[2]} for c in scored[1:4] if c[0] >= 0.25]
         if best[0] < MIN_CONFIDENCE:
+            weak[n["node_id"]] = [{"sclass_id": c[1], "confidence": round(c[0], 3), **c[2]} for c in scored[:3] if c[0] >= 0.25]
             continue
         runner = scored[1] if len(scored) > 1 else None
-        signals = dict(best[2])
+        signals = dict(best[2], candidates=alts)
         if runner:
             signals["runner_up"] = {"sclass_id": runner[1], "path": exts[runner[1]]["path"], "confidence": round(runner[0], 3)}
         ambiguous = runner is not None and best[0] - runner[0] < AMBIGUITY_MARGIN
@@ -189,10 +193,10 @@ def automap(db, plan_id, draft_id):
     candidates = sum(1 for n in nodes.values() if n["parent_node_id"] is not None and n["node_status"] == "existing"
                      and n["node_kind"] == "extension" and n["title"])
     return {"existing_nodes": candidates, "mapped": len(results), "not_found": candidates - len(results) - len(decided),
-            **stats}
+            **stats}, weak
 
 
-def gap_report(db, plan_id, draft_id):
+def gap_report(db, plan_id, draft_id, weak=None):
     nodes, exts = load(db, draft_id)
     ts = now()
     report_id = db.execute(
@@ -224,7 +228,7 @@ def gap_report(db, plan_id, draft_id):
         if n["node_status"] in ("new", "new_special_build"):
             add("added", "info", nid, None, **label, node_status=n["node_status"])
         elif n["node_kind"] == "extension" and n["title"] and nid not in maps:
-            add("existing_not_found", "warning", nid, None, **label)
+            add("existing_not_found", "warning", nid, None, **label, candidates=(weak or {}).get(nid, []))
         if n["digit"] is None:
             add("unnumbered", "warning", nid, None, **label)
         stated = n["hints"].get("stated_path")
@@ -333,7 +337,8 @@ def run(db_file):
         raise SystemExit("אין תכנית. קודם מייבאים טיוטה.")
     plan_id = plan["plan_id"]
     draft_id = db.execute("SELECT draft_id FROM draft WHERE plan_id = ? AND kind = 'working'", (plan_id,)).fetchone()[0]
-    out = {"automap": automap(db, plan_id, draft_id), "gap_report": gap_report(db, plan_id, draft_id),
+    stats, weak = automap(db, plan_id, draft_id)
+    out = {"automap": stats, "gap_report": gap_report(db, plan_id, draft_id, weak),
            "validation_current_tree": validate_current_tree(db)}
     db.commit()
     return out

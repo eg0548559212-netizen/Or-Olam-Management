@@ -68,8 +68,7 @@ def build(db_file):
              for r in q("SELECT * FROM draft_node WHERE draft_id = ? ORDER BY position", draft["draft_id"])]
     notes = [[r["node_id"], r["scope"], r["note_kind"], r["text"]]
              for r in q("SELECT * FROM draft_note WHERE draft_id = ? ORDER BY note_id", draft["draft_id"])]
-    maps = [[r["node_id"], r["sclass_id"], r["relation"], r["confidence"], r["status"],
-             json.loads(r["signals"]).get("reasons", [])]
+    maps = [[r["node_id"], r["sclass_id"], r["relation"], r["confidence"], r["status"], json.loads(r["signals"])]
             for r in q("""SELECT t.node_id, s.sclass_id, m.relation, m.confidence, m.status, m.signals
                           FROM mapping_row m JOIN mapping_target t USING (mapping_id) JOIN mapping_source s USING (mapping_id)
                           WHERE m.plan_id = ?""", plan["plan_id"])]

@@ -281,6 +281,62 @@ td .linkish:hover { text-decoration: underline; }
   .card-h .sub { order: 3; flex-basis: 100%; }
   .health { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
+
+/* ── מסך ההחלטות ── */
+.qbar { gap: 10px; }
+.qbar-in { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 20px; align-items: center; }
+.qbar-t h2 { font-size: 19px; }
+.qbar-t p { margin: 4px 0 0; color: var(--ink-2); max-width: 70ch; }
+.qbar-n { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.qbar-n b { font-family: var(--f-display); font-size: 30px; font-weight: 500; line-height: 1; color: var(--sun-strong); }
+.qbar-n small { color: var(--ink-3); }
+.qbar-n .track { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.qbar-n .fill { display: block; height: 100%; background: var(--teal); border-radius: 999px; }
+.qbar-a { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+.confirm { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--ink-2); max-width: 260px; }
+.notice { background: var(--sun-soft); color: var(--sun-strong); border-radius: 14px; padding: 8px 14px; font-size: 14px; }
+.cta:disabled, .ghost:disabled { opacity: .45; cursor: default; }
+.digit.sm { min-width: 26px; height: 26px; border-radius: 8px; font-size: 13px; }
+.chip.sm { font-size: 11px; padding: 2px 8px; }
+.decision { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--line); padding-top: 16px; }
+.q { display: flex; gap: 12px; align-items: flex-start; background: var(--sun-soft); border-radius: var(--r-inner); padding: 14px 16px; }
+.q .qn { width: 32px; height: 32px; border-radius: 50%; background: var(--sun); color: #182437; display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; flex: none; }
+.q b { font-family: var(--f-display); font-weight: 500; font-size: 17px; }
+.q p { margin: 2px 0 0; color: var(--ink-2); }
+.done { background: var(--teal-softer); border: 1px solid var(--teal-soft); border-radius: var(--r-inner); padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; }
+.xcard { border: 1px solid var(--line); border-radius: var(--r-inner); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.xcard-t { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.xcard-t .path { color: var(--teal-strong); }
+.xcard-a { display: flex; gap: 12px; align-items: center; }
+.xcard-a .linkish { border: 0; background: none; padding: 0; color: var(--ink-2); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.xlist { display: flex; flex-direction: column; gap: 8px; }
+.why { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: 14px; }
+.why li { display: flex; gap: 8px; align-items: baseline; }
+.why li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; flex: none; transform: translateY(-1px); }
+.why li.good::before { background: var(--ok); }
+.why li.warn { color: var(--warn); }
+.why li.warn::before { background: var(--warn); }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.opt { border: 1px solid var(--line); border-radius: 16px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
+.opt:hover { border-color: var(--teal); }
+.opt.on { border-color: var(--teal); background: var(--teal-softer); box-shadow: inset 0 0 0 1px var(--teal); }
+.opt input { position: absolute; opacity: 0; pointer-events: none; }
+.opt:focus-within { outline: 2px solid var(--teal); outline-offset: 2px; }
+.opt b { font-weight: 600; }
+.opt span { font-size: 13px; color: var(--ink-2); }
+.pick { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.pick .field { flex: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip .x { border: 0; background: none; color: inherit; padding: 0 0 0 2px; font-size: 16px; line-height: 1; }
+.results { display: flex; flex-direction: column; gap: 2px; }
+.results button { border: 0; background: var(--surface-2); text-align: right; padding: 8px 12px; border-radius: 12px; display: flex; gap: 8px; align-items: center; }
+.results button:hover { background: var(--teal-soft); }
+.note-in { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+.note-in textarea { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 8px 12px; resize: vertical; }
+.dec-a { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+.notes-grid.one { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 1180px) { .qbar-in { grid-template-columns: minmax(0, 1fr) auto; } .qbar-t { grid-column: 1 / -1; } }
+@media (max-width: 760px) { .qbar-in { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -364,8 +420,8 @@ for (const [node, scope, kind, text] of D.notes) {
   NOTES_BY.get(k).push({ scope, kind, text });
 }
 const MAP_BY_NODE = new Map(), MAP_BY_EXT = new Map();
-for (const [node, ext, relation, conf, status, reasons] of D.maps) {
-  const m = { node, ext, relation, conf, status, reasons };
+for (const [node, ext, relation, conf, status, signals] of D.maps) {
+  const m = { node, ext, relation, conf, status, signals: signals || {}, reasons: (signals && signals.reasons) || [] };
   MAP_BY_NODE.set(node, m); MAP_BY_EXT.set(ext, m);
 }
 
@@ -429,7 +485,7 @@ function renderHome() {
   const gapMax = Math.max(...Object.values(gapCounts));
   const refsTotal = D.refs.length;
   const broken = D.refs.filter(r => r[6] === "broken").length;
-  const queue = [...MAP_BY_NODE.values()].filter(m => m.status === "needs_decision").sort((a, b) => b.conf - a.conf).slice(0, 4);
+  const queue = [...MAP_BY_NODE.values()].filter(m => m.status === "needs_decision" && !DEC.has(m.node)).slice(0, 4);
 
   // גרף עומק בקנה מידה אחד
   const W = 520, H = 190, padB = 28, padT = 22, bw = 34, gap = (W - 20 - bw * 10) / 9;
@@ -477,14 +533,15 @@ function renderHome() {
         <div class="kpi"><small>הוצעו</small><b style="color:var(--ok)">${ms.suggested}</b></div>
         <div class="kpi"><small>דורש החלטה</small><b style="color:var(--warn)">${ms.needs_decision}</b></div>
         <div class="kpi"><small>לא נמצאו</small><b style="color:var(--ink-3)">${notFound}</b></div>
+        <div class="kpi"><small>הוחלטו</small><b style="color:var(--teal-strong)">${DEC.size}</b></div>
       </div>
       <div class="stack" style="height:16px" role="img" aria-label="מצב המיפוי">
         <div style="flex:${ms.suggested};background:var(--ok)"></div><div style="flex:${ms.needs_decision};background:var(--sun)"></div><div style="flex:${notFound};background:var(--line)"></div></div>
       <div class="sec"><h3>בראש התור "דורש החלטה"</h3>
         <div class="refs">${queue.map(m => { const n = NODES.get(m.node), e = EXT.get(m.ext);
-          return `<div class="ref"><div><b>${esc(n.title)}</b> <span class="path muted">${esc(n.path || "")}</span><div class="what">הוצעה: ${esc(e.name || "בלי שם")} · <span class="path">${esc(e.path)}</span></div></div>
-          <span class="chip sun num">${Math.round(m.conf * 100)}%</span></div>`; }).join("")}</div></div>
-      <button class="cta" onclick="state.planFilter='needs_decision';go('plan')">לתור ההחלטות</button>
+          return `<div class="ref" style="cursor:pointer" onclick="openNode(${n.id})"><div><b>${esc(n.title)}</b> <span class="path muted">${esc(n.path || "")}</span><div class="what">הוצעה: ${esc(e.name || "בלי שם")} · <span class="path">${esc(e.path)}</span></div></div>
+          <span class="chip sun">דורש החלטה</span></div>`; }).join("")}</div></div>
+      <button class="cta" onclick="pstate.f='all';pstate.sel=null;go('plan')">לתור ההחלטות</button>
     </section>
 
     <section class="card c7">
@@ -504,7 +561,7 @@ function renderHome() {
         <span class="chip warn"><span class="dot"></span>${D.notes.filter(n => n[2] === "build_note").length} הערות בנייה</span>
         <span class="chip"><span class="dot"></span>${D.nodes.filter(n => n[2] == null).length} צמתים בלי מספר</span>
       </div>
-      <button class="ghost" onclick="state.planFilter='all';go('plan')">פתיחת הטיוטה ←</button>
+      <button class="ghost" onclick="pstate.f='all';go('plan')">פתיחת הטיוטה ←</button>
     </section>
 
     <section class="card c5">
@@ -622,8 +679,8 @@ function renderDetail() {
           ${ALIAS.has(e.id) ? `<span class="chip warn">נתיב קודם <span class="path">${esc(ALIAS.get(e.id))}</span></span>` : ""}
         </div></div></div>
     ${mn ? `<div class="sec"><h3>בטיוטה החדשה</h3><div class="ref"><div><b>${esc(mn.title)}</b> <span class="path muted">${esc(mn.path || "בלי נתיב")}</span>
-      <div class="what">${m.relation === "keep" ? "נשארת במקום" : "עוברת למיקום חדש"} · ביטחון ${Math.round(m.conf * 100)}%</div></div>
-      <span class="chip ${MAP_STATUS[m.status][1]}">${MAP_STATUS[m.status][0]}</span></div></div>` : ""}
+      <div class="what">${DEC.has(mn.id) ? "הוחלט" : MAP_STATUS[m.status][0]} · ${m.relation === "keep" ? "באותו נתיב" : "בנתיב אחר"}</div></div>
+      <button class="ghost" onclick="openNode(${mn.id})">להחלטה</button></div></div>` : ""}
     <div class="sec"><h3>הפניות יוצאות <span class="chip line num">${out.length}</span></h3>
       ${out.length ? `<div class="refs">${out.map(r => refHtml(r, "out")).join("")}</div>` : '<div class="muted">אין הפניות בהגדרות.</div>'}</div>
     ${inn.length ? `<div class="sec"><h3>שלוחות שמפנות לכאן <span class="chip line num">${inn.length}</span></h3><div class="refs">${inn.slice(0, 40).map(r => refHtml(r, "in")).join("")}</div>
@@ -648,69 +705,320 @@ function refHtml(r, dir) {
 }
 
 /* ── תכנון ── */
-function renderPlan() {
-  const filters = [["all", "הכול"], ["needs_decision", "דורש החלטה"], ["suggested", "הוצע"], ["not_found", "קיימת שלא נמצאה"], ["new", "חדשות ובנייה מיוחדת"], ["notes", "עם הערות"]];
-  const g = k => NOTES_BY.get("global:" + k) || [];
-  $("#view").innerHTML = `<div class="grid">
-    <section class="card c12">
-      <div class="card-h"><h2>טיוטת העץ החדש</h2><span class="sub">טיוטת עבודה · ${esc(D.meta.draft_label || "")} · ${NODES.size - 1} צמתים</span></div>
-      <div class="legend">
-        <span class="chip"><span class="dot"></span>קיימת</span><span class="chip new"><span class="dot"></span>חדשה</span><span class="chip special"><span class="dot"></span>בנייה מיוחדת</span>
-        <span class="chip bad"><span class="dot"></span>שאלה</span><span class="chip warn"><span class="dot"></span>הערת בנייה</span>
-      </div>
-      <div class="notes-grid">
-        <div class="notes-col"><h3>בכל הקו</h3><ul>${g("global").filter(n => !n.text.startsWith("דרושים מוסרים")).map(n => `<li>${esc(n.text)}</li>`).join("")}</ul></div>
-        <div class="notes-col"><h3>שאלות שנותרו</h3><ul>${g("open_question").map(n => `<li>${esc(n.text)}</li>`).join("")}</ul></div>
-        <div class="notes-col"><h3>דרושים מוסרים</h3><ul>${g("global").filter(n => n.text.startsWith("דרושים מוסרים")).map(n => `<li>${esc(n.text.replace(/^דרושים מוסרים:\s*/, ""))}</li>`).join("")}</ul></div>
-      </div>
-    </section>
-    <section class="card c12">
-      <div class="toolbar">${filters.map(([k, l]) => `<button class="ghost${state.planFilter === k ? " on" : ""}" data-f="${k}">${l}</button>`).join("")}</div>
-      <div class="plan-head"><span>הטיוטה</span><span>שלוחה בעץ הנוכחי (מיפוי אוטומטי)</span></div>
-      <div id="plan-list"></div>
-    </section></div>`;
-  const draw = () => {
-    const f = state.planFilter, rows = [];
-    const keep = n => {
-      const m = MAP_BY_NODE.get(n.id);
-      if (f === "all") return true;
-      if (f === "needs_decision" || f === "suggested") return m && m.status === f;
-      if (f === "not_found") return !m && n.status === "existing" && n.kind === "extension" && n.title && n.parent != null;
-      if (f === "new") return n.status === "new" || n.status === "new_special_build";
-      if (f === "notes") return NOTES_BY.has(n.id);
-    };
-    const walk = (ids, depth) => { for (const id of ids) { const n = NODES.get(id); if (n.parent != null && keep(n)) rows.push([n, depth]); walk(NKIDS.get(id) || [], depth + 1); } };
-    walk(NKIDS.get(null) || [], -1);
-    $("#plan-list").innerHTML = rows.length ? rows.map(([n, d]) => planRow(n, f === "all" ? d : 0)).join("") : '<div class="empty-note">אין צמתים במסנן הזה.</div>';
-    $("#plan-list").querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => openExt(+b.dataset.go)));
-  };
-  draw();
-  document.querySelectorAll("[data-f]").forEach(b => b.addEventListener("click", () => {
-    state.planFilter = b.dataset.f; document.querySelectorAll("[data-f]").forEach(x => x.classList.toggle("on", x === b)); draw();
-  }));
+/* ההחלטות נשמרות ב-db של הדף: decisions/<node_id>. Claude קורא אותן חזרה לבסיס הנתונים (mapping_row). */
+const DEC = new Map();
+let DB = null, USER = null, CAN_WRITE = null, MY_ID = null;
+const NAMES = {};
+const ACTIONS = {
+  same: { label: "זו אותה שלוחה", help: "אותו מזהה בידע פון. אם המיקום בטיוטה שונה, השלוחה תוזז אליו, וכל ההיסטוריה שלה נשארת איתה.", min: 1, max: 1 },
+  rebuild: { label: "תיבנה שלוחה חדשה במקומה", help: "תיבנה שלוחה חדשה במקום הזה, וההאזנות והמאפיינים של השלוחה הקיימת יעברו אליה.", min: 1, max: 1 },
+  merge: { label: "כמה שלוחות מתאחדות לכאן", help: "כמה שלוחות קיימות מתאחדות לצומת הזה, וההיסטוריה של כולן נספרת כאן.", min: 2, max: 20 },
+  split: { label: "רק חלק משלוחה קיימת", help: "שלוחה קיימת מתפצלת לכמה צמתים בטיוטה. ההיסטוריה תתחלק לפי השיעורים, כשמודל השיעורים יהיה מוכן.", min: 1, max: 1 },
+  none: { label: "אין לה שלוחה קיימת", help: "הצומת ייבנה כשלוחה חדשה לגמרי, ושום היסטוריה לא עוברת אליו.", min: 0, max: 0 }
+};
+const NSTATE = {
+  decided: ["הוחלט", "teal"], suggested: ["הצעה ודאית", "ok"], needs_decision: ["דורש החלטה", "sun"],
+  not_found: ["לא נמצאה", "line"], new: ["חדשה", "new"], new_special_build: ["בנייה מיוחדת", "special"]
+};
+const pstate = { sel: null, open: new Set(), q: "", f: "all", form: null, dirty: false, bulkAsk: false };
+
+function nodeState(n) {
+  if (n.parent == null) return "root";
+  if (DEC.has(n.id)) return "decided";
+  if (n.status === "new" || n.status === "new_special_build") return n.status;
+  if (n.kind !== "extension" || !n.title) return "other";
+  const m = MAP_BY_NODE.get(n.id);
+  return m ? m.status : "not_found";
 }
-function planRow(n, depth) {
-  const m = MAP_BY_NODE.get(n.id), e = m && EXT.get(m.ext);
+const queue = () => {
+  const out = [];
+  const walk = ids => { for (const id of ids) { const n = NODES.get(id); if (nodeState(n) === "needs_decision") out.push(id); walk(NKIDS.get(id) || []); } };
+  walk(NKIDS.get(null) || []);
+  return out;
+};
+const suggestedOpen = () => [...MAP_BY_NODE.values()].filter(m => m.status === "suggested" && !DEC.has(m.node));
+const notFoundCands = new Map(D.gaps.filter(g => g[0] === "existing_not_found").map(g => [g[2], g[4].candidates || []]));
+
+function revealNode(id) {
+  let p = NODES.get(id)?.parent;
+  while (p != null) { pstate.open.add(p); p = NODES.get(p)?.parent; }
+}
+function selectNode(id, scroll) {
+  pstate.sel = id; pstate.form = null; pstate.dirty = false; pstate.bulkAsk = false;
+  revealNode(id);
+  drawPlanTree(); renderPlanDetail();
+  if (scroll) requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "center" }));
+  if (innerWidth < 1180 && scroll !== "tree") $("#pdetail")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function openNode(id) { pstate.sel = id; revealNode(id); go("plan"); requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "center" })); }
+
+function renderPlan() {
+  for (const id of NKIDS.get(null) || []) { pstate.open.add(id); for (const c of NKIDS.get(id) || []) pstate.open.add(c); }
+  if (pstate.sel == null) { const q = queue(); pstate.sel = q[0] ?? null; if (pstate.sel) revealNode(pstate.sel); }
+  const filters = [["all", "כל הטיוטה"], ["needs_decision", "דורש החלטה"], ["suggested", "הצעות ודאיות"], ["not_found", "לא נמצאה"], ["decided", "הוחלט"], ["new", "חדשות"], ["notes", "עם הערות"]];
+  $("#view").innerHTML = `<div style="display:flex;flex-direction:column;gap:20px">
+    <section class="card qbar" id="qbar"></section>
+    <div class="split">
+      <section class="card">
+        <div class="card-h"><h2>טיוטת העץ החדש</h2><span class="sub">${esc(D.meta.draft_label || "")}</span>
+          <button class="ghost" id="gnotes">הערות כלליות</button></div>
+        <div class="toolbar">
+          <label class="field" for="q-plan">${ICON_SEARCH}<input id="q-plan" type="search" placeholder="חיפוש בטיוטה" value="${esc(pstate.q)}" autocomplete="off"></label>
+          <select class="ghost" id="f-plan" aria-label="סינון">${filters.map(([k, l]) => `<option value="${k}"${pstate.f === k ? " selected" : ""}>${l}</option>`).join("")}</select>
+        </div>
+        <div class="legend"><span><i style="background:var(--surface-2);border:1px solid var(--ink-3)"></i>קיימת</span><span><i style="background:var(--new)"></i>חדשה</span>
+          <span><i style="background:var(--special)"></i>בנייה מיוחדת</span><span><i style="background:var(--bad)"></i>יש שאלה</span></div>
+        <div class="tree" id="ptree"></div>
+      </section>
+      <section class="card" id="pdetail"></section>
+    </div></div>`;
+  drawQueueBar(); drawPlanTree(); renderPlanDetail();
+  $("#ptree").addEventListener("click", ev => {
+    const tw = ev.target.closest("[data-tw]");
+    if (tw && tw.dataset.tw) { const id = +tw.dataset.tw; pstate.open.has(id) ? pstate.open.delete(id) : pstate.open.add(id); drawPlanTree(); return; }
+    const row = ev.target.closest(".trow"); if (!row) return;
+    const id = +row.dataset.nid; if ((NKIDS.get(id) || []).length) pstate.open.add(id);
+    selectNode(id, "tree");
+  });
+  $("#q-plan").addEventListener("input", e => { pstate.q = e.target.value; drawPlanTree(); });
+  $("#f-plan").addEventListener("change", e => { pstate.f = e.target.value; drawPlanTree(); });
+  $("#gnotes").addEventListener("click", () => { pstate.sel = null; drawPlanTree(); renderPlanDetail(); });
+}
+
+function drawQueueBar() {
+  const el = $("#qbar"); if (!el) return;
+  const q = queue(), total = D.maps.filter(m => m[4] === "needs_decision").length, sugg = suggestedOpen();
+  const done = total - q.length;
+  el.innerHTML = `<div class="qbar-in">
+    <div class="qbar-t"><h2>תור ההחלטות</h2>
+      <p>לכל צומת קיים בטיוטה צריך לקבוע לאיזו שלוחה בעץ הנוכחי הוא שייך. כך ההיסטוריה שלה עוברת איתו ביום המעבר. המערכת הציעה התאמות, ובמקרים שבהם היא לא בטוחה, ההחלטה שלך.</p></div>
+    <div class="qbar-n"><b class="num">${q.length}</b><small>נותרו להחלטה מתוך ${total}</small>
+      <span class="track"><span class="fill" style="width:${total ? done / total * 100 : 0}%"></span></span></div>
+    <div class="qbar-a">
+      <button class="cta" id="q-next" ${q.length ? "" : "disabled"}>להחלטה הבאה ←</button>
+      ${sugg.length ? (pstate.bulkAsk
+        ? `<span class="confirm">לאשר ${sugg.length} הצעות ודאיות כ"אותה שלוחה"? <button class="ghost on" id="bulk-yes">כן, לאשר</button><button class="ghost" id="bulk-no">ביטול</button></span>`
+        : `<button class="ghost" id="bulk">אישור כל ${sugg.length} ההצעות הוודאיות</button>`) : ""}
+    </div></div>
+    ${saveNotice()}`;
+  $("#q-next")?.addEventListener("click", () => nextInQueue());
+  $("#bulk")?.addEventListener("click", () => { pstate.bulkAsk = true; drawQueueBar(); });
+  $("#bulk-no")?.addEventListener("click", () => { pstate.bulkAsk = false; drawQueueBar(); });
+  $("#bulk-yes")?.addEventListener("click", async () => {
+    pstate.bulkAsk = false;
+    for (const m of suggestedOpen()) await saveDecision(m.node, { action: "same", ids: [m.ext], note: "" }, "bulk");
+    drawQueueBar(); drawPlanTree(); renderPlanDetail();
+  });
+}
+function saveNotice() {
+  if (DB === null) return `<div class="notice">ההחלטות בתצוגה הזו לא נשמרות. כדי לשמור, פותחים את הדף מתוך claude.ai כשמחוברים.</div>`;
+  if (CAN_WRITE === false) return `<div class="notice">יש לך הרשאת צפייה בלבד, ולכן אי אפשר לשמור החלטות.</div>`;
+  return "";
+}
+function nextInQueue() {
+  const q = queue(); if (!q.length) return;
+  const i = q.findIndex(id => id > -1 && posOf(id) > posOf(pstate.sel ?? -1));
+  selectNode(q[i >= 0 ? i : 0], true);
+}
+const POS = new Map(D.nodes.map((n, i) => [n[0], i]));
+const posOf = id => POS.get(id) ?? -1;
+
+function prowHtml(n, depth, flat) {
+  const kids = NKIDS.get(n.id) || [];
+  const st = nodeState(n), [lbl, cls] = NSTATE[st] || [];
   const notes = NOTES_BY.get(n.id) || [];
-  const isSection = n.parent != null && NODES.get(n.parent).parent == null;
-  const cls = n.digit == null ? "none" : n.status;
-  let mapHtml = "";
-  if (n.status === "existing" && n.kind === "extension" && n.title) {
-    if (m) {
-      const c = Math.round(m.conf * 100), col = m.status === "suggested" ? "var(--ok)" : "var(--sun)";
-      mapHtml = `<div class="map"><div class="line1"><span class="path muted">${esc(e.path)}</span><button data-go="${e.id}">${esc(e.name || "בלי שם")}</button>
-        <span class="chip ${MAP_STATUS[m.status][1]}">${MAP_STATUS[m.status][0]}</span></div>
-        <div class="conf"><span class="track"><span class="fill" style="display:block;width:${c}%;background:${col}"></span></span><span class="num">${c}%</span><span>${m.relation === "keep" ? "נשארת במקום" : "הזזה"}</span></div>
-        ${m.reasons.length ? `<div class="reasons">${m.reasons.map(esc).join(" · ")}</div>` : ""}</div>`;
-    } else mapHtml = '<div class="map none">לא נמצאה שלוחה מתאימה</div>';
-  } else if (n.status !== "existing") mapHtml = `<div class="map none">${n.status === "new" ? "שלוחה חדשה" : "שלוחה חדשה, בנייה מיוחדת"}</div>`;
-  const stated = n.hints?.stated_path && n.path && n.hints.stated_path !== n.path ? `<span class="chip warn">בטיוטה כתוב <span class="path">${esc(n.hints.stated_path)}</span></span>` : "";
-  const desc = n.hints?.description ? `<div class="muted">${esc(n.hints.description)}</div>` : "";
-  return `<div class="plan-row"><div class="plan-node${isSection ? " heading" : ""}" style="padding-inline-start:${Math.max(0, depth) * 22}px">
-      <span class="digit ${cls}">${esc(n.digit ?? "–")}</span>
-      <div class="t"><b>${esc(n.title || "(ריק)")}</b> <span class="path">${esc(n.path || "")}</span> ${stated}${desc}
-        ${notes.length ? `<div class="notes">${notes.map(x => `<div class="note ${x.kind}"><b>${NOTE_KIND[x.kind]}</b><span>${esc(x.text)}</span></div>`).join("")}</div>` : ""}</div></div>
-    <div>${mapHtml}</div></div>`;
+  const dcls = n.digit == null ? "none" : n.status;
+  return `<button class="trow${pstate.sel === n.id ? " sel" : ""}" data-nid="${n.id}" style="padding-inline-start:${8 + depth * 18}px">
+    <span class="tw${pstate.open.has(n.id) ? " open" : ""}" data-tw="${kids.length && !flat ? n.id : ""}">${kids.length && !flat ? ICON_CHEV : ""}</span>
+    <span class="digit sm ${dcls}">${esc(n.digit ?? "–")}</span>
+    ${flat ? `<span class="path">${esc(n.path || "")}</span>` : ""}<span class="nm${n.title ? "" : " empty"}">${esc(n.title || "(ריק)")}</span>
+    ${notes.some(x => x.kind === "question") ? '<span class="mark-bad" title="יש שאלה פתוחה"></span>' : ""}
+    ${lbl ? `<span class="chip sm ${cls}">${lbl}</span>` : ""}</button>`;
+}
+function drawPlanTree() {
+  const el = $("#ptree"); if (!el) return;
+  const q = pstate.q.trim(), f = pstate.f;
+  const match = n => {
+    if (q && !((n.title || "").includes(q) || (n.path || "").startsWith(q))) return false;
+    const st = nodeState(n);
+    if (f === "all") return true;
+    if (f === "new") return st === "new" || st === "new_special_build";
+    if (f === "notes") return NOTES_BY.has(n.id);
+    return st === f;
+  };
+  if (q || f !== "all") {
+    const rows = D.nodes.map(r => NODES.get(r[0])).filter(n => n.parent != null && match(n));
+    el.innerHTML = rows.length ? rows.map(n => prowHtml(n, 0, true)).join("") : '<div class="empty-note">אין צמתים במסנן הזה.</div>';
+    return;
+  }
+  const out = [];
+  const walk = (ids, d) => { for (const id of ids) { const n = NODES.get(id); out.push(prowHtml(n, d, false)); if (pstate.open.has(id)) walk(NKIDS.get(id) || [], d + 1); } };
+  walk(NKIDS.get(null) || [], 0);
+  el.innerHTML = out.join("");
+}
+
+function extCard(e, opts = {}) {
+  if (!e) return "";
+  const parent = e.parent != null ? EXT.get(e.parent) : null;
+  return `<div class="xcard">
+    <div class="xcard-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b><span class="ctype">${esc(e.type || "")}</span></div>
+    <div class="muted">${parent ? `תחת <span class="path">${esc(parent.path)}</span> ${esc(parent.name || "")}` : "שורש"}${(KIDS.get(e.id) || []).length ? ` · ${(KIDS.get(e.id) || []).length} תתי-שלוחות` : ""}</div>
+    ${opts.why ? `<ul class="why">${opts.why.map(w => `<li class="${w[0]}">${esc(w[1])}</li>`).join("")}</ul>` : ""}
+    <div class="xcard-a">${opts.pick ? `<button class="ghost" data-pick="${e.id}">זו השלוחה</button>` : ""}<button class="linkish" data-go="${e.id}">פתיחה בעץ</button></div></div>`;
+}
+function whyLines(n, sig, reasons) {
+  const out = [];
+  if (sig) {
+    if (sig.name_sim >= 0.95) out.push(["good", "השם זהה לשם בטיוטה"]);
+    else if (sig.name_sim >= 0.7) out.push(["good", "השם דומה לשם בטיוטה"]);
+    else out.push(["warn", "השם שונה מהשם בטיוטה"]);
+    if (sig.in_parent_branch) out.push(["good", "נמצאת מתחת לשלוחה שהוצעה לצומת שמעליו"]);
+    else if (n.parent != null && NODES.get(n.parent).parent != null) out.push(["warn", "נמצאת בענף אחר בעץ, לא מתחת לשלוחה שהוצעה לצומת שמעליו"]);
+    if (sig.digit_match) out.push(["good", `באותה ספרה (${n.digit})`]);
+    if (sig.lecturer_match) out.push(["good", "שם המרצה מהטיוטה מופיע בשם השלוחה"]);
+  }
+  const R = { "מועמד שני קרוב": "יש שלוחה נוספת שמתאימה כמעט באותה מידה (מופיעה למטה)", "תלוי בהחלטה על האב": "קודם צריך להחליט על הצומת שמעליו",
+    "אותה שלוחה הוצעה לכמה צמתים": "אותה שלוחה הוצעה גם לצומת אחר", "ביטחון מתחת לסף": "ההתאמה חלקית" };
+  for (const r of reasons || []) out.push(["warn", R[r] || r]);
+  return out;
+}
+function formFor(n) {
+  if (pstate.form && pstate.form.node === n.id) return pstate.form;
+  const d = DEC.get(n.id), m = MAP_BY_NODE.get(n.id);
+  pstate.form = d ? { node: n.id, action: d.action, ids: [...(d.sclass_ids || [])], note: d.note || "" }
+    : m ? { node: n.id, action: "same", ids: [m.ext], note: "" }
+    : { node: n.id, action: n.status === "existing" ? null : "none", ids: [], note: "" };
+  return pstate.form;
+}
+function decisionSummary(d, n) {
+  const exts = (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean);
+  const names = exts.map(e => `<span class="path">${esc(e.path)}</span> ${esc(e.name || "")}`).join("، ");
+  const moveTxt = d.action === "same" && exts[0] ? (exts[0].path === n.path ? " · נשארת במקום" : ` · תעבור מ-<span class="path">${esc(exts[0].path)}</span> ל-<span class="path">${esc(n.path || "?")}</span>`) : "";
+  return `${ACTIONS[d.action]?.label || d.action}${names ? ": " + names : ""}${moveTxt}`;
+}
+function renderPlanDetail() {
+  const el = $("#pdetail"); if (!el) return;
+  const n = NODES.get(pstate.sel);
+  if (!n || n.parent == null) { el.innerHTML = globalNotesHtml(); return; }
+  const crumbs = []; let p = n.parent; while (p != null && NODES.get(p).parent != null) { crumbs.unshift(NODES.get(p)); p = NODES.get(p).parent; }
+  const notes = NOTES_BY.get(n.id) || [];
+  const st = nodeState(n), m = MAP_BY_NODE.get(n.id), d = DEC.get(n.id);
+  const h = n.hints || {};
+  const facts = [h.episodes && `${h.episodes} פרקים`, h.closed_series && "סדרה סגורה", h.renewal && "מתחדשת", h.copy_to && `להעתיק גם ל-${h.copy_to}`, h.redirect_to && `מעבר לשלוחה ${h.redirect_to}`].filter(Boolean);
+  const showDecision = n.title && n.kind === "extension";
+  el.innerHTML = `
+    <div class="crumbs">${crumbs.map(c => `<button data-nid="${c.id}">${esc(c.title || c.path)}</button><span>›</span>`).join("")}</div>
+    <div class="detail-h"><span class="big">${esc(n.path || "–")}</span>
+      <div style="flex:1;min-width:0"><h2>${esc(n.title || "(ריק)")}</h2>
+        <div class="meta"><span class="chip ${NODE_STATUS[n.status][1]}">${n.status === "existing" ? "קיימת לפי הטיוטה" : NODE_STATUS[n.status][0]}</span>
+          ${n.digit == null ? '<span class="chip warn">בלי מספר</span>' : ""}
+          ${h.stated_path && n.path && h.stated_path !== n.path ? `<span class="chip warn">בטיוטה כתוב <span class="path">${esc(h.stated_path)}</span></span>` : ""}
+          ${facts.map(f => `<span class="chip line">${esc(f)}</span>`).join("")}</div>
+        ${h.description ? `<p class="muted" style="margin:8px 0 0">${esc(h.description)}</p>` : ""}</div></div>
+    ${notes.length ? `<div class="notes">${notes.map(x => `<div class="note ${x.kind}"><b>${NOTE_KIND[x.kind]}</b><span>${esc(x.text)}</span></div>`).join("")}</div>` : ""}
+    ${showDecision ? decisionHtml(n, st, m, d) : ""}`;
+  el.querySelectorAll(".crumbs [data-nid]").forEach(b => b.addEventListener("click", () => selectNode(+b.dataset.nid, true)));
+  if (showDecision) wireDecision(n);
+}
+function decisionHtml(n, st, m, d) {
+  const f = formFor(n);
+  const sig = m ? m.signals : null;
+  const sugg = m ? EXT.get(m.ext) : null;
+  const alts = (sig?.candidates || notFoundCands.get(n.id) || []).map(c => EXT.get(c.sclass_id)).filter(e => e && e.id !== sugg?.id);
+  const who = d ? (d.decided_by === MY_ID ? "את" : (NAMES[d.decided_by] || "")) : "";
+  const intro = st === "suggested" ? "המערכת מצאה התאמה ודאית. מספיק לאשר אותה, או לבחור אחרת."
+    : st === "needs_decision" ? "המערכת מצאה התאמה אפשרית, אבל לא בטוחה בה. צריך לבחור מה נכון."
+    : st === "not_found" ? "המערכת לא מצאה שלוחה מתאימה. אם יש כזו, מחפשים אותה למטה. אם אין, בוחרים \"אין לה שלוחה קיימת\"."
+    : st === "decided" ? "" : "הצומת מסומן בטיוטה כחדש. אם בכל זאת יש לו שלוחה קיימת, אפשר לבחור אותה.";
+  const act = ACTIONS[f.action];
+  const chosen = f.ids.map(id => EXT.get(id)).filter(Boolean);
+  const moveTxt = f.action === "same" && chosen[0] ? (chosen[0].path === n.path ? "השלוחה נשארת באותו נתיב." : `השלוחה תעבור מ-<span class="path">${esc(chosen[0].path)}</span> ל-<span class="path">${esc(n.path || "?")}</span>.`) : "";
+  const valid = f.action && f.ids.length >= act.min && f.ids.length <= act.max;
+  return `<div class="decision">
+    <div class="q"><span class="qn">?</span><div><b>לאיזו שלוחה בעץ הנוכחי שייך "${esc(n.title)}"?</b><p>${intro}</p></div></div>
+    ${d ? `<div class="done"><b>הוחלט:</b> ${decisionSummary(d, n)}${d.note ? `<div class="muted">הערה: ${esc(d.note)}</div>` : ""}
+      <div class="muted">${who ? esc(who) + " · " : ""}${new Date(d.decided_at).toLocaleString("he-IL", { dateStyle: "short", timeStyle: "short" })}${d.source === "bulk" ? " · באישור מרוכז" : ""}</div></div>` : ""}
+    ${sugg ? `<div class="sec"><h3>ההצעה של המערכת</h3>${extCard(sugg, { why: whyLines(n, sig, d ? [] : m.reasons), pick: !f.ids.includes(sugg.id) })}</div>` : ""}
+    ${alts.length ? `<div class="sec"><h3>${sugg ? "שלוחות דומות נוספות" : "שלוחות דומות (התאמה חלשה)"}</h3><div class="xlist">${alts.map(e => extCard(e, { pick: !f.ids.includes(e.id) })).join("")}</div></div>` : ""}
+    <div class="sec"><h3>ההחלטה</h3>
+      <div class="opts" role="radiogroup" aria-label="מה קורה לשלוחה">${Object.entries(ACTIONS).map(([k, a]) =>
+        `<label class="opt${f.action === k ? " on" : ""}"><input type="radio" name="act" value="${k}"${f.action === k ? " checked" : ""}><b>${a.label}</b><span>${a.help}</span></label>`).join("")}</div>
+      ${!act || act.max > 0 ? `<div class="pick">
+        <div class="muted">${act && act.max > 1 ? "השלוחות שמתאחדות:" : "השלוחה:"}</div>
+        <div class="chips">${chosen.map(e => `<span class="chip teal"><span class="path">${esc(e.path)}</span> ${esc(e.name || "")}<button class="x" data-rm="${e.id}" aria-label="הסרה">×</button></span>`).join("") || '<span class="muted">עוד לא נבחרה שלוחה</span>'}</div>
+        ${chosen.length < (act ? act.max : 1) ? `<label class="field" for="pick-q">${ICON_SEARCH}<input id="pick-q" type="search" placeholder="חיפוש שלוחה אחרת לפי שם או נתיב" autocomplete="off"></label><div class="results" id="pick-r"></div>` : ""}
+        ${moveTxt ? `<div class="muted">${moveTxt}</div>` : ""}</div>` : ""}
+      <label class="note-in" for="dec-note"><span class="muted">הערה (לא חובה)</span><textarea id="dec-note" rows="2">${esc(f.note)}</textarea></label>
+      <div class="dec-a">
+        <button class="cta" id="dec-save" ${valid && CAN_WRITE !== false ? "" : "disabled"}>${d ? "עדכון ההחלטה" : "שמירת ההחלטה"}</button>
+        <button class="ghost" id="dec-next">${st === "needs_decision" && !d ? "דילוג" : "להחלטה הבאה"} ←</button>
+        ${!valid && f.action ? `<span class="muted">${act.min > 1 ? `צריך לבחור לפחות ${act.min} שלוחות` : "צריך לבחור שלוחה"}</span>` : ""}
+        <span class="muted" id="dec-msg" role="status"></span>
+      </div></div></div>`;
+}
+function wireDecision(n) {
+  const el = $("#pdetail"), f = pstate.form;
+  const redraw = () => { renderPlanDetail(); };
+  el.querySelectorAll('input[name="act"]').forEach(r => r.addEventListener("change", () => {
+    f.action = r.value; const a = ACTIONS[f.action]; if (f.ids.length > a.max) f.ids = f.ids.slice(0, a.max); pstate.dirty = true; redraw();
+  }));
+  el.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => {
+    const id = +b.dataset.pick; if (!f.action || ACTIONS[f.action].max === 0) f.action = "same";
+    const a = ACTIONS[f.action]; f.ids = a.max === 1 ? [id] : [...new Set([...f.ids, id])].slice(0, a.max); pstate.dirty = true; redraw();
+  }));
+  el.querySelectorAll("[data-rm]").forEach(b => b.addEventListener("click", () => { f.ids = f.ids.filter(x => x !== +b.dataset.rm); pstate.dirty = true; redraw(); }));
+  $("#dec-note")?.addEventListener("input", e => { f.note = e.target.value; pstate.dirty = true; });
+  const pq = $("#pick-q");
+  pq?.addEventListener("input", () => {
+    const v = pq.value.trim(); const r = $("#pick-r");
+    if (v.length < 2) { r.innerHTML = ""; return; }
+    const hits = [...EXT.values()].filter(e => (e.name || "").includes(v) || e.path.startsWith(v)).slice(0, 8);
+    r.innerHTML = hits.map(e => `<button data-add="${e.id}"><span class="path">${esc(e.path)}</span> ${esc(e.name || "בלי שם")} <span class="ctype">${esc(e.type || "")}</span></button>`).join("") || '<div class="muted">לא נמצאו שלוחות.</div>';
+    r.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => {
+      const id = +b.dataset.add; if (!f.action || ACTIONS[f.action].max === 0) f.action = "same"; const a = ACTIONS[f.action]; f.ids = a.max === 1 ? [id] : [...new Set([...f.ids, id])].slice(0, a.max); pstate.dirty = true; redraw();
+    }));
+  });
+  $("#dec-next").addEventListener("click", () => nextInQueue());
+  $("#dec-save").addEventListener("click", async () => {
+    const btn = $("#dec-save"); btn.disabled = true; $("#dec-msg").textContent = "שומרת…";
+    const ok = await saveDecision(n.id, f, "manual");
+    pstate.dirty = false;
+    drawQueueBar(); drawPlanTree(); pstate.form = null; renderPlanDetail();
+    const msg = $("#dec-msg"); if (msg) msg.textContent = ok ? "ההחלטה נשמרה" : DB ? "השמירה נכשלה. אפשר לנסות שוב." : "ההחלטה נשמרה רק בתצוגה הזו, עד שהדף ייסגר.";
+  });
+}
+async function saveDecision(nodeId, f, source) {
+  const doc = { node_id: nodeId, action: f.action, sclass_ids: f.ids, note: f.note || "", decided_by: MY_ID, decided_at: new Date().toISOString(), source };
+  DEC.set(nodeId, doc);
+  if (!DB || CAN_WRITE === false) return false;
+  try { await DB.doc("decisions/" + nodeId).set(doc); return true; }
+  catch (e) { if (e && e.code === "invalid_argument") CAN_WRITE = false; return false; }
+}
+function globalNotesHtml() {
+  const g = k => NOTES_BY.get("global:" + k) || [];
+  const col = (t, list) => `<div class="notes-col"><h3>${t}</h3><ul>${list.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
+  return `<div class="card-h"><h2>הערות כלליות בטיוטה</h2></div>
+    <div class="notes-grid one">
+      ${col("בכל הקו", g("global").filter(n => !n.text.startsWith("דרושים מוסרים")).map(n => n.text))}
+      ${col("שאלות שנותרו", g("open_question").map(n => n.text))}
+      ${col("דרושים מוסרים", g("global").filter(n => n.text.startsWith("דרושים מוסרים")).map(n => n.text.replace(/^דרושים מוסרים:\s*/, "")))}
+    </div>`;
+}
+async function initDecisions() {
+  try { USER = await window.claude?.use?.("user"); } catch (e) { USER = null; }
+  try { DB = await window.claude?.use?.("db"); } catch (e) { DB = null; }
+  if (USER) { try { MY_ID = await USER.id(); } catch (e) {} try { CAN_WRITE = await USER.can("data.write"); } catch (e) {} }
+  if (!DB) { if (location.hash === "#plan") drawQueueBar(); return; }
+  DB.collection("decisions").onSnapshot(async snap => {
+    DEC.clear();
+    for (const s of snap.docs) { const v = s.data(); if (v && v.node_id != null) DEC.set(+v.node_id, v); }
+    const ids = [...new Set([...DEC.values()].map(v => v.decided_by).filter(Boolean))];
+    if (USER && ids.length) { try { const ps = await USER.profiles(ids); for (const id of ids) NAMES[id] = ps[id]?.name || ""; } catch (e) {} }
+    const view = (location.hash || "#home").slice(1);
+    if (view === "plan") { drawQueueBar(); drawPlanTree(); if (!pstate.dirty) { pstate.form = null; renderPlanDetail(); } }
+    else if (view === "home") renderHome();
+  }, () => {});
+  if (location.hash === "#plan") drawQueueBar();
 }
 
 /* ── דוח פערים ── */
@@ -753,12 +1061,13 @@ function renderGaps() {
     const slice = list.slice(state.gapPage * per, state.gapPage * per + per);
     const sevLabel = { info: ["מידע", "teal"], warning: ["אזהרה", "warn"], error: ["שגיאה", "bad"] };
     $("#gap-body").innerHTML = slice.map(([k, sev, node, sid, d]) => `<tr><td>${GAP[k]?.[0] || k}</td><td><span class="chip ${sevLabel[sev][1]}">${sevLabel[sev][0]}</span></td>
-      <td>${gapText(k, d, node, sid)}</td><td>${sid != null && EXT.has(sid) ? `<button class="linkish" data-go="${sid}">לשלוחה בעץ</button>` : ""}</td></tr>`).join("")
+      <td>${gapText(k, d, node, sid)}</td><td>${["existing_not_found", "moved", "renamed", "unnumbered", "number_conflict"].includes(k) && node != null ? `<button class="linkish" data-nid="${node}">לצומת בטיוטה</button>` : sid != null && EXT.has(sid) ? `<button class="linkish" data-go="${sid}">לשלוחה בעץ</button>` : ""}</td></tr>`).join("")
       || '<tr><td colspan="4" class="empty-note">אין פריטים.</td></tr>';
     $("#gap-pager").innerHTML = pages > 1 ? `<button class="ghost" id="pg-prev" ${state.gapPage ? "" : "disabled"}>הקודם</button><span class="num">עמוד ${state.gapPage + 1} מתוך ${pages} · ${fmt(list.length)} פריטים</span><button class="ghost" id="pg-next" ${state.gapPage < pages - 1 ? "" : "disabled"}>הבא</button>` : `<span class="num">${fmt(list.length)} פריטים</span>`;
     $("#pg-prev")?.addEventListener("click", () => { state.gapPage--; draw(); });
     $("#pg-next")?.addEventListener("click", () => { state.gapPage++; draw(); });
     $("#gap-body").querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => openExt(+b.dataset.go)));
+    $("#gap-body").querySelectorAll("[data-nid]").forEach(b => b.addEventListener("click", () => openNode(+b.dataset.nid)));
   };
   draw();
   document.querySelectorAll(".tile").forEach(t => t.addEventListener("click", () => {
@@ -801,8 +1110,9 @@ $("#theme-btn").addEventListener("click", () => {
   const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
   root.dataset.theme = dark ? "light" : "dark";
 });
-document.addEventListener("click", ev => { const b = ev.target.closest("#detail [data-go], .ref [data-go]"); if (b && !b.closest(".crumbs")) { ev.preventDefault(); openExt(+b.dataset.go); } });
+document.addEventListener("click", ev => { const b = ev.target.closest("#detail [data-go], .ref [data-go], #pdetail [data-go]"); if (b && !b.closest(".crumbs")) { ev.preventDefault(); openExt(+b.dataset.go); } });
 addEventListener("hashchange", route);
 document.documentElement.lang = "he";
 route();
+initDecisions();
 </script>
