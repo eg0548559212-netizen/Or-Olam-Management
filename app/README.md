@@ -17,6 +17,7 @@
 set -a; . ./.env; set +a
 rm -f data/or-olam.db
 python3 -m app.importers.scan_import data/scan/or-olam-full-tree-settings.json
+python3 -m app.importers.types_import data/api/sclass-types-2026-10-28.json   # D-119
 python3 -m app.importers.draft_import data/draft/draft-2026-10-21.docx
 python3 -m app.planning.analyze
 python3 -m app.demo.build      # דף ההצגה: data/demo/or-olam-demo.html
@@ -27,6 +28,7 @@ python3 -m app.demo.build      # דף ההצגה: data/demo/or-olam-demo.html
 | שלב | קובץ | טבלאות |
 |---|---|---|
 | ייבוא הסריקה | `importers/scan_import.py` | `extension_type`, `extension`, `extension_path_alias`, `extension_sensitive_setting`, `tree_sync_run`, `tree_sync_raw`, `extension_setting_ref`, `extension_link` |
+| ייבוא סוגי השלוחות (D-119) | `importers/types_import.py` | `extension_type` |
 | ייבוא הטיוטה | `importers/draft_import.py` | `migration_plan`, `base_tree_snapshot`, `uploaded_file`, `draft` (`imported` + `working`), `draft_node`, `draft_note` |
 | דף ההצגה (D-112) | `demo/build.py`, `demo/template.html` | קורא בלבד. לא כולל ערכים מוצפנים, ומסתיר טלפונים בשמות |
 | החלת החלטות מהדף (D-113) | `planning/apply_decisions.py` | `mapping_row` (`approved` / `rejected`) |

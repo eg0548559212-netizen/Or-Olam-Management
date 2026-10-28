@@ -40,9 +40,10 @@ def build(db_file):
     q = lambda sql, *a: [dict(r) for r in db.execute(sql, a)]
 
     types, defaults = {}, {}
-    for r in q("SELECT cls_type, name, name_source, schema_json FROM extension_type"):
+    for r in q("SELECT cls_type, name, name_source, type_group, priority, schema_json FROM extension_type"):
         schema = json.loads(r["schema_json"]) if r["schema_json"] else {}
-        types[r["cls_type"]] = {"n": r["name"], "p": r["name_source"] == "provisional", "k": flat_titles(schema)}
+        types[r["cls_type"]] = {"n": r["name"], "p": r["name_source"] == "provisional", "g": r["type_group"], "o": r["priority"],
+                                "k": flat_titles(schema)}
         defaults[r["cls_type"]] = {k: v.get("default") for k, v in schema.get("properties", {}).items()
                                    if isinstance(v, dict) and "default" in v}
 

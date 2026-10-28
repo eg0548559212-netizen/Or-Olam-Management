@@ -955,7 +955,14 @@ function whyLines(n, sig, reasons) {
   for (const r of reasons || []) if (R[r] && !(r === "תלוי בהחלטה על האב" && DEC.has(n.parent))) out.push(["warn", R[r]]);
   return out;
 }
-const TYPE_OPTIONS = Object.keys(D.types).sort((a, b) => TYPE_NAME(a).localeCompare(TYPE_NAME(b), "he"));
+/* כל סוגי ידע פון לפי הקבוצות והסדר שלהם (D-119). סוגים שכבר קיימים בעץ מסומנים */
+const USED_TYPES = new Set([...EXT.values()].map(e => e.type));
+const TYPE_GROUPS = (() => {
+  const g = new Map();
+  for (const [t, v] of Object.entries(D.types)) { const k = v.g || "אחר"; if (!g.has(k)) g.set(k, []); g.get(k).push(t); }
+  const order = k => Math.min(...g.get(k).map(t => D.types[t].o ?? 999));
+  return [...g.keys()].sort((a, b) => order(a) - order(b)).map(k => [k, g.get(k).sort((a, b) => (D.types[a].o ?? 999) - (D.types[b].o ?? 999))]);
+})();
 const TYPE_SRC = { manual: "נקבע ידנית", db: "נקבע ידנית", legacy: "לפי ההחלטה הקודמת", linked: "לפי השלוחה המשויכת",
   suggested: "לפי השלוחה שהמערכת הציעה", children: "יש לו תתי-צמתים, ולכן תפריט" };
 
@@ -983,7 +990,7 @@ function renderPlanDetail() {
         ${h.description ? `<p class="muted" style="margin:8px 0 0">${esc(h.description)}</p>` : ""}</div></div>
     ${row ? `<div class="props">
       <label class="prop" for="p-type"><span>סוג שלוחה</span>
-        <select id="p-type" class="ghost"${ro}><option value="">בלי סוג</option>${TYPE_OPTIONS.map(t => `<option value="${t}"${et.t === t ? " selected" : ""}>${esc(TYPE_NAME(t))}${D.types[t]?.p ? " (זמני)" : ""}</option>`).join("")}</select>
+        <select id="p-type" class="ghost"${ro}><option value="">בלי סוג</option>${TYPE_GROUPS.map(([g, ts]) => `<optgroup label="${esc(g)}">${ts.map(t => `<option value="${t}"${et.t === t ? " selected" : ""}>${esc(TYPE_NAME(t))}${USED_TYPES.has(t) ? "" : " · לא בשימוש בקו"}</option>`).join("")}</optgroup>`).join("")}</select>
         <small class="muted">${et.t ? (TYPE_SRC[et.src] || "") + (routing ? " · תפריט מורחב, בלי שיוך" : "") : "עוד לא נקבע"}</small></label>
       <div class="prop"><span>תגיות</span>
         <button class="tagbtn${sb ? " on" : ""}" id="p-sb"${ro}>${sb ? "✓ בנייה מיוחדת" : "+ בנייה מיוחדת"}</button></div>
