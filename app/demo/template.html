@@ -756,7 +756,7 @@ function renderHome() {
   const refsTotal = D.refs.length;
   const broken = D.refs.filter(r => r[6] === "broken").length;
   const lc = { unset: 0, new: 0, existing: 0, merged: 0, routing: 0, total: 0 };
-  for (const n of NODES.values()) { if (!isNodeRow(n)) continue; lc.total++; if (isRouting(n)) lc.routing++; else lc[linkStatus(n)]++; }
+  for (const n of NODES.values()) { if (!isNodeRow(n)) continue; lc.total++; if (isRouting(n) && linkStatus(n) === "unset") lc.routing++; else lc[linkStatus(n)]++; }
 
   // גרף עומק בקנה מידה אחד
   const W = 520, H = 190, padB = 28, padT = 22, bw = 34, gap = (W - 20 - bw * 10) / 9;
@@ -1279,7 +1279,7 @@ function askDelete(id) {
   const n = NODES.get(id); if (!n || n.parent == null || CAN_WRITE === false) return;
   if (formDirty() && pstate.sel !== id) { toast("קודם שומרים או מבטלים את השינויים בטופס"); return; }
   const sub = subtreeIds(id).slice(1).map(k => NODES.get(k));
-  const linked = [n, ...sub].filter(x => ["existing", "merged"].includes(linkStatus(x)) && isNodeRow(x) && !isRouting(x));
+  const linked = [n, ...sub].filter(x => ["existing", "merged"].includes(linkStatus(x)) && isNodeRow(x));
   if (!sub.length && !linked.length) { deleteNode(id); return; }
   pstate.modal = { kind: "delete", id, sub: sub.length, linked: linked.length }; drawModal();
 }
@@ -1397,8 +1397,8 @@ function dirtyKeys(n) {
 function formError(n, f) {
   if (!f.title.trim()) return "title";
   const routing = ROUTING_TYPES.has(f.type);
-  if (isNodeRow(n) && !routing && f.link === "existing" && f.ids.length !== 1) return "link";
-  if (isNodeRow(n) && !routing && f.link === "merged" && f.ids.length < 2) return "link";
+  if (isNodeRow(n) && f.link === "existing" && f.ids.length !== 1) return "link";
+  if (isNodeRow(n) && f.link === "merged" && f.ids.length < 2) return "link";
   return null;
 }
 function renderPlanDetail() {
@@ -1440,9 +1440,9 @@ function renderPlanDetail() {
           <select id="f-type" class="in sel" aria-describedby="f-type-h"${ro}><option value="">בלי סוג</option>${TYPE_GROUPS.map(([g, ts]) => `<optgroup label="${esc(g)}">${ts.map(t => `<option value="${t}"${f.type === t ? " selected" : ""}>${esc(TYPE_NAME(t))}${USED_TYPES.has(t) ? "" : " · לא בשימוש בקו"}</option>`).join("")}</optgroup>`).join("")}</select></div>
         <label class="chk tall"><input type="checkbox" id="f-sb"${f.special ? " checked" : ""}${ro}><b>בנייה מיוחדת</b></label>
       </div>
-      ${routing ? '<span class="help" id="f-type-h" style="margin-top:-8px">תפריט מורחב: אין הקלטות, ולכן אין שיוך.</span>'
+      ${routing ? '<span class="help" id="f-type-h" style="margin-top:-8px">תפריט מורחב: השיוך לא חובה. הסוג לא משתנה לפי השיוך.</span>'
         : f.typeFrom && EXT.get(f.typeFrom) ? `<span class="help" id="f-type-h" role="status" style="margin-top:-8px">הסוג נקבע לפי השלוחה המשויכת <span class="path">${esc(EXT.get(f.typeFrom).path)}</span>. אפשר לשנות.</span>` : ""}
-      ${row && !routing ? linkFieldHtml(n, f, err === "link", ro) : ""}
+      ${row ? linkFieldHtml(n, f, err === "link", ro) : ""}
       <div class="f">
         <div class="lrow"><label for="f-notes">הערות</label><label class="chk sm"><input type="checkbox" id="f-mark"${f.mark ? " checked" : ""}${ro}>חיווי בעץ</label></div>
         <textarea id="f-notes" class="in" rows="2" placeholder="כל שורה היא הערה נפרדת"${ro}>${esc(f.notes)}</textarea>
@@ -1565,12 +1565,13 @@ async function saveForm(n) {
   const t = f.title.trim();
   if (t !== b.title) patch.title = n.title0 && t === n.title0 ? null : t;
   if (f.type !== b.type) patch.planned_type = f.type || null;
+  /* D-153: תפריט מורחב שמשויך לשלוחה ישנה נשאר תפריט, גם אם הסוג שלו נגזר עד עכשיו מתתי-השלוחות */
+  else if (ROUTING_TYPES.has(f.type) && f.ids.length && !["manual", "db"].includes(effType(n).src)) patch.planned_type = f.type;
   if (f.special !== b.special) patch.special_build = f.special;
   if (f.notes !== b.notes) patch.notes = f.notes.split("\n").map(x => x.trim()).filter(Boolean);
   if (f.mark !== b.mark) patch.note_mark = f.mark;
   if (Object.keys(patch).length) await saveProps(n.id, patch);
-  const routing = ROUTING_TYPES.has(f.type);
-  if (isNodeRow(n) && !routing && (f.link !== b.link || f.ids.join(",") !== b.ids.join(","))) {
+  if (isNodeRow(n) && (f.link !== b.link || f.ids.join(",") !== b.ids.join(","))) {
     if (f.link === "unset") await clearDecision(n.id);
     else await saveDecision(n.id, { action: { new: "none", existing: "same", merged: "merge" }[f.link], ids: f.link === "new" ? [] : f.ids }, "manual");
   }
@@ -1647,7 +1648,7 @@ function wireDetail(n) {
   const pick = id => {
     if (f.link === "merged") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; } else f.ids = [id];
     const t = EXT.get(f.ids[0])?.type;
-    if (t && t !== f.type && !ROUTING_TYPES.has(t)) { f.type = t; f.typeFrom = f.ids[0]; }
+    if (t && t !== f.type && !ROUTING_TYPES.has(t) && !ROUTING_TYPES.has(f.type)) { f.type = t; f.typeFrom = f.ids[0]; }
     rerender(f.link === "merged" ? "pick-q" : null);
   };
   el.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => pick(+b.dataset.pick)));
@@ -1757,7 +1758,7 @@ function computeFates() {
   }
   for (const m of MAP_BY_NODE.values()) {
     const n = NODES.get(m.node);
-    if (!n || !n.live || DEC.has(n.id) || isRouting(n) || linked.has(m.ext) || !EXT.get(m.ext)) continue;  /* תפריט מורחב לא משויך (D-118) */
+    if (!n || !n.live || DEC.has(n.id) || linked.has(m.ext) || !EXT.get(m.ext)) continue;
     NSRC.set(n.id, { k: "pending", sids: [m.ext], status: m.status });
     if (!pending.has(m.ext)) pending.set(m.ext, []);
     pending.get(m.ext).push(n.id);
@@ -1974,7 +1975,7 @@ function drawPair() {
       <div class="acts">${src.k === "pending" ? `<button class="cta" data-accept="${n.id}:${src.sids[0]}"${ro}>אישור ההצעה</button>` : ""}${openBtn(n.id)}</div>`;
     return;
   }
-  const why = !isNodeRow(n) || isRouting(n) ? "תפריט מורחב. אין לו הקלטות, ולכן אין לו שיוך." : linkStatus(n) === "new" ? "שלוחה חדשה. אין לה היסטוריה." : "עוד לא שויכה. משייכים בבניית העץ, או בוחרים בצד הימני שלוחה שלא בטיוטה.";
+  const why = !isNodeRow(n) ? "כותרת בלי שלוחה." : isRouting(n) ? "תפריט מורחב. השיוך לא חובה. אפשר לשייך מהעץ הנוכחי, או בבניית העץ." : linkStatus(n) === "new" ? "שלוחה חדשה. אין לה היסטוריה." : "עוד לא שויכה. משייכים בבניית העץ, או בוחרים בצד הימני שלוחה שלא בטיוטה.";
   el.innerHTML = `<div class="box dashed"><small>בעץ הנוכחי</small><span>${why}</span></div>${arrow("")}${nBox(n)}<div class="acts">${openBtn(n.id)}</div>`;
 }
 /* בחירת שלוחה בטיוטה לשיוך שלוחה ישנה */
@@ -1993,7 +1994,7 @@ function wirePick(e) {
   let hits = [], active = 0;
   const paint = () => {
     const v = cst.pq.trim(), name = normName(extName(e));
-    hits = treeOrder().map(id => NODES.get(id)).filter(n => n.live && isNodeRow(n) && !isRouting(n) && (v ? (n.title || "").includes(v) || pathText(n).startsWith(v) : true));
+    hits = treeOrder().map(id => NODES.get(id)).filter(n => n.live && isNodeRow(n) && (v ? (n.title || "").includes(v) || pathText(n).startsWith(v) : true));
     if (!v) hits = hits.map(n => [n, nameSim(n.title || "", name)]).filter(x => x[1] > .35).sort((a, b) => b[1] - a[1]).map(x => x[0]);
     hits = hits.slice(0, 12); active = Math.min(active, Math.max(0, hits.length - 1));
     box.innerHTML = hits.length ? hits.map((n, i) => `<div role="option" id="c-po${i}" class="combo-o${i === active ? " on" : ""}" aria-selected="${i === active}" data-i="${i}"><span class="path">${esc(pathText(n))}</span><span class="combo-n">${esc(n.title || "(ריק)")}</span>${srcChip(n)}</div>`).join("")
@@ -2020,7 +2021,8 @@ async function linkExt(nodeId, ids, action) {
   const n = NODES.get(nodeId), prevDec = DEC.get(nodeId) || null, prevProps = PROPS.has(nodeId) ? { ...PROPS.get(nodeId) } : null;
   await saveDecision(nodeId, { action, ids }, "manual");
   const t = EXT.get(ids[0])?.type;
-  if (t && !ROUTING_TYPES.has(t) && effType(n).t !== t) await saveProps(nodeId, { planned_type: t });
+  if (isRouting(n)) { if (!["manual", "db"].includes(effType(n).src)) await saveProps(nodeId, { planned_type: effType(n).t }); }  /* D-153: תפריט נשאר תפריט */
+  else if (t && !ROUTING_TYPES.has(t) && effType(n).t !== t) await saveProps(nodeId, { planned_type: t });
   cst.pick = null; cst.pq = ""; cst.ask = null;
   cmpRedraw();
   toast(`"${n.title}" שויכה ל-${ids.map(pathOf).join(", ")}`, async () => {
@@ -2127,8 +2129,8 @@ async function buildDocx(opts) {
     if (specialBuild(n)) runs.push(R("  [בנייה מיוחדת]", { color: C.special, size: 20 }));
     const meta = [];
     if (opts.types && t) meta.push(TYPE_NAME(t).replace(/\s*\(.*\)\s*$/, ""));
-    if (opts.links && isNodeRow(n) && !routing) {
-      const linked = d ? (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean) : [];
+    const linked = d ? (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean) : [];
+    if (opts.links && isNodeRow(n) && (!routing || linked.length)) {
       meta.push(linked.length ? `${LINK[ls][0]}: ${linked.map(e => `${e.path} ${e.name || ""}`.trim()).join("، ")}` : ls === "new" ? "חדשה" : "ללא שיוך");
     }
     if (meta.length) runs.push(R("  · " + meta.join(" · "), { color: C.grey, size: 18 }));
