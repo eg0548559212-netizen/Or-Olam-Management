@@ -1407,7 +1407,8 @@ function renderPlanDetail() {
           <select id="f-type" class="in sel" aria-describedby="f-type-h"${ro}><option value="">בלי סוג</option>${TYPE_GROUPS.map(([g, ts]) => `<optgroup label="${esc(g)}">${ts.map(t => `<option value="${t}"${f.type === t ? " selected" : ""}>${esc(TYPE_NAME(t))}${USED_TYPES.has(t) ? "" : " · לא בשימוש בקו"}</option>`).join("")}</optgroup>`).join("")}</select></div>
         <label class="chk tall"><input type="checkbox" id="f-sb"${f.special ? " checked" : ""}${ro}><b>בנייה מיוחדת</b></label>
       </div>
-      ${routing ? '<span class="help" id="f-type-h" style="margin-top:-8px">תפריט מורחב: אין הקלטות, ולכן אין שיוך.</span>' : ""}
+      ${routing ? '<span class="help" id="f-type-h" style="margin-top:-8px">תפריט מורחב: אין הקלטות, ולכן אין שיוך.</span>'
+        : f.typeFrom && EXT.get(f.typeFrom) ? `<span class="help" id="f-type-h" role="status" style="margin-top:-8px">הסוג נקבע לפי השלוחה המשויכת <span class="path">${esc(EXT.get(f.typeFrom).path)}</span>. אפשר לשנות.</span>` : ""}
       ${row && !routing ? linkFieldHtml(n, f, err === "link", ro) : ""}
       <div class="f">
         <div class="lrow"><label for="f-notes">הערות</label><label class="chk sm"><input type="checkbox" id="f-mark"${f.mark ? " checked" : ""}${ro}>חיווי בעץ</label></div>
@@ -1599,7 +1600,7 @@ function wireDetail(n) {
   $("#pe-form")?.addEventListener("submit", e => { e.preventDefault(); saveForm(n); });
   $("#f-title")?.addEventListener("input", e => { f.title = e.target.value; drawFoot(); });
   $("#f-reset")?.addEventListener("click", () => { f.title = n.title0; rerender("f-title"); });
-  $("#f-type")?.addEventListener("change", e => { f.type = e.target.value; rerender("f-type"); });
+  $("#f-type")?.addEventListener("change", e => { f.type = e.target.value; f.typeFrom = null; rerender("f-type"); });
   $("#f-sb")?.addEventListener("change", e => { f.special = e.target.checked; drawFoot(); });
   $("#f-mark")?.addEventListener("change", e => { f.mark = e.target.checked; drawFoot(); });
   $("#f-notes")?.addEventListener("input", e => { f.notes = e.target.value; drawFoot(); });
@@ -1608,7 +1609,14 @@ function wireDetail(n) {
     if (f.link === "new" || f.link === "unset") f.ids = []; else if (f.link === "existing") f.ids = f.ids.slice(0, 1);
     renderPlanDetail(); el.querySelector('input[name="f-link"]:checked')?.focus();
   }));
-  const pick = id => { if (f.link === "merged") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; } else f.ids = [id]; rerender(f.link === "merged" ? "pick-q" : null); };
+  /* D-150: שיוך לשלוחה קיימת קובע גם את סוג השלוחה, לפי השלוחה הראשונה שנבחרה. אפשר לשנות אחר כך.
+     תפריט מורחב לא נקבע כך, כי אז השיוך היה נעלם (D-118) */
+  const pick = id => {
+    if (f.link === "merged") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; } else f.ids = [id];
+    const t = EXT.get(f.ids[0])?.type;
+    if (t && t !== f.type && !ROUTING_TYPES.has(t)) { f.type = t; f.typeFrom = f.ids[0]; }
+    rerender(f.link === "merged" ? "pick-q" : null);
+  };
   el.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => pick(+b.dataset.pick)));
   el.querySelectorAll("[data-unpick]").forEach(b => b.addEventListener("click", () => { f.ids = f.ids.filter(x => x !== +b.dataset.unpick); rerender("pick-q"); }));
   comboInto($("#pick-q"), $("#pick-r"), pick, f.ids);
