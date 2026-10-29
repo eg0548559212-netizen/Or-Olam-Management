@@ -27,8 +27,9 @@
 
 **שלב 2: שחזור וסנכרון**
 1. מריצים `python3 -m app.session_package restore <zip>`, ובודקים שהתשובה כוללת `key_ok: true`. אם היא אומרת שהסכמה השתנתה, בונים מחדש מקובצי המקור שבחבילה, לפי `app/README.md`.
-2. מורידים מהדף את האוספים `decisions` ו-`nodeprops`, בעזרת `ArtifactData list` עם `out_dir` אל `data/page-state`. מחילים אותם על בסיס הנתונים:
-   `python3 -m app.planning.apply_decisions data/page-state/decisions --props data/page-state/nodeprops`
+2. מורידים מהדף את האוספים `decisions`, `nodeprops` ו-`retired` (D-152), בעזרת `ArtifactData list` עם `out_dir` אל `data/page-state`. מחילים אותם על בסיס הנתונים:
+   `python3 -m app.planning.apply_decisions data/page-state/decisions --props data/page-state/nodeprops --retired data/page-state/retired`
+   (אם האוסף `retired` ריק, יוצרים תיקייה ריקה.)
 3. מריצים `python3 -m app.planning.analyze`, ואז `python3 -m app.demo.build`.
 4. מפרסמים את הדף לאותה כתובת: https://claude.ai/artifact/RURYuWdBN67QoeUytV2oHD
    - קודם `read`, ורק אחריו פרסום.

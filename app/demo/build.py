@@ -83,6 +83,9 @@ def build(db_file):
         linked[r["node_id"]] = {"node_id": r["node_id"], "action": rel_action.get(r["relation"], "same"),
                                 "sclass_ids": [int(x) for x in r["ids"].split(",")], "decided_by": r["decided_by"],
                                 "decided_at": r["decided_at"], "source": "db"}
+    # D-152: שלוחות שסומנו "נסגרת" והוחלו. בדף, האוסף retired החי גובר עליהן
+    retired = [r["sclass_id"] for r in q("""SELECT s.sclass_id FROM mapping_row m JOIN mapping_source s USING (mapping_id)
+                                            WHERE m.plan_id = ? AND m.relation = 'retire' AND m.status = 'approved'""", plan["plan_id"])]
     report = q("SELECT * FROM gap_report WHERE draft_id = ? ORDER BY report_id DESC LIMIT 1", draft["draft_id"])[0]
     gaps = [[r["gap_kind"], r["severity"], r["draft_node_id"], r["sclass_id"], json.loads(r["detail"]) if r["detail"] else {}]
             for r in q("SELECT * FROM gap_item WHERE report_id = ? ORDER BY item_id", report["report_id"])]
@@ -94,7 +97,7 @@ def build(db_file):
                  "plan": plan["name"], "draft_label": draft["label"], "report_at": report["created_at"],
                  "validation": validation},
         "types": types, "ext": ext, "refs": refs, "aliases": aliases,
-        "nodes": nodes, "notes": notes, "maps": maps, "gaps": gaps, "linked": list(linked.values()),
+        "nodes": nodes, "notes": notes, "maps": maps, "gaps": gaps, "linked": list(linked.values()), "retired": retired,
     }
 
 

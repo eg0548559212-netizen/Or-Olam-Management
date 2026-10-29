@@ -110,6 +110,9 @@ def automap(db, plan_id, draft_id):
 
     claimed = set(decided.values()) | set(mapped.values())  # כולל השורש, שמופה לפי הנתיב
     claimed |= {sid for sid, e in exts.items() if is_excluded(e["path"])}
+    # D-152: שלוחה שנסגרה, ותתי-השלוחות שלה, לא מוצעות לשיוך
+    for sid in retired_sids(db, plan_id):
+        claimed |= set(descendants(exts, children, sid, 99)) | {sid}
     weak = {}  # צמתים בלי התאמה מעל הסף: המועמדים החלשים, להצגה בדוח
     for n in nodes.values():  # לפי position: אב לפני ילד
         if n["node_id"] in decided or n["parent_node_id"] is None:
@@ -203,6 +206,12 @@ def automap(db, plan_id, draft_id):
             **stats}, weak
 
 
+def retired_sids(db, plan_id):
+    return {r[0] for r in db.execute(
+        """SELECT s.sclass_id FROM mapping_row m JOIN mapping_source s USING (mapping_id)
+           WHERE m.plan_id = ? AND m.relation = 'retire' AND m.status = 'approved'""", (plan_id,))}
+
+
 def gap_report(db, plan_id, draft_id, weak=None):
     nodes, exts = load(db, draft_id)
     ts = now()
@@ -276,8 +285,12 @@ def gap_report(db, plan_id, draft_id, weak=None):
     root_ids = {sid for sid, e in exts.items() if e["parent_sclass_id"] is None}
     main_root = next((sid for sid in root_ids if exts[sid]["path"] == "1"), None)
 
+    retired = retired_sids(db, plan_id)  # D-152: ענף שנסגר הוא החלטה, ולא פער
+
     def walk(sid):
         for c in children.get(sid, []):
+            if c in retired:
+                continue
             if c in mapped_sids:
                 walk(c)
             else:

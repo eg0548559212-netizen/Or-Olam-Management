@@ -20,6 +20,10 @@ created → צומת חדש ב-draft_node (node_status = new), parent_id / digit
 deleted → draft_node.deleted לצומת ולכל הצאצאים שלו. אחר כך full_path מחושב מחדש,
 שורות מיפוי של צמתים שנמחקו נדחות, ו-keep / move מחושב מחדש לפי הנתיב החדש.
 הרצה חוזרת של המיפוי האוטומטי לא נוגעת בשורות approved / rejected.
+
+שלוחות שסומנו "לא עוברת (נסגרת)" במסך "חדש מול ישן" (D-152) נשמרות באוסף retired (מסמך לכל sclass_id),
+ומוחלות עם --retired <תיקייה>: לכל אחת שורת mapping_row עם relation = retire, status = approved,
+מקור אחד ובלי יעד. ההחלה מחליפה את כל שורות ה-retire הקודמות, כך שביטול סגירה בדף מוחק את השורה.
 """
 import argparse
 import glob
@@ -73,6 +77,34 @@ def run(src_dir, db_file):
         applied += 1
     db.commit()
     return {"applied": applied, "skipped": skipped}
+
+
+def apply_retired(src_dir, db_file):
+    db = connect(db_file)
+    plan_id = db.execute("SELECT plan_id FROM migration_plan ORDER BY plan_id LIMIT 1").fetchone()[0]
+    old = [r[0] for r in db.execute("SELECT mapping_id FROM mapping_row WHERE plan_id = ? AND relation = 'retire'", (plan_id,))]
+    for mid in old:
+        db.execute("DELETE FROM mapping_source WHERE mapping_id = ?", (mid,))
+        db.execute("DELETE FROM mapping_row WHERE mapping_id = ?", (mid,))
+    n = 0
+    for f in sorted(glob.glob(os.path.join(src_dir, "*.json"))):
+        doc = json.load(open(f, encoding="utf-8"))
+        d = doc.get("data", doc)
+        if d.get("sclass_id") is None or d.get("retired") is False:
+            continue
+        e = db.execute("SELECT sclass_id, path, name FROM extension WHERE sclass_id = ?", (int(d["sclass_id"]),)).fetchone()
+        if not e:
+            continue
+        mid = db.execute(
+            """INSERT INTO mapping_row (plan_id, relation, confidence, signals, status, decided_by, decided_at, note)
+               VALUES (?, 'retire', 1, ?, 'approved', ?, ?, ?)""",
+            (plan_id, json.dumps({"source": "page"}), d.get("decided_by"), d.get("decided_at"), d.get("note") or None),
+        ).lastrowid
+        db.execute("INSERT INTO mapping_source (mapping_id, sclass_id, path, name) VALUES (?, ?, ?, ?)",
+                   (mid, e["sclass_id"], e["path"], e["name"]))
+        n += 1
+    db.commit()
+    return {"retired": n}
 
 
 def _docs(src_dir):
@@ -196,6 +228,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("src_dir")
     ap.add_argument("--props", help="תיקיית nodeprops (D-118)")
+    ap.add_argument("--retired", help="תיקיית retired (D-152)")
     ap.add_argument("--db", default="data/or-olam.db")
     a = ap.parse_args()
     out = apply_structure(a.props, a.db) if a.props else {}
@@ -203,4 +236,6 @@ if __name__ == "__main__":
     if a.props:
         out.update(apply_props(a.props, a.db))
         finalize_structure(a.db)
+    if a.retired:
+        out.update(apply_retired(a.retired, a.db))
     print(json.dumps(out, ensure_ascii=False, indent=2))
