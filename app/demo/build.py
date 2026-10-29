@@ -65,7 +65,8 @@ def build(db_file):
     plan = q("SELECT * FROM migration_plan ORDER BY plan_id LIMIT 1")[0]
     draft = q("SELECT * FROM draft WHERE plan_id = ? AND kind = 'working'", plan["plan_id"])[0]
     nodes = [[r["node_id"], r["parent_node_id"], r["digit"], r["full_path"], r["title"], r["node_status"], r["node_kind"],
-              json.loads(r["hints"]) if r["hints"] else None, r["link_status"], r["special_build"], r["planned_cls_type"]]
+              json.loads(r["hints"]) if r["hints"] else None, r["link_status"], r["special_build"], r["planned_cls_type"],
+              r["deleted"]]
              for r in q("SELECT * FROM draft_node WHERE draft_id = ? ORDER BY position", draft["draft_id"])]
     notes = [[r["node_id"], r["scope"], r["note_kind"], r["text"]]
              for r in q("SELECT * FROM draft_note WHERE draft_id = ? ORDER BY note_id", draft["draft_id"])]

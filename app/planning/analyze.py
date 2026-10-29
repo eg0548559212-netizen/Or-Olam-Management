@@ -60,7 +60,7 @@ def is_excluded(path):
 
 
 def load(db, draft_id):
-    nodes = {r["node_id"]: dict(r) for r in db.execute("SELECT * FROM draft_node WHERE draft_id = ? ORDER BY position", (draft_id,))}
+    nodes = {r["node_id"]: dict(r) for r in db.execute("SELECT * FROM draft_node WHERE draft_id = ? AND deleted = 0 ORDER BY position", (draft_id,))}
     for n in nodes.values():
         n["hints"] = json.loads(n["hints"]) if n["hints"] else {}
     exts = {r["sclass_id"]: dict(r) for r in db.execute(
@@ -299,7 +299,7 @@ def gap_report(db, plan_id, draft_id, weak=None):
            FROM extension_setting_ref r JOIN extension e USING (sclass_id)
            WHERE r.target_sclass_id IS NOT NULL AND r.target_form IN ('absolute', 'parent_relative', 'exclude')"""):
         m = mapped_sids.get(ref["target_sclass_id"])
-        if m and m["relation"] == "move":
+        if m and m["relation"] == "move" and m["node_id"] in nodes:
             add("ref_needs_rewrite", "warning", m["node_id"], ref["sclass_id"], from_path=ref["from_path"],
                 setting_key=ref["setting_key"], old_target=ref["target_text"], new_target=nodes[m["node_id"]]["full_path"])
 

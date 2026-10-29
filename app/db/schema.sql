@@ -257,6 +257,7 @@ CREATE TABLE draft_node (
     planned_cls_type    TEXT,                   -- סוג השלוחה שייבנה (D-118)
     link_status         TEXT NOT NULL DEFAULT 'unset' CHECK (link_status IN ('unset', 'new', 'existing', 'merged')),  -- D-118
     special_build       INTEGER NOT NULL DEFAULT 0,  -- תגית "בנייה מיוחדת" (D-118)
+    deleted             INTEGER NOT NULL DEFAULT 0,  -- נמחק בעריכת המבנה (D-124). נשמר לשחזור
     hints               TEXT,                   -- JSON
     source_color        TEXT,                   -- הצבע הדומיננטי בקובץ, כמקור בלבד
     source_span         TEXT,                   -- JSON: מיקום בקובץ המקור

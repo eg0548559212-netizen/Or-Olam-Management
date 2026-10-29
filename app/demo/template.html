@@ -425,6 +425,145 @@ td .linkish:hover { text-decoration: underline; }
 .title-row .eye { font-size: 13px; font-family: var(--f-body); font-weight: 400; color: var(--ink-3); }
 .title-edit { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .title-edit input { flex: 1 1 220px; min-width: 0; font-family: var(--f-display); font-size: 20px; border: 1.5px solid var(--teal); border-radius: 14px; padding: 6px 12px; background: var(--surface); }
+/* ── בניית העץ החדש (D-124–D-127) ── */
+.phead { padding: 18px 24px; display: flex; flex-direction: row; align-items: center; gap: 18px; flex-wrap: wrap; }
+.ph1 { font-size: 22px; }
+.pstats { display: flex; align-items: center; }
+.pstat { display: flex; flex-direction: column; padding: 0 16px; border-inline-start: 1px solid var(--line); }
+.pstat b { font-family: var(--f-display); font-weight: 500; font-size: 24px; line-height: 1.1; }
+.pstat small { font-size: 13px; color: var(--ink-2); }
+.pacts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.psplit { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 20px; align-items: start; }
+.ptreecard { padding: 20px 20px 14px; display: flex; flex-direction: column; gap: 12px; }
+.pcolh { display: flex; align-items: center; gap: 8px; padding: 0 8px 6px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+.ptree { max-height: calc(100vh - 330px); min-height: 460px; overflow: auto; margin-inline: -6px; padding-inline: 6px; display: flex; flex-direction: column; gap: 1px; }
+.prow { display: flex; align-items: center; gap: 8px; min-height: 40px; border-radius: 12px; padding-inline-end: 8px; position: relative; }
+.prow:hover { background: var(--surface-2); }
+.prow.sel { background: var(--teal-soft); }
+.prow.dragging { opacity: .45; }
+.prow.drop-in { box-shadow: inset 0 0 0 2px var(--teal); }
+.prow.drop-before::before, .prow.drop-after::before { content: ""; position: absolute; inset-inline: 30px 0; height: 0; border-top: 2px solid var(--teal); }
+.prow.drop-before::before { top: -1px; } .prow.drop-after::before { bottom: -1px; }
+.prow[data-drop]::after { content: attr(data-drop); position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: var(--teal); color: #fff; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 10px; pointer-events: none; z-index: 2; }
+.ptw { width: 26px; height: 26px; border: 0; background: none; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); flex: none; padding: 0; }
+.ptw:hover { background: var(--surface); }
+.ptw svg { width: 14px; transition: transform .15s; }
+.ptw.open svg { transform: rotate(-90deg); }
+.ptw-sp { width: 26px; flex: none; }
+.pmain { flex: 1; min-width: 0; border: 0; background: none; display: flex; align-items: center; gap: 8px; text-align: right; padding: 4px 0; min-height: 36px; border-radius: 8px; }
+.pp { display: inline-flex; align-items: center; gap: 3px; flex: none; font-family: var(--f-display); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.pp .sp { font-size: 10px; opacity: .6; }
+.pdg { min-width: 28px; height: 28px; padding: 0 6px; border-radius: 9px; display: inline-grid; place-items: center; flex: none; font-family: var(--f-display); font-size: 14px; font-weight: 700; }
+.pdg.existing { background: var(--ok-soft); color: var(--ok); border: 1px solid color-mix(in srgb, var(--ok) 35%, transparent); }
+.pdg.new { background: var(--new-soft); color: var(--new); border: 1px solid color-mix(in srgb, var(--new) 30%, transparent); }
+.pdg.unset { background: var(--surface); color: var(--ink-2); border: 1px dashed var(--ink-3); }
+.pdg.plain { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+.pnm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pnm.top { font-family: var(--f-display); font-weight: 500; }
+.pnm.empty { color: var(--ink-3); font-style: italic; }
+.pkids { font-size: 12px; color: var(--ink-2); flex: none; }
+.prowact { display: flex; flex: none; }
+.prowact button { width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--surface); color: var(--teal-strong); display: grid; place-items: center; }
+.prowact button:hover { background: var(--teal-softer); }
+.prowact svg { width: 16px; }
+.ptcol { flex: none; width: 150px; display: flex; }
+.ptcol .ctype { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prow.sel .ctype { background: var(--surface); }
+.pfoot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 12px; font-size: 13px; color: var(--ink-2); }
+.plg { display: inline-flex; align-items: center; gap: 6px; }
+.plg i { min-width: 14px; width: 14px; height: 14px; padding: 0; border-radius: 4px; }
+.pedit { display: flex; flex-direction: column; position: sticky; top: 20px; max-height: calc(100vh - 40px); }
+.pe-h { padding: 20px 24px 0; display: flex; flex-direction: column; gap: 12px; }
+.pe-top { display: flex; align-items: center; gap: 12px; }
+.eyebrow { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.pe-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pe-title h2 { font-size: 21px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pe-acts { display: flex; gap: 6px; position: relative; flex: none; }
+.pe-menu { position: absolute; top: 46px; left: 0; background: var(--surface); border-radius: 16px; box-shadow: 0 12px 32px rgba(20, 34, 51, .16); padding: 6px; display: flex; flex-direction: column; min-width: 200px; z-index: 6; }
+.pe-menu button { border: 0; background: none; text-align: right; padding: 10px 12px; border-radius: 10px; min-height: 42px; }
+.pe-menu button:hover, .pe-menu button:focus-visible { background: var(--surface-2); }
+.pe-menu button.dz { color: var(--bad); }
+.pe-menu button.dz:hover { background: var(--bad-soft); }
+.pe-body { padding: 16px 24px 20px; display: flex; flex-direction: column; gap: 16px; overflow: auto; min-height: 0; }
+.f { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.f > label, .f .lbl, .lrow > label:first-child { font-size: 14px; font-weight: 600; color: var(--ink); }
+.req { color: var(--bad); margin-inline-start: 2px; }
+.in { border: 1px solid color-mix(in srgb, var(--ink-3) 55%, var(--line)); border-radius: 12px; background: var(--surface); padding: 9px 12px; min-height: 44px; width: 100%; color: var(--ink); }
+.in:hover { border-color: var(--ink-3); }
+.in:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
+.in.err { border-color: var(--bad); box-shadow: 0 0 0 3px var(--bad-soft); }
+.in:disabled { background: var(--surface-2); }
+textarea.in { resize: vertical; line-height: 1.5; }
+select.in { appearance: none; padding-left: 34px; background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+  background-position: 16px 52%, 21px 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+.help { font-size: 13px; color: var(--ink-2); }
+.errt { font-size: 13px; color: var(--bad); font-weight: 600; }
+.f-row2 { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: end; }
+.chk { display: flex; gap: 10px; align-items: center; cursor: pointer; }
+.chk input { width: 20px; height: 20px; margin: 0; accent-color: var(--teal-strong); flex: none; }
+.chk b { font-weight: 600; }
+.chk.tall { min-height: 44px; }
+.chk.sm { font-size: 13.5px; color: var(--ink-2); font-weight: 500; }
+.chk.sm input { width: 18px; height: 18px; }
+.lrow { display: flex; align-items: center; gap: 10px; }
+.lrow > label:first-child { flex: 1; }
+.segr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; background: var(--surface-2); border-radius: 14px; padding: 4px; }
+.segr label { display: grid; place-items: center; min-height: 40px; border-radius: 10px; font-weight: 600; font-size: 14px; color: var(--ink-2); cursor: pointer; position: relative; }
+.segr label:hover { background: var(--surface); color: var(--ink); }
+.segr label.on { background: var(--navy); color: var(--on-navy); }
+.segr input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.segr label:focus-within { outline: 2px solid var(--teal); outline-offset: 1px; }
+.sel-ext { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 12px; min-height: 48px; }
+.sel-ext.alt { border-style: dashed; }
+.sugg { display: flex; align-items: center; gap: 10px; border: 1px dashed var(--teal); background: var(--teal-softer); border-radius: 12px; padding: 8px 8px 8px 12px; }
+.sugg-t { font-size: 12px; font-weight: 700; color: var(--teal-strong); }
+.linkbtn { border: 0; background: none; color: var(--teal-strong); font-weight: 600; padding: 6px 8px; border-radius: 8px; text-decoration: underline; text-underline-offset: 3px; min-height: 32px; }
+.linkbtn:hover { background: var(--teal-softer); }
+.pe-foot { position: sticky; bottom: 0; border-top: 1px solid var(--line); background: var(--surface); border-radius: 0 0 26px 26px; padding: 14px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pe-st { flex: 1; font-size: 13.5px; color: var(--ink-2); min-width: 140px; }
+.pe-st.dirty { color: var(--sun-strong); font-weight: 600; }
+.pend { background: var(--sun-soft); border-radius: 14px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.pkeys { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pkey { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 8px 10px; min-height: 62px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: right; }
+button.pkey:hover { border-color: var(--teal); }
+.pkey b { font-family: var(--f-display); font-size: 18px; font-weight: 600; line-height: 1; }
+.pkey span { font-size: 12.5px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.pkey.existing b { color: var(--ok); } .pkey.new b { color: var(--new); }
+.pkey.free { border-style: dashed; background: var(--surface-2); }
+.pkey.free b { color: var(--ink-3); }
+.pkey.free span { color: var(--teal-strong); }
+.pkey.free.sys span { color: var(--ink-3); }
+.pkey.exp { border-color: var(--sun); background: var(--sun-soft); }
+.pkey.exp span { color: var(--sun-strong); }
+.pm-bg { position: fixed; inset: 0; background: rgba(20, 34, 51, .35); display: grid; place-items: center; z-index: 50; padding: 16px; }
+.pm { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px; }
+.pm-h { display: flex; align-items: center; gap: 10px; }
+.pm-h h2 { flex: 1; font-size: 19px; }
+.pm .field { flex: none; }
+.pm-h .ghost { min-height: 40px; }
+#xslot:empty { display: none; }
+.pm-list { margin: 0; padding: 0 18px 0 0; display: flex; flex-direction: column; gap: 4px; color: var(--ink-2); }
+.pm-a { display: flex; gap: 8px; flex-wrap: wrap; }
+.pm-opts { display: flex; flex-direction: column; gap: 8px; }
+.pm-opt { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 10px 14px; text-align: right; display: flex; flex-direction: column; gap: 2px; }
+button.pm-opt:hover { border-color: var(--teal); }
+.pm-opt:disabled { opacity: .5; cursor: default; }
+.pm-opt b { font-weight: 600; }
+.pm-opt small { color: var(--ink-2); }
+.pm-keys { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.pm-keys .ghost { min-width: 44px; padding: 6px 12px; }
+.pm-cands { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow: auto; border: 1px solid var(--line); border-radius: 14px; padding: 4px; }
+.pm-cand { border: 0; background: none; text-align: right; display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; min-height: 40px; }
+.pm-cand:hover { background: var(--surface-2); }
+.pm-cand.on { background: var(--teal-soft); }
+.pm-cand .path { color: var(--ink-2); min-width: 4em; }
+.pm-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
+.pm-k { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; min-height: 44px; font-family: var(--f-display); font-weight: 600; }
+.pm-k:disabled { background: var(--surface-2); color: var(--ink-3); cursor: default; }
+.pm-k.on { background: var(--navy); color: var(--on-navy); border-color: var(--navy); }
+.info { font-size: 14px; color: var(--ink-2); background: var(--surface-2); border-radius: 12px; padding: 10px 14px; }
+.danger { border: 0; border-radius: 999px; padding: 10px 20px; background: var(--bad); color: #fff; font-weight: 600; }
+@media (max-width: 1180px) { .psplit { grid-template-columns: minmax(0, 1fr); } .pedit { position: static; max-height: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -457,7 +596,7 @@ td .linkish:hover { text-decoration: underline; }
       </label>
       <span class="pill teal" title="מקור הנתונים"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z"/><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>סריקה 21.10.2026</span></span>
       <div class="grow"></div>
-      <div class="user"><div class="avatar">מ</div><div class="who"><b>מנהלת הקו</b><small>אור עולם</small></div><span class="badge-role">מנהל ראשי</span></div>
+      <div class="user"><div class="avatar">מ</div><div class="who"><b>מנהל הקו</b><small>אור עולם</small></div><span class="badge-role">מנהל ראשי</span></div>
       <button class="icon-btn" id="theme-btn" aria-label="החלפת מצב תצוגה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></button>
     </header>
     <main id="view"></main>
@@ -496,8 +635,8 @@ for (const r of D.refs) {
 const BROKEN = new Set(D.refs.filter(r => r[6] === "broken").map(r => r[0]));
 const ALIAS = new Map(D.aliases.map(([old, id]) => [id, old]));
 const NODES = new Map(), NKIDS = new Map();
-for (const [id, parent, digit, path, title, status, kind, hints, link, special, planned] of D.nodes) {
-  NODES.set(id, { id, parent, digit, path, title, title0: title, status, kind, hints, link, special, planned });
+for (const [id, parent, digit, path, title, status, kind, hints, link, special, planned, del] of D.nodes) {
+  NODES.set(id, { id, parent, digit, path, title, title0: title, status, kind, hints, link, special, planned, parent0: parent, digit0: digit, del0: !!del });
   if (!NKIDS.has(parent)) NKIDS.set(parent, []);
   NKIDS.get(parent).push(id);
 }
@@ -797,22 +936,54 @@ function refHtml(r, dir) {
 /* ── תכנון ── */
 /* D-118: לכל צומת בטיוטה שני מאפיינים נפרדים:
    סוג שלוחה (planned_type, מאותה רשימה של העץ הנוכחי) וסטטוס שיוך (ללא / חדשה / קיימת / מאוחדת).
-   סוג "תפריט מורחב" לא צריך שיוך. "בנייה מיוחדת" היא תגית, והערות מקבלות חיווי בעץ רק לפי בחירה.
-   שמירה: decisions/<node_id> (שיוך) ו-nodeprops/<node_id> (סוג, תגית, חיווי הערות). */
+   סוג "תפריט מורחב" לא צריך שיוך. "בנייה מיוחדת" היא תגית.
+   D-124: עריכת מבנה. nodeprops/<node_id> שומר גם parent_id, digit, deleted, ו-created לצומת שנוסף בדף.
+   D-125, D-126: בשורה הנתיב מחוץ למקש, וצבע המקש הוא סטטוס השיוך (קיימת ירוק, חדשה מג'נטה, ללא מקווקו).
+   D-127: טופס העריכה נשמר בלחיצה. פעולות מבנה מתבצעות מיד, עם ביטול בהודעה.
+   שמירה: decisions/<node_id> (שיוך) ו-nodeprops/<node_id> (כל השאר). */
 const DEC = new Map((D.linked || []).map(d => [d.node_id, d])), PROPS = new Map();
 let DB = null, USER = null, CAN_WRITE = null, MY_ID = null;
 const NAMES = {};
 const ROUTING_TYPES = new Set(["LMENU"]);  /* תפריט מורחב: בלי הקלטות, ולכן בלי שיוך */
 const LINK = { unset: ["ללא", "line"], new: ["חדשה", "new"], existing: ["קיימת", "teal"], merged: ["מאוחדת", "special"] };
-const LINK_ACTION = { new: "none", existing: "same", merged: "merge" };
-const pstate = { sel: null, open: new Set(), q: "", f: "all", form: null, bulkAsk: false, tab: null };
+const LINK_DESC = { unset: "עוד לא הוחלט", new: "בלי שלוחה קיימת. היסטוריה לא עוברת", existing: "שלוחה אחת מהעץ הנוכחי", merged: "כמה שלוחות קיימות לאחת" };
+const pstate = { sel: null, open: new Set(), q: "", f: "all", form: null, keys: false, trash: false, menu: false, modal: null, pending: null, bulkAsk: false, focusTitle: false };
 const POS = new Map(D.nodes.map((n, i) => [n[0], i]));
-const posOf = id => POS.get(id) ?? -1;
+const posOf = id => POS.get(id) ?? 1e6 + id / 1e9;
 const notFoundCands = new Map(D.gaps.filter(g => g[0] === "existing_not_found").map(g => [g[2], g[4].candidates || []]));
 /* D-114: שלוחות תחת השורש 2 לא משויכות לטיוטה */
 const EXCLUDED = p => p === "2" || p.startsWith("2.");
-const isNodeRow = n => n.parent != null && n.title && n.kind === "extension";
+const DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+const digitKey = d => d == null ? 1e9 : d === "0" ? 10 : /^\d$/.test(d) ? +d : 10 + (parseInt(d, 10) || 0);
+const ROOT_ID = (NKIDS.get(null) || [])[0];
 
+/* המבנה החי: הטיוטה מבסיס הנתונים, ועליה parent_id / digit / deleted / created מ-nodeprops */
+function rebuildStructure() {
+  for (const [id, p] of PROPS) if (p.created && !NODES.has(id))
+    NODES.set(id, { id, parent: ROOT_ID, digit: null, path: null, title: "", title0: "", status: "new", kind: "extension", hints: null, link: "new",
+      special: false, planned: null, parent0: ROOT_ID, digit0: null, del0: false, created: true, ephemeral: true });
+  for (const [id, n] of NODES) if (n.ephemeral && !PROPS.has(id)) NODES.delete(id);
+  for (const n of NODES.values()) {
+    const p = PROPS.get(n.id) || {};
+    n.parent = "parent_id" in p ? p.parent_id : n.parent0;
+    n.digit = "digit" in p ? p.digit : n.digit0;
+    n.deleted = "deleted" in p ? !!p.deleted : n.del0;
+    n.live = false;
+  }
+  NKIDS.clear();
+  for (const n of NODES.values()) { if (n.deleted) continue; if (!NKIDS.has(n.parent)) NKIDS.set(n.parent, []); NKIDS.get(n.parent).push(n.id); }
+  for (const list of NKIDS.values()) list.sort((a, b) => digitKey(NODES.get(a).digit) - digitKey(NODES.get(b).digit) || posOf(a) - posOf(b));
+  const walk = (id, base) => {
+    for (const k of NKIDS.get(id) || []) {
+      const c = NODES.get(k); c.live = true;
+      c.path = base === "" ? c.digit : base != null && c.digit != null ? base + "." + c.digit : null;
+      walk(k, c.path);
+    }
+  };
+  walk(null, "");
+  applyTitles();
+}
+const isNodeRow = n => n.live && n.parent != null && n.title && n.kind === "extension";
 function effType(n) {
   const p = PROPS.get(n.id);
   if (p && "planned_type" in p) return { t: p.planned_type || null, src: "manual" };
@@ -839,80 +1010,91 @@ const noteMark = n => { const p = PROPS.get(n.id) || {}; return "note_mark" in p
 function usedBy(extId, exceptNode) {
   const out = [];
   for (const d of DEC.values()) if (d.node_id !== exceptNode && (d.sclass_ids || []).includes(extId) && d.action !== "routing") out.push(NODES.get(d.node_id));
-  return out.filter(Boolean);
+  return out.filter(n => n && n.live);
 }
+const treeOrder = () => { const out = []; const w = id => { for (const k of NKIDS.get(id) || []) { out.push(k); w(k); } }; w(null); return out; };
 const inQueue = n => isNodeRow(n) && !isRouting(n) && linkStatus(n) === "unset";
-const queue = () => D.nodes.map(r => NODES.get(r[0])).filter(inQueue).map(n => n.id);
-const suggestedOpen = () => [...MAP_BY_NODE.values()].filter(m => m.status === "suggested" && inQueue(NODES.get(m.node)));
+const queue = () => treeOrder().map(id => NODES.get(id)).filter(inQueue).map(n => n.id);
+const suggestedOpen = () => [...MAP_BY_NODE.values()].filter(m => m.status === "suggested" && NODES.get(m.node) && inQueue(NODES.get(m.node)));
+const subtreeIds = id => [id, ...(NKIDS.get(id) || []).flatMap(subtreeIds)];
+const freeDigits = (parentId, exceptId) => DIGITS.filter(d => !(NKIDS.get(parentId) || []).some(k => k !== exceptId && NODES.get(k).digit === d));
+const occupant = (parentId, digit, exceptId) => (NKIDS.get(parentId) || []).map(k => NODES.get(k)).find(c => c.id !== exceptId && c.digit === digit);
+function chain(n) { const out = []; let c = n; while (c) { out.unshift(c.digit ?? "–"); c = NODES.get(c.parent); } return out; }
+const pathText = (n, digit) => { const ch = chain(n); if (digit !== undefined) ch[ch.length - 1] = digit; return ch.join("."); };
+const badgeCls = n => "pdg " + (!isNodeRow(n) || isRouting(n) || linkStatus(n) === "merged" ? "plain" : linkStatus(n));
+const keyHtml = n => { const ch = chain(n); return `<span class="pp" aria-hidden="true">${ch.slice(0, -1).map(d => `<span>${esc(d)}</span><span class="sp">›</span>`).join("")}</span><span class="${badgeCls(n)}" title="${esc(isNodeRow(n) && !isRouting(n) ? "שיוך: " + LINK[linkStatus(n)][0] : "")}">${esc(ch[ch.length - 1])}</span>`; };
+const isMenuNode = n => isRouting(n) || (NKIDS.get(n.id) || []).length > 0;
+const changedCount = () => [...NODES.values()].filter(n => n.parent != null && (n.created ? !n.deleted : n.deleted || n.parent !== n.parent0 || n.digit !== n.digit0 || (n.title0 && n.title !== n.title0))).length;
 
 function revealNode(id) { let p = NODES.get(id)?.parent; while (p != null) { pstate.open.add(p); p = NODES.get(p)?.parent; } }
-function selectNode(id, scroll) {
-  pstate.sel = id; pstate.form = null; pstate.bulkAsk = false; pstate.tab = null; pstate.editNotes = false; pstate.editTitle = false;
+function formDirty() { const n = NODES.get(pstate.sel); return !!(n && pstate.form && pstate.form.id === n.id && dirtyKeys(n).length); }
+function selectNode(id, scroll, force) {
+  if (!force && id !== pstate.sel && formDirty()) { pstate.pending = id; drawFoot(); return; }
+  pstate.sel = id; pstate.form = null; pstate.keys = false; pstate.trash = false; pstate.menu = false; pstate.pending = null;
   revealNode(id); drawPlanTree(); renderPlanDetail();
-  if (scroll) requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "nearest" }));
-  if (innerWidth < 1180 && scroll !== "tree") $("#pdetail")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (scroll) requestAnimationFrame(() => { const b = document.querySelector(`.prow[data-nid="${id}"] .pmain`); b?.scrollIntoView({ block: "nearest" }); if (scroll === "focus") b?.focus(); });
 }
-function openNode(id) { pstate.sel = id; pstate.tab = null; revealNode(id); go("plan"); requestAnimationFrame(() => document.querySelector(`.trow[data-nid="${id}"]`)?.scrollIntoView({ block: "center" })); }
-function nextInQueue() { const q = queue(); if (!q.length) return; selectNode(q.find(id => posOf(id) > posOf(pstate.sel ?? -1)) ?? q[0], true); }
+function openNode(id) { pstate.sel = id; pstate.form = null; pstate.keys = false; pstate.trash = false; revealNode(id); go("plan"); requestAnimationFrame(() => document.querySelector(`.prow[data-nid="${id}"]`)?.scrollIntoView({ block: "center" })); }
 
 function renderPlan() {
   for (const id of NKIDS.get(null) || []) { pstate.open.add(id); for (const c of NKIDS.get(id) || []) pstate.open.add(c); }
-  if (pstate.sel == null) { const q = queue(); pstate.sel = q[0] ?? null; if (pstate.sel) revealNode(pstate.sel); }
-  const filters = [["all", "כל הטיוטה"], ["unset", "שיוך: ללא"], ["new", "שיוך: חדשה"], ["existing", "שיוך: קיימת"], ["merged", "שיוך: מאוחדת"],
-    ["routing", "תפריטים מורחבים"], ["notype", "בלי סוג"], ["special", "בנייה מיוחדת"], ["notes", "עם הערות"]];
+  if (pstate.sel == null || !NODES.get(pstate.sel)?.live) { const q = queue(); pstate.sel = q[0] ?? null; if (pstate.sel) revealNode(pstate.sel); }
   $("#view").innerHTML = `<div style="display:flex;flex-direction:column;gap:20px">
-    <section class="card qbar" id="qbar"></section>
-    <div class="split">
-      <section class="card">
-        <div class="card-h"><h2>טיוטת העץ החדש</h2><span class="sub">${esc(D.meta.draft_label || "")}</span>
-          <button class="ghost" id="gnotes">הערות כלליות</button><button class="ghost" id="xbtn">ייצוא לאישור</button></div>
-        <div id="xslot"></div>
+    <section class="card phead" id="phead"></section>
+    <div class="psplit">
+      <section class="card ptreecard" aria-label="טיוטת העץ החדש">
         <div class="toolbar">
           <label class="field" for="q-plan">${ICON_SEARCH}<input id="q-plan" type="search" placeholder="חיפוש בטיוטה" value="${esc(pstate.q)}" autocomplete="off"></label>
-          <select class="ghost" id="f-plan" aria-label="סינון">${filters.map(([k, l]) => `<option value="${k}"${pstate.f === k ? " selected" : ""}>${l}</option>`).join("")}</select>
+          <button class="ghost${pstate.f === "unset" ? " on" : ""}" id="f-unset" aria-pressed="${pstate.f === "unset"}">רק בלי שיוך</button>
         </div>
-        <div class="tree" id="ptree"></div>
+        <div class="pcolh"><span style="flex:1">מקש ושם</span><span style="width:150px">סוג שלוחה</span></div>
+        <div class="ptree" id="ptree" role="tree" aria-label="טיוטת העץ החדש"></div>
+        <div class="pfoot" id="pfoot"></div>
       </section>
-      <section class="card" id="pdetail"></section>
-    </div></div>`;
-  drawQueueBar(); drawPlanTree(); renderPlanDetail();
-  $("#ptree").addEventListener("click", ev => {
+      <section class="card pedit" id="pdetail" aria-labelledby="ed-title"></section>
+    </div></div><div id="pmodal"></div>`;
+  drawHead(); drawPlanTree(); renderPlanDetail();
+  const tree = $("#ptree");
+  tree.addEventListener("click", ev => {
     const tw = ev.target.closest("[data-tw]");
-    if (tw && tw.dataset.tw) { const id = +tw.dataset.tw; pstate.open.has(id) ? pstate.open.delete(id) : pstate.open.add(id); drawPlanTree(); return; }
-    const row = ev.target.closest(".trow"); if (!row) return;
+    if (tw) { const id = +tw.dataset.tw; pstate.open.has(id) ? pstate.open.delete(id) : pstate.open.add(id); drawPlanTree(); return; }
+    const add = ev.target.closest("[data-addchild]");
+    if (add) { addChild(+add.dataset.addchild); return; }
+    const row = ev.target.closest(".prow[data-nid]"); if (!row) return;
     const id = +row.dataset.nid; if ((NKIDS.get(id) || []).length) pstate.open.add(id);
-    selectNode(id, "tree");
+    selectNode(id, "focus");
   });
+  tree.addEventListener("keydown", treeKeys);
+  wireDrag(tree);
   $("#q-plan").addEventListener("input", e => { pstate.q = e.target.value; drawPlanTree(); });
-  $("#f-plan").addEventListener("change", e => { pstate.f = e.target.value; drawPlanTree(); });
-  $("#gnotes").addEventListener("click", () => { pstate.sel = null; drawPlanTree(); renderPlanDetail(); });
-  $("#xbtn").addEventListener("click", () => { const x = $("#xslot"); x.innerHTML = x.innerHTML ? "" : exportPanelHtml(); if (x.innerHTML) wireExport(); });
+  $("#f-unset").addEventListener("click", e => { pstate.f = pstate.f === "unset" ? "all" : "unset"; e.target.classList.toggle("on", pstate.f === "unset"); e.target.setAttribute("aria-pressed", pstate.f === "unset"); drawPlanTree(); });
 }
+function redrawPlan() { if (!$("#ptree")) return; drawHead(); drawPlanTree(); if (!formDirty()) renderPlanDetail(); else drawFoot(); drawModal(); }
 
-function drawQueueBar() {
-  const el = $("#qbar"); if (!el) return;
-  const all = D.nodes.map(r => NODES.get(r[0])).filter(n => isNodeRow(n) && !isRouting(n));
-  const q = all.filter(n => linkStatus(n) === "unset"), sugg = suggestedOpen();
-  const done = all.length - q.length;
-  el.innerHTML = `<div class="qbar-in">
-    <div class="qbar-t"><h2>שיוך לעץ הנוכחי</h2>
-      <p>לכל צומת בטיוטה קובעים סוג שלוחה וסטטוס שיוך. תפריט מורחב לא צריך שיוך.</p></div>
-    <div class="qbar-n"><b class="num">${q.length}</b><small>בלי שיוך, מתוך ${all.length}</small>
-      <span class="track"><span class="fill" style="width:${all.length ? done / all.length * 100 : 0}%"></span></span></div>
-    <div class="qbar-a">
-      <button class="cta" id="q-next" ${q.length ? "" : "disabled"}>לצומת הבא בלי שיוך ←</button>
+function drawHead() {
+  const el = $("#phead"); if (!el) return;
+  const rows = treeOrder().map(id => NODES.get(id)).filter(isNodeRow);
+  const sugg = suggestedOpen();
+  el.innerHTML = `<div style="flex:1 1 260px;min-width:0"><h1 class="ph1">בניית העץ החדש</h1><div class="muted">${esc(D.meta.draft_label || "")}</div></div>
+    <div class="pstats">
+      <div class="pstat"><b class="num">${fmt(rows.length)}</b><small>שלוחות בטיוטה</small></div>
+      <div class="pstat"><b class="num" style="color:var(--sun-strong)">${fmt(queue().length)}</b><small>בלי שיוך</small></div>
+      <div class="pstat"><b class="num" style="color:var(--teal-strong)">${fmt(changedCount())}</b><small>שינויים מאז הטיוטה</small></div></div>
+    <div class="pacts">
       ${sugg.length ? (pstate.bulkAsk
         ? `<span class="confirm">לשייך ${sugg.length} הצעות ודאיות כ"קיימת"? <button class="ghost on" id="bulk-yes">כן</button><button class="ghost" id="bulk-no">ביטול</button></span>`
-        : `<button class="ghost" id="bulk">אישור ${sugg.length} ההצעות הוודאיות</button>`) : ""}
-    </div></div>${saveNotice()}`;
-  $("#q-next")?.addEventListener("click", () => nextInQueue());
-  $("#bulk")?.addEventListener("click", () => { pstate.bulkAsk = true; drawQueueBar(); });
-  $("#bulk-no")?.addEventListener("click", () => { pstate.bulkAsk = false; drawQueueBar(); });
+        : `<button class="ghost" id="bulk">אישור ${sugg.length} הצעות ודאיות</button>`) : ""}
+      <button class="ghost" id="gnotes">הערות כלליות</button><button class="cta" id="xbtn">ייצוא לאישור</button></div>
+    <div id="xslot" style="flex-basis:100%"></div>${saveNotice() ? `<div style="flex-basis:100%">${saveNotice()}</div>` : ""}`;
+  $("#bulk")?.addEventListener("click", () => { pstate.bulkAsk = true; drawHead(); });
+  $("#bulk-no")?.addEventListener("click", () => { pstate.bulkAsk = false; drawHead(); });
   $("#bulk-yes")?.addEventListener("click", async () => {
     pstate.bulkAsk = false;
     for (const m of suggestedOpen()) await saveDecision(m.node, { action: "same", ids: [m.ext] }, "bulk");
-    drawQueueBar(); drawPlanTree(); renderPlanDetail();
+    redrawPlan();
   });
+  $("#gnotes").addEventListener("click", () => { if (formDirty()) { pstate.pending = "global"; drawFoot(); return; } pstate.sel = null; pstate.form = null; drawPlanTree(); renderPlanDetail(); });
+  $("#xbtn").addEventListener("click", () => { const x = $("#xslot"); x.innerHTML = x.innerHTML ? "" : exportPanelHtml(); if (x.innerHTML) wireExport(); });
 }
 function saveNotice() {
   if (DB === null) return `<div class="notice">בתצוגה הזו שום דבר לא נשמר. כדי לשמור, פותחים את הדף מתוך claude.ai כשמחוברים.</div>`;
@@ -921,57 +1103,237 @@ function saveNotice() {
 }
 
 function prowHtml(n, depth, flat) {
-  const kids = NKIDS.get(n.id) || [];
-  const notes = nodeNotes(n), marked = notes.length && noteMark(n);
-  const t = effType(n).t, routing = ROUTING_TYPES.has(t), ls = linkStatus(n);
-  const showLink = n.parent != null && n.title && !routing && n.kind === "extension";
-  return `<button class="trow${pstate.sel === n.id ? " sel" : ""}" data-nid="${n.id}" style="padding-inline-start:${8 + depth * 18}px">
-    <span class="tw${pstate.open.has(n.id) ? " open" : ""}" data-tw="${kids.length && !flat ? n.id : ""}">${kids.length && !flat ? ICON_CHEV : ""}</span>
-    <span class="digit sm ${n.digit == null ? "none" : "existing"}">${esc(n.digit ?? "–")}</span>
-    ${flat ? `<span class="path">${esc(n.path || "")}</span>` : ""}<span class="nm${n.title ? "" : " empty"}">${esc(n.title || "(ריק)")}</span>
-    ${marked ? `<span class="ndot" title="${esc(notes.join(" · "))}"></span>` : ""}
-    ${specialBuild(n) ? '<span class="ind-sb" title="בנייה מיוחדת">בנייה מיוחדת</span>' : ""}
-    ${n.parent != null ? (t ? typeChip(t) : '<span class="ctype faint">בלי סוג</span>') : ""}
-    ${showLink ? `<span class="chip sm ${(DEC.get(n.id)?.sclass_ids || []).some(i => EXCLUDED(pathOf(i) || "")) ? "bad" : LINK[ls][1]}">${LINK[ls][0]}</span>` : ""}</button>`;
+  const kids = NKIDS.get(n.id) || [], open = pstate.open.has(n.id) && !flat, sel = pstate.sel === n.id;
+  const t = effType(n).t;
+  return `<div class="prow${sel ? " sel" : ""}" data-nid="${n.id}" draggable="${CAN_WRITE === false ? "false" : "true"}" role="treeitem" aria-level="${depth + 1}" aria-selected="${sel}"${kids.length && !flat ? ` aria-expanded="${open}"` : ""} style="padding-inline-start:${4 + depth * 20}px">
+    ${kids.length && !flat ? `<button class="ptw${open ? " open" : ""}" data-tw="${n.id}" tabindex="-1" aria-label="${open ? "סגירה" : "פתיחה"}">${ICON_CHEV}</button>` : '<span class="ptw-sp"></span>'}
+    <button class="pmain" tabindex="${sel ? 0 : -1}">${keyHtml(n)}
+      <span class="pnm${depth === 0 && !flat ? " top" : ""}${n.title ? "" : " empty"}">${esc(n.title || "(ריק)")}</span>
+      ${kids.length && !open && !flat ? `<span class="pkids">${kids.length} תתי-שלוחות</span>` : ""}
+      ${nodeNotes(n).length && noteMark(n) ? `<span class="ndot" title="${esc(nodeNotes(n).join(" · "))}"></span>` : ""}
+      ${specialBuild(n) ? '<span class="ind-sb">בנייה מיוחדת</span>' : ""}</button>
+    ${sel && CAN_WRITE !== false ? `<span class="prowact"><button data-addchild="${n.id}" aria-label="הוספת תת-שלוחה" title="הוספת תת-שלוחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></span>` : ""}
+    <span class="ptcol">${t ? typeChip(t) : n.parent != null ? '<span class="ctype faint">בלי סוג</span>' : ""}</span></div>`;
 }
 function drawPlanTree() {
   const el = $("#ptree"); if (!el) return;
-  const q = pstate.q.trim(), f = pstate.f;
-  const match = n => {
-    if (q && !((n.title || "").includes(q) || (n.path || "").startsWith(q))) return false;
-    if (f === "all") return true;
-    if (f === "routing") return isNodeRow(n) && isRouting(n);
-    if (f === "notype") return isNodeRow(n) && !effType(n).t;
-    if (f === "special") return specialBuild(n);
-    if (f === "notes") return nodeNotes(n).length > 0;
-    return isNodeRow(n) && !isRouting(n) && linkStatus(n) === f;
-  };
-  if (q || f !== "all") {
-    const rows = D.nodes.map(r => NODES.get(r[0])).filter(n => n.parent != null && match(n));
-    el.innerHTML = rows.length ? rows.map(n => prowHtml(n, 0, true)).join("") : '<div class="empty-note">אין צמתים במסנן הזה.</div>';
-    return;
+  const q = pstate.q.trim();
+  if (q || pstate.f === "unset") {
+    const rows = treeOrder().map(id => NODES.get(id)).filter(n => n.parent != null
+      && (!q || (n.title || "").includes(q) || (n.path || "").startsWith(q)) && (pstate.f !== "unset" || inQueue(n)));
+    el.innerHTML = rows.length ? rows.map(n => prowHtml(n, 0, true)).join("") : '<div class="empty-note">אין שלוחות שמתאימות.</div>';
+  } else {
+    const out = [];
+    const walk = (ids, d) => { for (const id of ids) { out.push(prowHtml(NODES.get(id), d, false)); if (pstate.open.has(id)) walk(NKIDS.get(id) || [], d + 1); } };
+    walk(NKIDS.get(ROOT_ID) || [], 0);
+    el.innerHTML = out.join("");
   }
-  const out = [];
-  const walk = (ids, d) => { for (const id of ids) { const n = NODES.get(id); out.push(prowHtml(n, d, false)); if (pstate.open.has(id)) walk(NKIDS.get(id) || [], d + 1); } };
-  walk(NKIDS.get(null) || [], 0);
-  el.innerHTML = out.join("");
+  const trash = [...NODES.values()].filter(n => n.deleted && n.parent != null);
+  const f = $("#pfoot");
+  if (f) {
+    f.innerHTML = `${CAN_WRITE !== false ? '<button class="ghost" id="add-top">+ שלוחה ראשית</button>' : ""}<span style="flex:1"></span>
+      <span>צבע המקש הוא השיוך:</span><span class="plg"><i class="pdg existing"></i>קיימת</span><span class="plg"><i class="pdg new"></i>חדשה</span><span class="plg"><i class="pdg unset"></i>ללא</span>
+      ${trash.length ? `<button class="ghost" id="show-trash">נמחקו (${trash.length})</button>` : ""}`;
+    $("#add-top")?.addEventListener("click", () => addChild(ROOT_ID));
+    $("#show-trash")?.addEventListener("click", () => { if (formDirty()) { pstate.pending = "trash"; drawFoot(); return; } pstate.trash = true; pstate.form = null; renderPlanDetail(); });
+  }
+}
+/* ניווט במקלדת בעץ (WAI-ARIA tree), ופעולות מבנה (D-124) */
+function treeKeys(e) {
+  const row = e.target.closest(".prow[data-nid]"); if (!row) return;
+  const id = +row.dataset.nid, n = NODES.get(id);
+  const rows = [...$("#ptree").querySelectorAll(".prow[data-nid]")], i = rows.indexOf(row);
+  const focusRow = r => { if (r) selectNode(+r.dataset.nid, "focus"); };
+  if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) { e.preventDefault(); nudge(n, e.key === "ArrowUp" ? -1 : 1); return; }
+  if (e.key === "ArrowDown") { e.preventDefault(); focusRow(rows[i + 1]); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); focusRow(rows[i - 1]); }
+  else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    e.preventDefault();
+    const expand = e.key === "ArrowLeft";  /* RTL: שמאלה פותח, ימינה סוגר */
+    if ((NKIDS.get(id) || []).length && expand !== pstate.open.has(id)) { expand ? pstate.open.add(id) : pstate.open.delete(id); drawPlanTree(); document.querySelector(`.prow[data-nid="${id}"] .pmain`)?.focus(); }
+    else if (!expand && n.parent !== ROOT_ID) focusRow(document.querySelector(`.prow[data-nid="${n.parent}"]`));
+  }
+  else if (e.key === "Enter") { e.preventDefault(); pstate.keys = false; if (!formDirty() || pstate.sel === id) { if (pstate.sel !== id) selectNode(id); renderPlanDetail(); $("#f-title")?.focus(); $("#f-title")?.select(); } }
+  else if (e.key === "Delete") { e.preventDefault(); askDelete(id); }
+  else if (e.key === "Tab" && !pstate.q && pstate.f === "all" && CAN_WRITE !== false) {
+    const sibs = NKIDS.get(n.parent) || [], k = sibs.indexOf(id);
+    if (!e.shiftKey && k > 0) { e.preventDefault(); const np = sibs[k - 1]; const d = freeDigits(np)[0]; if (d) { pstate.open.add(np); moveNode(id, np, d); } else toast("אין מקש פנוי בתפריט שמעל"); }
+    else if (e.shiftKey && n.parent !== ROOT_ID) { e.preventDefault(); const gp = NODES.get(n.parent).parent; const d = freeDigits(gp)[0]; if (d) moveNode(id, gp, d); else toast("אין מקש פנוי בתפריט שמעל"); }
+  }
+}
+/* גרירה: למעלה או למטה בשורה = לפני או אחרי, באמצע = תחת השורה */
+function wireDrag(tree) {
+  let dragId = null, drop = null;
+  const clear = () => tree.querySelectorAll(".drop-before,.drop-after,.drop-in").forEach(r => { r.classList.remove("drop-before", "drop-after", "drop-in"); r.removeAttribute("data-drop"); });
+  tree.addEventListener("dragstart", e => {
+    const row = e.target.closest(".prow[data-nid]"); if (!row || CAN_WRITE === false || formDirty()) { e.preventDefault(); if (formDirty()) toast("קודם שומרים או מבטלים את השינויים בטופס"); return; }
+    dragId = +row.dataset.nid; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(dragId)); row.classList.add("dragging");
+  });
+  tree.addEventListener("dragend", () => { tree.querySelector(".dragging")?.classList.remove("dragging"); clear(); dragId = null; });
+  tree.addEventListener("dragover", e => {
+    const row = e.target.closest(".prow[data-nid]"); if (dragId == null || !row) return;
+    const tid = +row.dataset.nid, t = NODES.get(tid);
+    if (subtreeIds(dragId).includes(tid)) { clear(); drop = null; return; }
+    e.preventDefault();
+    const r = row.getBoundingClientRect(), y = (e.clientY - r.top) / r.height;
+    const zone = y < .3 ? "before" : y > .7 ? "after" : "in";
+    let parent, digit;
+    if (zone === "in") { parent = tid; digit = freeDigits(tid, dragId)[0] ?? null; }
+    else { parent = t.parent; const k = DIGITS.indexOf(t.digit); digit = zone === "before" ? t.digit : k >= 0 && k < 9 ? DIGITS[k + 1] : null; }
+    drop = { parent, digit, zone, tid };
+    clear(); row.classList.add("drop-" + zone);
+    const pn = NODES.get(parent);
+    row.setAttribute("data-drop", digit ? `תחת "${pn.parent == null ? "תפריט ראשי" : pn.title}" · מקש ${digit}` : "אין מקש פנוי");
+  });
+  tree.addEventListener("dragleave", e => { if (!tree.contains(e.relatedTarget)) clear(); });
+  tree.addEventListener("drop", e => {
+    e.preventDefault(); clear();
+    if (dragId == null || !drop || !drop.digit) return;
+    const id = dragId, n = NODES.get(id); dragId = null;
+    if (drop.parent === n.parent && drop.digit === n.digit) return;
+    if (drop.zone === "in") pstate.open.add(drop.parent);
+    placeNode(id, drop.parent, drop.digit);
+  });
+}
+/* מקש תפוס לא נדרס (D-124): שואלים מה לעשות */
+function placeNode(id, parent, digit) {
+  const occ = occupant(parent, digit, id);
+  if (!occ) { moveNode(id, parent, digit); return; }
+  pstate.modal = { kind: "conflict", id, parent, digit }; drawModal();
+}
+function shiftPlan(parent, digit, id) {
+  /* הזזת השלוחות מהמקש הזה והלאה מקש אחד, עד המקש הפנוי הראשון */
+  const moves = []; let k = DIGITS.indexOf(digit);
+  while (k >= 0 && k < 10) {
+    const occ = occupant(parent, DIGITS[k], id);
+    if (!occ) return moves;
+    if (k === 9) return null;
+    moves.push([occ.id, DIGITS[k + 1]]); k++;
+  }
+  return null;
+}
+async function moveNode(id, parent, digit, extra) {
+  const n = NODES.get(id), from = n.path;
+  const changes = [...(extra || []).map(([oid, d, p]) => [oid, { parent_id: p ?? NODES.get(oid).parent, digit: d }]), [id, { parent_id: parent, digit }]];
+  await writeProps(changes, null);
+  toast(`"${n.title}" הוזזה מ-${from || "?"} ל-${NODES.get(id).path || "?"}`, lastUndo);
+  revealNode(id); selectNode(id, "focus", true);
+}
+function nudge(n, dir) {
+  const sibs = NKIDS.get(n.parent) || [], k = sibs.indexOf(n.id), o = NODES.get(sibs[k + dir]);
+  if (!o) return;
+  if (n.digit == null || o.digit == null) { toast("לשלוחה בלי מקש אי אפשר להחליף מקום"); return; }
+  moveNode(n.id, n.parent, o.digit, [[o.id, n.digit]]);
+}
+async function addChild(parentId, digit) {
+  if (formDirty()) { toast("קודם שומרים או מבטלים את השינויים בטופס"); return; }
+  const d = digit || freeDigits(parentId)[0];
+  if (!d) { toast("כל עשרת המקשים בתפריט הזה תפוסים"); return; }
+  const id = Date.now();
+  await writeProps([[id, { created: true, parent_id: parentId, digit: d, title: "שלוחה חדשה" }]], `נוספה שלוחה במקש ${d}`);
+  pstate.open.add(parentId); selectNode(id, true, true);
+  $("#f-title")?.focus(); $("#f-title")?.select();
+}
+function askDelete(id) {
+  const n = NODES.get(id); if (!n || n.parent == null || CAN_WRITE === false) return;
+  if (formDirty() && pstate.sel !== id) { toast("קודם שומרים או מבטלים את השינויים בטופס"); return; }
+  const sub = subtreeIds(id).slice(1).map(k => NODES.get(k));
+  const linked = [n, ...sub].filter(x => ["existing", "merged"].includes(linkStatus(x)) && isNodeRow(x) && !isRouting(x));
+  if (!sub.length && !linked.length) { deleteNode(id); return; }
+  pstate.modal = { kind: "delete", id, sub: sub.length, linked: linked.length }; drawModal();
+}
+async function deleteNode(id) {
+  const n = NODES.get(id), parent = n.parent, extra = subtreeIds(id).length - 1;
+  pstate.form = null;
+  await writeProps([[id, { deleted: true }]], `נמחקה "${n.title}"${extra ? ` וגם ${extra} תתי-שלוחות` : ""}`);
+  selectNode(parent === ROOT_ID ? (NKIDS.get(ROOT_ID) || [])[0] : parent, "focus", true);
+}
+async function restoreNode(id) {
+  const n = NODES.get(id), patch = { deleted: false };
+  if (n.digit != null && occupant(n.parent, n.digit, id)) { const d = freeDigits(n.parent, id)[0]; if (!d) { toast("אין מקש פנוי בתפריט שאליו היא שייכת"); return; } patch.digit = d; }
+  await writeProps([[id, patch]], `"${n.title}" שוחזרה${patch.digit ? ` במקש ${patch.digit}` : ""}`);
+  pstate.trash = false; revealNode(id); selectNode(id, true, true);
+}
+/* כל שינוי מבנה נכתב ל-nodeprops, והקודם נשמר לביטול */
+let lastUndo = null;
+async function writeProps(changes, label) {
+  const prev = changes.map(([id]) => [id, PROPS.has(id) ? { ...PROPS.get(id) } : null]);
+  for (const [id, patch] of changes) await saveProps(id, patch);
+  rebuildStructure();
+  lastUndo = async () => {
+    for (const [id, doc] of prev) await restoreProps(id, doc);
+    rebuildStructure(); pstate.form = null;
+    if (!NODES.get(pstate.sel)?.live) pstate.sel = (NKIDS.get(ROOT_ID) || [])[0];
+    redrawPlan(); renderPlanDetail();
+  };
+  redrawPlan();
+  if (label) toast(label, lastUndo);
+}
+async function restoreProps(id, doc) {
+  if (doc) { PROPS.set(id, doc); if (DB && CAN_WRITE !== false) { try { await DB.doc("nodeprops/" + id).set(doc); } catch (e) {} } }
+  else { PROPS.delete(id); if (DB && CAN_WRITE !== false) { try { await DB.doc("nodeprops/" + id).delete(); } catch (e) {} } }
+  applyTitles();
 }
 
-function whyLines(n, sig, reasons) {
-  const out = [];
-  if (sig) {
-    if (sig.name_sim >= 0.95) out.push(["good", "השם זהה"]);
-    else if (sig.name_sim >= 0.7) out.push(["good", "השם דומה"]);
-    else out.push(["warn", "השם שונה"]);
-    if (sig.in_parent_branch) out.push(["good", "באותו ענף"]);
-    else if (n.parent != null && NODES.get(n.parent).parent != null) out.push(["warn", "בענף אחר"]);
-    if (sig.lecturer_match) out.push(["good", "שם המרצה מופיע"]);
+function drawModal() {
+  const el = $("#pmodal"); if (!el) return;
+  const m = pstate.modal;
+  if (!m) { el.innerHTML = ""; return; }
+  const n = NODES.get(m.id), close = '<button class="ghost" data-mclose style="width:40px;padding:0" aria-label="סגירה">✕</button>';
+  let body = "";
+  if (m.kind === "delete") {
+    body = `<div class="pm-h"><h2 id="pm-t">למחוק את "${esc(n.title)}"?</h2>${close}</div>
+      <ul class="pm-list">${m.sub ? `<li>יימחקו גם ${m.sub} תתי-שלוחות.</li>` : ""}
+        ${m.linked ? `<li>${m.linked === 1 ? "אחת מהן משויכת" : `${m.linked} מהן משויכות`} לשלוחה קיימת. השיוך יוסר, והשלוחה הקיימת תופיע בדוח הפערים כ"לא מופיעה בטיוטה".</li>` : ""}
+        <li>אפשר לשחזר מרשימת "נמחקו".</li></ul>
+      <div class="pm-a"><button class="danger" id="pm-del">${m.sub ? "מחיקה עם תתי-השלוחות" : "מחיקה"}</button><button class="ghost" data-mclose>ביטול</button></div>`;
+  } else if (m.kind === "conflict") {
+    const occ = occupant(m.parent, m.digit, m.id), pn = NODES.get(m.parent), sh = shiftPlan(m.parent, m.digit, m.id);
+    const swap = n.parent === m.parent && n.digit != null;
+    const free = freeDigits(m.parent, m.id);
+    body = `<div class="pm-h"><h2 id="pm-t">מקש ${esc(m.digit)} תחת "${esc(pn.parent == null ? "תפריט ראשי" : pn.title)}" תפוס</h2>${close}</div>
+      <p class="muted" style="margin:0">שם נמצאת "${esc(occ.title)}". מה לעשות?</p>
+      <div class="pm-opts">
+        <button class="pm-opt" id="pm-shift"${sh ? "" : " disabled"}><b>להזיז את הבאות מקש אחד</b><small>${sh ? sh.map(([oid, d]) => `${esc(NODES.get(oid).digit)}→${esc(d)}`).join(", ") : "אין מקש פנוי אחריהן"}</small></button>
+        ${swap ? `<button class="pm-opt" id="pm-swap"><b>להחליף ביניהן</b><small>"${esc(occ.title)}" עוברת למקש ${esc(n.digit)}</small></button>` : ""}
+        <div class="pm-opt as-div"><b>לשים במקש פנוי אחר</b><div class="pm-keys">${free.length ? free.map(d => `<button class="ghost" data-free="${d}">${d}</button>`).join("") : '<small>אין מקשים פנויים</small>'}</div></div>
+      </div>`;
+  } else if (m.kind === "move") {
+    const own = new Set(subtreeIds(m.id));
+    const q = (m.q || "").trim();
+    const cands = [ROOT_ID, ...treeOrder()].map(id => NODES.get(id)).filter(c => !own.has(c.id) && (c.id === ROOT_ID || (c.kind === "extension" && c.title))
+      && (!q || (c.title || "").includes(q) || (c.path || "").startsWith(q))).slice(0, 60);
+    const tgt = m.target != null ? NODES.get(m.target) : null;
+    const free = tgt ? freeDigits(tgt.id, m.id) : [];
+    if (m.digit && !free.includes(m.digit)) m.digit = null;
+    const subN = own.size - 1;
+    body = `<div class="pm-h"><h2 id="pm-t">הזזת "${esc(n.title)}"</h2>${close}</div>
+      <label class="field" for="pm-q">${ICON_SEARCH}<input id="pm-q" type="search" placeholder="חיפוש תפריט יעד לפי שם או נתיב" value="${esc(m.q || "")}" autocomplete="off"></label>
+      <div class="pm-cands" role="listbox" aria-label="תפריט יעד">${cands.map(c => `<button role="option" aria-selected="${m.target === c.id}" class="pm-cand${m.target === c.id ? " on" : ""}" data-tgt="${c.id}"><span class="path">${esc(c.path || "")}</span><span>${esc(c.id === ROOT_ID ? "תפריט ראשי" : c.title)}</span>${c.id === n.parent ? '<small class="muted">המיקום הנוכחי</small>' : ""}</button>`).join("") || '<div class="muted">לא נמצאו תפריטים.</div>'}</div>
+      ${tgt ? `<div class="f"><span class="lbl">מקש בתפריט היעד</span><div class="pm-grid">${DIGITS.map(d => { const o = occupant(tgt.id, d, m.id);
+          return `<button class="pm-k${m.digit === d ? " on" : ""}" data-dg="${d}"${o ? ` disabled title="תפוס: ${esc(o.title)}"` : ""}>${d}</button>`; }).join("")}</div>
+          ${free.length ? "" : '<span class="errt">אין מקש פנוי בתפריט הזה.</span>'}</div>` : ""}
+      ${tgt && m.digit ? `<div class="info"><span class="path">${esc(n.path || "?")}</span> ← <span class="path">${esc(tgt.id === ROOT_ID ? "1." + m.digit : (tgt.path ? tgt.path + "." + m.digit : "?"))}</span> · השיוך לעץ הנוכחי נשמר${subN ? ` · ${subN} תתי-שלוחות עוברות איתה` : ""}</div>` : ""}
+      <div class="pm-a"><button class="cta" id="pm-move"${tgt && m.digit ? "" : " disabled"}>הזזה</button><button class="ghost" data-mclose>ביטול</button></div>`;
   }
-  const R = { "מועמד שני קרוב": "יש חלופה קרובה", "תלוי בהחלטה על האב": "תלוי בצומת שמעליו", "אותה שלוחה הוצעה לכמה צמתים": "הוצעה גם לצומת אחר" };
-  for (const r of reasons || []) if (R[r] && !(r === "תלוי בהחלטה על האב" && DEC.has(n.parent))) out.push(["warn", R[r]]);
-  return out;
+  el.innerHTML = `<div class="pm-bg" data-mclose-bg><div class="pm card" role="dialog" aria-modal="true" aria-labelledby="pm-t">${body}</div></div>`;
+  const done = () => { pstate.modal = null; drawModal(); };
+  el.querySelectorAll("[data-mclose]").forEach(b => b.addEventListener("click", done));
+  el.querySelector("[data-mclose-bg]").addEventListener("click", e => { if (e.target.hasAttribute("data-mclose-bg")) done(); });
+  el.querySelector(".pm").addEventListener("keydown", e => { if (e.key === "Escape") done(); });
+  $("#pm-del")?.addEventListener("click", () => { const id = m.id; done(); deleteNode(id); });
+  $("#pm-shift")?.addEventListener("click", () => { const sh = shiftPlan(m.parent, m.digit, m.id); done(); moveNode(m.id, m.parent, m.digit, [...sh].reverse()); });
+  $("#pm-swap")?.addEventListener("click", () => { const occ = occupant(m.parent, m.digit, m.id); done(); moveNode(m.id, m.parent, m.digit, [[occ.id, n.digit]]); });
+  el.querySelectorAll("[data-free]").forEach(b => b.addEventListener("click", () => { done(); moveNode(m.id, m.parent, b.dataset.free); }));
+  const qi = $("#pm-q");
+  qi?.addEventListener("input", () => { m.q = qi.value; drawModal(); const x = $("#pm-q"); x.focus(); x.setSelectionRange(x.value.length, x.value.length); });
+  el.querySelectorAll("[data-tgt]").forEach(b => b.addEventListener("click", () => { m.target = +b.dataset.tgt; m.digit = freeDigits(m.target, m.id)[0] || null; drawModal(); }));
+  el.querySelectorAll("[data-dg]").forEach(b => b.addEventListener("click", () => { m.digit = b.dataset.dg; drawModal(); }));
+  $("#pm-move")?.addEventListener("click", () => { const { id, target, digit } = m; done(); pstate.open.add(target); moveNode(id, target, digit); });
+  (el.querySelector("#pm-q") && m.kind === "move" && !m.target ? el.querySelector("#pm-q") : el.querySelector(".pm button:not([data-mclose]):not([disabled])") || el.querySelector(".pm button"))?.focus();
 }
-/* כל סוגי ידע פון לפי הקבוצות והסדר שלהם (D-119). סוגים שכבר קיימים בעץ מסומנים */
+
+/* כל סוגי ידע פון לפי הקבוצות והסדר שלהם (D-119). סוגים שלא בשימוש בקו מסומנים */
 const USED_TYPES = new Set([...EXT.values()].map(e => e.type));
 const TYPE_GROUPS = (() => {
   const g = new Map();
@@ -979,164 +1341,209 @@ const TYPE_GROUPS = (() => {
   const order = k => Math.min(...g.get(k).map(t => D.types[t].o ?? 999));
   return [...g.keys()].sort((a, b) => order(a) - order(b)).map(k => [k, g.get(k).sort((a, b) => (D.types[a].o ?? 999) - (D.types[b].o ?? 999))]);
 })();
-const TYPE_SRC = { manual: "נקבע ידנית", db: "נקבע ידנית", legacy: "לפי ההחלטה הקודמת", linked: "לפי השלוחה המשויכת",
-  suggested: "לפי השלוחה שהמערכת הציעה", children: "יש לו תתי-צמתים, ולכן תפריט" };
 
+/* טופס העריכה (D-127): עותק עבודה ב-pstate.form, ונשמר רק בלחיצה */
+function formBase(n) {
+  const d = DEC.get(n.id);
+  return { id: n.id, title: n.title || "", type: effType(n).t || "", special: specialBuild(n), link: linkStatus(n),
+    ids: d && d.action !== "routing" && d.action !== "none" ? [...(d.sclass_ids || [])] : [], notes: nodeNotes(n).join("\n"), mark: noteMark(n) };
+}
+function dirtyKeys(n) {
+  const b = formBase(n), f = pstate.form;
+  if (!f || f.id !== n.id) return [];
+  return Object.keys(b).filter(k => k !== "id" && (k === "ids" ? b.ids.join(",") !== f.ids.join(",") : b[k] !== f[k]));
+}
+function formError(n, f) {
+  if (!f.title.trim()) return "title";
+  const routing = ROUTING_TYPES.has(f.type);
+  if (isNodeRow(n) && !routing && f.link === "existing" && f.ids.length !== 1) return "link";
+  if (isNodeRow(n) && !routing && f.link === "merged" && f.ids.length < 2) return "link";
+  return null;
+}
 function renderPlanDetail() {
   const el = $("#pdetail"); if (!el) return;
+  if (pstate.trash) { el.innerHTML = trashHtml(); wireTrash(); return; }
   const n = NODES.get(pstate.sel);
-  if (!n || n.parent == null) { el.innerHTML = globalNotesHtml(); return; }
-  const crumbs = []; let p = n.parent; while (p != null && NODES.get(p).parent != null) { crumbs.unshift(NODES.get(p)); p = NODES.get(p).parent; }
-  const notes = nodeNotes(n), mark = noteMark(n);
-  const h = n.hints || {};
-  const facts = [h.episodes && `${h.episodes} פרקים`, h.closed_series && "סדרה סגורה", h.renewal && "מתחדשת", h.copy_to && `להעתיק גם ל-${h.copy_to}`, h.redirect_to && `מעבר לשלוחה ${h.redirect_to}`].filter(Boolean);
-  const et = effType(n), routing = ROUTING_TYPES.has(et.t), ls = linkStatus(n), sb = specialBuild(n);
-  const ro = CAN_WRITE === false ? " disabled" : "";
-  const row = isNodeRow(n);
+  if (!n || n.parent == null || !n.live) { el.innerHTML = `<div class="pe-h">${globalNotesHtml()}</div>`; return; }
+  if (!pstate.form || pstate.form.id !== n.id) pstate.form = formBase(n);
+  const f = pstate.form, ro = CAN_WRITE === false ? " disabled" : "";
+  const crumbs = []; let p = NODES.get(n.parent); while (p && p.parent != null) { crumbs.unshift(p.title); p = NODES.get(p.parent); }
+  const kids = NKIDS.get(n.id) || [], menu = isMenuNode(n);
+  const routing = ROUTING_TYPES.has(f.type), row = isNodeRow(n);
+  const err = pstate.showErr ? formError(n, f) : null;
   el.innerHTML = `
-    <div class="crumbs">${crumbs.map(c => `<button data-nid="${c.id}">${esc(c.title || c.path)}</button><span>›</span>`).join("")}</div>
-    <div class="detail-h"><span class="big">${esc(n.path || "–")}</span>
-      <div style="flex:1;min-width:0">${pstate.editTitle
-        ? `<div class="title-edit"><input id="t-in" type="text" value="${esc(n.title || "")}" aria-label="כותרת השלוחה"><button class="cta" id="t-save"${ro}>שמירה</button><button class="ghost" id="t-cancel">ביטול</button></div>
-           ${n.title !== n.title0 ? `<div class="muted">בטיוטה המקורית: ${esc(n.title0 || "(ריק)")} · <button class="linkish" id="t-reset">חזרה למקור</button></div>` : ""}`
-        : `<h2 class="title-row">${esc(n.title || "(ריק)")}${row ? `<button class="eye" id="t-edit" title="עריכת הכותרת"${ro}>עריכה</button>` : ""}</h2>`}
-        <div class="meta">
-          ${row && !routing ? `<span class="chip ${LINK[ls][1]}">שיוך: ${LINK[ls][0]}</span>` : ""}
-          ${sb ? '<span class="chip special">בנייה מיוחדת</span>' : ""}
-          ${n.digit == null ? '<span class="chip warn">בלי מספר</span>' : ""}
-          ${h.stated_path && n.path && h.stated_path !== n.path ? `<span class="chip warn">בטיוטה כתוב <span class="path">${esc(h.stated_path)}</span></span>` : ""}
-          ${facts.map(f => `<span class="chip line">${esc(f)}</span>`).join("")}</div>
-        ${h.description ? `<p class="muted" style="margin:8px 0 0">${esc(h.description)}</p>` : ""}</div></div>
-    ${row ? `<div class="props">
-      <label class="prop" for="p-type"><span>סוג שלוחה</span>
-        <select id="p-type" class="ghost"${ro}><option value="">בלי סוג</option>${TYPE_GROUPS.map(([g, ts]) => `<optgroup label="${esc(g)}">${ts.map(t => `<option value="${t}"${et.t === t ? " selected" : ""}>${esc(TYPE_NAME(t))}${USED_TYPES.has(t) ? "" : " · לא בשימוש בקו"}</option>`).join("")}</optgroup>`).join("")}</select>
-        <small class="muted">${et.t ? (TYPE_SRC[et.src] || "") + (routing ? " · תפריט מורחב, בלי שיוך" : "") : "עוד לא נקבע"}</small></label>
-      <div class="prop"><span>תגיות</span>
-        <button class="tagbtn${sb ? " on" : ""}" id="p-sb"${ro}>${sb ? "✓ בנייה מיוחדת" : "+ בנייה מיוחדת"}</button></div>
-    </div>` : ""}
-    ${pstate.editNotes ? `<div class="notebox"><div class="notebox-h"><b>הערות</b><span class="muted">כל שורה היא הערה</span></div>
-        <textarea id="notes-ta" rows="${Math.max(3, notes.length + 1)}">${esc(notes.join("\n"))}</textarea>
-        <div class="dec-foot"><button class="cta" id="notes-save"${ro}>שמירה</button><button class="ghost" id="notes-cancel">ביטול</button></div></div>`
-      : notes.length ? `<div class="notebox"><div class="notebox-h"><b>הערות</b>
-        <button class="eye${mark ? " on" : ""}" id="note-mark" aria-pressed="${mark}"${ro}>${mark ? "✓ מוצג בעץ" : "הצגה בעץ"}</button>
-        <button class="eye" id="notes-edit"${ro}>עריכה</button></div>
-        <ul>${notes.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`
-      : row ? `<div><button class="eye" id="notes-edit"${ro}>+ הוספת הערה</button></div>` : ""}
-    ${row && !routing ? linkHtml(n, ls) : ""}
-    <div class="dec-foot"><button class="ghost" id="dec-next">לצומת הבא בלי שיוך ←</button><span class="muted" id="dec-msg" role="status"></span></div>`;
-  el.querySelectorAll(".crumbs [data-nid]").forEach(b => b.addEventListener("click", () => selectNode(+b.dataset.nid, true)));
+    <div class="pe-h">
+      <div class="pe-top">
+        <span class="eyebrow" style="flex:1">עריכת שלוחה</span>
+        <div class="pe-acts">
+          ${menu ? `<button class="ghost${pstate.keys ? " on" : ""}" id="pe-keys" aria-pressed="${pstate.keys}">${pstate.keys ? "חזרה לפרטים" : `מקשים (${kids.length})`}</button>` : ""}
+          <button class="ghost" id="pe-add"${ro}>+ תת-שלוחה</button>
+          <button class="ghost" id="pe-more" aria-label="פעולות נוספות" aria-haspopup="menu" aria-expanded="${pstate.menu}" style="width:40px;padding:0"${ro}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></button>
+          ${pstate.menu ? `<div class="pe-menu" role="menu"><button role="menuitem" id="m-move">הזזה אל…</button><button role="menuitem" id="m-sib">הוספת שלוחה אחריה</button><button role="menuitem" class="dz" id="m-del">מחיקת השלוחה</button></div>` : ""}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:-6px">
+        <div class="pe-title">${keyHtml(n)}<h2 id="ed-title">${esc(n.title || "(ריק)")}</h2></div>
+        <div class="muted">${esc(["תפריט ראשי", ...crumbs].join(" › "))}</div>
+      </div>
+    </div>
+    ${pstate.keys && menu ? keypadHtml(n) : `<form class="pe-body" id="pe-form" novalidate>
+      <div class="f">
+        <label for="f-title">שם השלוחה<span class="req" aria-hidden="true">*</span></label>
+        <input id="f-title" class="in${err === "title" ? " err" : ""}" type="text" value="${esc(f.title)}" required aria-required="true" aria-invalid="${err === "title"}" aria-describedby="f-title-h"${ro}>
+        ${err === "title" ? '<span class="errt" id="f-title-h" role="alert">חובה למלא שם.</span>'
+          : n.title0 && f.title !== n.title0 ? `<span class="help" id="f-title-h">בטיוטה המקורית: ${esc(n.title0)} <button type="button" class="linkbtn" id="f-reset">שחזור</button></span>` : ""}
+      </div>
+      <div class="f-row2">
+        <div class="f"><label for="f-type">סוג שלוחה</label>
+          <select id="f-type" class="in sel" aria-describedby="f-type-h"${ro}><option value="">בלי סוג</option>${TYPE_GROUPS.map(([g, ts]) => `<optgroup label="${esc(g)}">${ts.map(t => `<option value="${t}"${f.type === t ? " selected" : ""}>${esc(TYPE_NAME(t))}${USED_TYPES.has(t) ? "" : " · לא בשימוש בקו"}</option>`).join("")}</optgroup>`).join("")}</select></div>
+        <label class="chk tall"><input type="checkbox" id="f-sb"${f.special ? " checked" : ""}${ro}><b>בנייה מיוחדת</b></label>
+      </div>
+      ${routing ? '<span class="help" id="f-type-h" style="margin-top:-8px">תפריט מורחב: אין הקלטות, ולכן אין שיוך.</span>' : ""}
+      ${row && !routing ? linkFieldHtml(n, f, err === "link", ro) : ""}
+      <div class="f">
+        <div class="lrow"><label for="f-notes">הערות</label><label class="chk sm"><input type="checkbox" id="f-mark"${f.mark ? " checked" : ""}${ro}>חיווי בעץ</label></div>
+        <textarea id="f-notes" class="in" rows="2" placeholder="כל שורה היא הערה נפרדת"${ro}>${esc(f.notes)}</textarea>
+      </div>
+    </form>`}
+    <div class="pe-foot" id="pe-foot"></div>`;
   wireDetail(n);
+  drawFoot();
 }
-function linkHtml(n, ls) {
-  const m = MAP_BY_NODE.get(n.id), sig = m ? m.signals : null, sugg = m ? EXT.get(m.ext) : null;
-  const d = DEC.get(n.id);
-  const tab = pstate.tab || (ls !== "unset" ? ls : sugg || notFoundCands.get(n.id)?.length ? "existing" : "new");
-  pstate.tab = tab;
-  const f = pstate.form && pstate.form.node === n.id ? pstate.form
-    : (pstate.form = { node: n.id, ids: d && d.action === "merge" ? [...d.sclass_ids] : sugg ? [sugg.id] : [] });
-  const ro = CAN_WRITE === false ? " disabled" : "";
-  const linked = d ? (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean) : [];
-  const also = linked.flatMap(e => usedBy(e.id, n.id).map(o => [e, o]));
-  const current = linked.length ? `<div class="done"><span class="ok-ic" aria-hidden="true">✓</span><div>
-      <b>${LINK[ls][0]}:</b> ${linked.map(e => `<span class="path">${esc(e.path)}</span> ${esc(e.name || "")}`).join("، ")}
-      ${ls === "existing" && linked[0].path !== n.path ? `<div class="muted">תעבור מ-<span class="path">${esc(linked[0].path)}</span> ל-<span class="path">${esc(n.path || "?")}</span></div>` : ""}
-      ${also.length ? `<div class="wy warn" style="display:inline-block;margin-top:4px">השלוחה המשויכת מופיעה גם ב: ${also.map(([e, o]) => esc(o.title)).join(", ")}</div>` : ""}
-      ${linked.some(e => EXCLUDED(e.path)) ? '<div class="wy bad" style="display:inline-block;margin-top:4px">משויכת לשלוחה תחת השורש 2. לפי D-114 לא משייכים לשם, וצריך לבחור שלוחה אחרת.</div>' : ""}</div></div>`
-    : ls === "new" ? `<div class="done"><span class="ok-ic" aria-hidden="true">✓</span><div><b>חדשה:</b> בלי שלוחה קיימת. שום היסטוריה לא עוברת.${d ? "" : '<div class="muted">לפי הצבע בטיוטה</div>'}</div></div>` : "";
-  const alts = (sig?.candidates || notFoundCands.get(n.id) || []).map(c => EXT.get(c.sclass_id)).filter(e => e && e.id !== sugg?.id);
-  const cands = [...(sugg ? [[sugg, whyLines(n, sig, m.reasons).slice(0, 4), true]] : []), ...alts.map(e => [e, [], false])];
-  for (const id of f.ids) if (!cands.some(c => c[0].id === id) && EXT.get(id)) cands.push([EXT.get(id), [], false]);
-  const multi = tab === "merged";
-  const candHtml = ([e, why, isSugg]) => {
-    const parent = e.parent != null ? EXT.get(e.parent) : null, sel = f.ids.includes(e.id), others = usedBy(e.id, n.id);
-    const isCurrent = linked.some(x => x.id === e.id) && !multi;
-    const btn = multi ? `<button class="choose${sel ? "" : " alt"}" data-toggle="${e.id}"${ro}>${sel ? "✓ נבחרה" : "+ הוספה"}</button>`
-      : isCurrent ? '<span class="chip teal">משויכת עכשיו</span>'
-      : `<button class="choose${isSugg ? "" : " alt"}" data-choose="${e.id}"${ro}><span aria-hidden="true">✓</span> זו השלוחה</button>`;
-    return `<div class="cand${isSugg ? " sugg" : ""}${sel && multi ? " picked" : ""}">
-      <div class="cand-i">${isSugg ? '<span class="tag-s">הצעת המערכת</span>' : ""}
-        <div class="cand-t"><span class="path">${esc(e.path)}</span><b>${esc(e.name || "בלי שם")}</b>${typeChip(e.type)}</div>
-        <div class="muted">${parent ? `תחת ${esc(parent.name || parent.path)}` : "שורש"} · <button class="linkish" data-go="${e.id}">פתיחה בעץ</button></div>
-        ${why.length ? `<div class="whyline">${why.map(w => `<span class="wy ${w[0]}">${esc(w[1])}</span>`).join("")}</div>` : ""}
-        ${others.length ? `<div class="wy warn" style="align-self:flex-start">מופיעה גם ב: ${others.map(o => esc(o.title)).join(", ")}</div>` : ""}</div>
-      ${btn}</div>`;
-  };
-  const body = tab === "unset"
-    ? `<div class="dec-foot">${ls !== "unset" && d ? `<button class="ghost" id="dec-clear"${ro}>ניקוי השיוך</button>` : '<span class="muted">עוד לא נקבע שיוך.</span>'}</div>`
-    : tab === "new"
-    ? (ls === "new" && d ? "" : `<div class="dec-foot"><button class="cta" id="dec-new"${ro}>שמירה: שלוחה חדשה</button></div>`)
-    : `${cands.length ? `<div class="cands">${cands.map(candHtml).join("")}</div>` : '<div class="muted">המערכת לא מצאה שלוחה מתאימה. מחפשים כאן:</div>'}
-      <div class="pick"><label class="field" for="pick-q">${ICON_SEARCH}<input id="pick-q" type="search" placeholder="חיפוש שלוחה לפי שם או נתיב" autocomplete="off"></label><div class="results" id="pick-r"></div></div>
-      ${multi ? `<div class="dec-foot"><button class="cta" id="dec-merge"${f.ids.length >= 2 && !ro ? "" : " disabled"}>שמירת האיחוד (${f.ids.length} שלוחות)</button>${f.ids.length < 2 ? '<span class="muted">בוחרים לפחות שתיים</span>' : ""}</div>` : ""}`;
-  return `<div class="decision">
-    <div class="q2"><b>שיוך לעץ הנוכחי</b></div>
-    ${current}
-    <div class="kinds k4" role="radiogroup" aria-label="סטטוס שיוך">${Object.entries(LINK).map(([k, [l]]) =>
-      `<label class="kind${tab === k ? " on" : ""}"><input type="radio" name="link" value="${k}"${tab === k ? " checked" : ""}>${l}</label>`).join("")}</div>
-    ${body}</div>`;
+function linkFieldHtml(n, f, err, ro) {
+  const m = MAP_BY_NODE.get(n.id), sugg = m ? EXT.get(m.ext) : null;
+  const sel = f.ids.map(id => EXT.get(id)).filter(Boolean);
+  const alts = [sugg, ...((m?.signals?.candidates || notFoundCands.get(n.id) || []).map(c => EXT.get(c.sclass_id)))].filter((e, i, a) => e && !f.ids.includes(e.id) && a.findIndex(x => x && x.id === e.id) === i).slice(0, 3);
+  const extLine = e => `<span class="path" style="color:var(--teal-strong)">${esc(e.path)}</span> <b>${esc(e.name || "בלי שם")}</b>`;
+  const warns = e => [...(usedBy(e.id, n.id).length ? [`משויכת גם ל: ${usedBy(e.id, n.id).map(o => o.title).join(", ")}`] : []), ...(EXCLUDED(e.path) ? ["תחת השורש 2. לפי D-114 לא משייכים לשם"] : [])];
+  const newPath = n.path || "?";
+  let below = "";
+  if (f.link === "existing" || f.link === "merged") {
+    const multi = f.link === "merged";
+    below = `<div class="f" style="margin-top:-6px">
+      ${sel.map(e => `<div class="sel-ext"><div style="flex:1;min-width:0">${extLine(e)}${warns(e).map(w => `<div class="errt" style="font-weight:500">${esc(w)}</div>`).join("")}</div><button type="button" class="linkbtn" data-unpick="${e.id}"${ro}>הסרה</button></div>`).join("")}
+      ${!multi && sel.length === 1 ? `<span class="help">${sel[0].path === newPath ? "נשארת באותו מקום." : `תעבור מ-${esc(sel[0].path)} ל-${esc(newPath)}.`}</span>` : ""}
+      ${(multi || !sel.length) ? `${alts.map((e, i) => `<div class="${i === 0 && e === sugg ? "sugg" : "sel-ext alt"}"><div style="flex:1;min-width:0">${i === 0 && e === sugg ? `<div class="sugg-t">הצעת המערכת · התאמה ${Math.round((m.conf || 0) * 100)}%</div>` : ""}${extLine(e)}</div><button type="button" class="ghost" data-pick="${e.id}"${ro}>${multi ? "+ הוספה" : "בחירה"}</button></div>`).join("")}
+        <input class="in" id="pick-q" type="search" placeholder="חיפוש שלוחה בעץ הנוכחי לפי שם או נתיב" aria-label="חיפוש שלוחה בעץ הנוכחי" autocomplete="off"${ro}><div class="results" id="pick-r"></div>` : ""}
+      ${err ? `<span class="errt" role="alert">${multi ? "בוחרים לפחות שתי שלוחות." : "בוחרים שלוחה מהעץ הנוכחי."}</span>` : multi && sel.length < 2 ? '<span class="help">בוחרים לפחות שתיים.</span>' : ""}
+    </div>`;
+  }
+  return `<div class="f" role="radiogroup" aria-labelledby="f-link-l"><span class="lbl" id="f-link-l">שיוך לעץ הנוכחי</span>
+    <div class="segr">${Object.keys(LINK).map(k => `<label class="${f.link === k ? "on" : ""}" title="${esc(LINK_DESC[k])}"><input type="radio" name="f-link" value="${k}"${f.link === k ? " checked" : ""}${ro}>${LINK[k][0]}</label>`).join("")}</div></div>${below}`;
+}
+function keypadHtml(n) {
+  const kids = (NKIDS.get(n.id) || []).map(k => NODES.get(k));
+  const hasOne = kids.some(k => k.digit === "1");
+  const missing = hasOne ? ["7", "8", "9", "0"].filter(d => !kids.some(k => k.digit === d)) : [];
+  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"].map(d => {
+    const k = kids.find(x => x.digit === d);
+    if (k) return `<button type="button" class="pkey ${badgeCls(k).replace("pdg ", "")}" data-nid="${k.id}" aria-label="מקש ${d}: ${esc(k.title)}"><b>${d}</b><span>${esc(k.title)}</span></button>`;
+    if (d === "*" || d === "#") return `<span class="pkey free sys"><b>${d}</b><span>מקש מערכת</span></span>`;
+    const exp = missing.includes(d);
+    return `<button type="button" class="pkey free${exp ? " exp" : ""}" data-addd="${d}" aria-label="הוספת שלוחה במקש ${d}"${CAN_WRITE === false ? " disabled" : ""}><b>${d}</b><span>${exp ? "חסר לפי הדפוס" : "+ הוספה"}</span></button>`;
+  });
+  const extra = kids.filter(k => !DIGITS.includes(k.digit));
+  return `<div class="pe-body"><span class="help">${kids.filter(k => DIGITS.includes(k.digit)).length} מתוך 10 מקשים תפוסים${missing.length ? `. חסרים ${missing.join(", ")} לפי הדפוס 1/7/8/9/0` : ""}. לחיצה על מקש פנוי מוסיפה בו שלוחה.</span>
+    <div class="pkeys">${keys.join("")}</div>
+    ${extra.length ? `<div class="help">גם בלי מקש רגיל: ${extra.map(k => `<button type="button" class="linkbtn" data-nid="${k.id}">${esc(k.digit ?? "–")} ${esc(k.title)}</button>`).join(" · ")}</div>` : ""}</div>`;
+}
+function drawFoot() {
+  const el = $("#pe-foot"), n = NODES.get(pstate.sel); if (!el) return;
+  if (!n || pstate.trash || n.parent == null || !n.live) { el.innerHTML = ""; el.hidden = true; return; }
+  el.hidden = false;
+  const dk = dirtyKeys(n), dirty = dk.length > 0, err = formError(n, pstate.form || formBase(n));
+  el.innerHTML = `${pstate.pending != null ? `<div class="pend" role="alertdialog" aria-labelledby="pend-t"><b id="pend-t">יש שינויים שלא נשמרו בשלוחה הזו.</b>
+      <div class="pm-a"><button type="button" class="cta" id="pend-save">שמירה ומעבר</button><button type="button" class="ghost" id="pend-drop">מעבר בלי שמירה</button><button type="button" class="ghost" id="pend-stay">הישארות</button></div></div>` : ""}
+    <span class="pe-st${dirty ? " dirty" : ""}" role="status">${dirty ? (dk.length === 1 ? "שינוי אחד שלא נשמר" : `${dk.length} שינויים שלא נשמרו`) : "כל השינויים נשמרו"}</span>
+    <button type="button" class="ghost" id="f-discard"${dirty ? "" : " disabled"}>ביטול שינויים</button>
+    <button type="button" class="cta" id="f-save"${dirty && CAN_WRITE !== false ? "" : " disabled"}>שמירה</button>`;
+  const goPending = () => { const t = pstate.pending; pstate.pending = null; pstate.form = null; pstate.showErr = false;
+    if (t === "global") { pstate.sel = null; drawPlanTree(); renderPlanDetail(); }
+    else if (t === "trash") { pstate.trash = true; renderPlanDetail(); }
+    else selectNode(t, true, true); };
+  $("#pend-save")?.addEventListener("click", async () => { if (await saveForm(n)) goPending(); });
+  $("#pend-drop")?.addEventListener("click", goPending);
+  $("#pend-stay")?.addEventListener("click", () => { pstate.pending = null; drawFoot(); });
+  $("#f-discard")?.addEventListener("click", () => { pstate.form = null; pstate.showErr = false; renderPlanDetail(); toast("השינויים בוטלו"); });
+  $("#f-save")?.addEventListener("click", () => saveForm(n));
+  if (err && !pstate.showErr && dirty) $("#f-save").title = err === "title" ? "חובה למלא שם" : "צריך לבחור שלוחה לשיוך";
+}
+async function saveForm(n) {
+  const f = pstate.form, b = formBase(n);
+  if (formError(n, f)) { pstate.showErr = true; renderPlanDetail(); (document.querySelector(".in.err") || $("#pick-q"))?.focus(); return false; }
+  const prevProps = PROPS.has(n.id) ? { ...PROPS.get(n.id) } : null, prevDec = DEC.get(n.id) || null;
+  const patch = {};
+  const t = f.title.trim();
+  if (t !== b.title) patch.title = n.title0 && t === n.title0 ? null : t;
+  if (f.type !== b.type) patch.planned_type = f.type || null;
+  if (f.special !== b.special) patch.special_build = f.special;
+  if (f.notes !== b.notes) patch.notes = f.notes.split("\n").map(x => x.trim()).filter(Boolean);
+  if (f.mark !== b.mark) patch.note_mark = f.mark;
+  if (Object.keys(patch).length) await saveProps(n.id, patch);
+  const routing = ROUTING_TYPES.has(f.type);
+  if (isNodeRow(n) && !routing && (f.link !== b.link || f.ids.join(",") !== b.ids.join(","))) {
+    if (f.link === "unset") await clearDecision(n.id);
+    else await saveDecision(n.id, { action: { new: "none", existing: "same", merged: "merge" }[f.link], ids: f.link === "new" ? [] : f.ids }, "manual");
+  }
+  pstate.form = null; pstate.showErr = false;
+  rebuildStructure(); drawHead(); drawPlanTree(); renderPlanDetail();
+  toast(`"${n.title}" · השינויים נשמרו`, async () => {
+    await restoreProps(n.id, prevProps);
+    if (prevDec) await saveDecision(n.id, { action: prevDec.action, ids: prevDec.sclass_ids || [] }, prevDec.source || "manual"); else await clearDecision(n.id);
+    rebuildStructure(); pstate.form = null; redrawPlan(); renderPlanDetail();
+  });
+  return true;
 }
 function searchInto(input, box, onPick) {
   input?.addEventListener("input", () => {
     const v = input.value.trim();
     if (v.length < 2) { box.innerHTML = ""; return; }
     const hits = [...EXT.values()].filter(e => !EXCLUDED(e.path) && ((e.name || "").includes(v) || e.path.startsWith(v))).slice(0, 8);
-    box.innerHTML = hits.map(e => `<button data-add="${e.id}"><span class="path">${esc(e.path)}</span> ${esc(e.name || "בלי שם")}<span class="pick-go">בחירה</span></button>`).join("") || '<div class="muted">לא נמצאו שלוחות.</div>';
+    box.innerHTML = hits.map(e => `<button type="button" data-add="${e.id}"><span class="path">${esc(e.path)}</span> ${esc(e.name || "בלי שם")}<span class="pick-go">בחירה</span></button>`).join("") || '<div class="muted">לא נמצאו שלוחות.</div>';
     box.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => onPick(+b.dataset.add)));
   });
 }
 function wireDetail(n) {
-  const el = $("#pdetail");
-  $("#dec-next")?.addEventListener("click", () => nextInQueue());
-  $("#p-type")?.addEventListener("change", async e => {
-    await saveProps(n.id, { planned_type: e.target.value || null });
-    toast(`"${n.title}" · סוג: ${e.target.value ? TYPE_NAME(e.target.value) : "בלי סוג"}`);
-    pstate.tab = null; drawQueueBar(); drawPlanTree(); renderPlanDetail();
-  });
-  $("#p-sb")?.addEventListener("click", async () => { await saveProps(n.id, { special_build: !specialBuild(n) }); drawPlanTree(); renderPlanDetail(); });
-  $("#t-edit")?.addEventListener("click", () => { pstate.editTitle = true; renderPlanDetail(); $("#t-in")?.select(); });
-  $("#t-cancel")?.addEventListener("click", () => { pstate.editTitle = false; renderPlanDetail(); });
-  const saveTitle = async v => {
-    const t = (v || "").trim();
-    await saveProps(n.id, { title: t && t !== n.title0 ? t : null });
-    pstate.editTitle = false; toast(`הכותרת נשמרה: "${n.title}"`); drawPlanTree(); renderPlanDetail();
-  };
-  $("#t-save")?.addEventListener("click", () => saveTitle($("#t-in").value));
-  $("#t-in")?.addEventListener("keydown", e => { if (e.key === "Enter") saveTitle(e.target.value); if (e.key === "Escape") { pstate.editTitle = false; renderPlanDetail(); } });
-  $("#t-reset")?.addEventListener("click", () => saveTitle(""));
-  $("#note-mark")?.addEventListener("click", async () => { await saveProps(n.id, { note_mark: !noteMark(n) }); drawPlanTree(); renderPlanDetail(); });
-  $("#notes-edit")?.addEventListener("click", () => { pstate.editNotes = true; renderPlanDetail(); $("#notes-ta")?.focus(); });
-  $("#notes-cancel")?.addEventListener("click", () => { pstate.editNotes = false; renderPlanDetail(); });
-  $("#notes-save")?.addEventListener("click", async () => {
-    const list = $("#notes-ta").value.split("\n").map(x => x.trim()).filter(Boolean);
-    await saveProps(n.id, { notes: list });
-    pstate.editNotes = false; toast(`"${n.title}" · ההערות נשמרו`); drawPlanTree(); renderPlanDetail();
-  });
-  el.querySelectorAll('input[name="link"]').forEach(r => r.addEventListener("change", () => { pstate.tab = r.value; renderPlanDetail(); }));
-  const f = pstate.form;
-  const decide = async (action, ids) => {
-    const wasQueue = inQueue(n), prev = DEC.get(n.id);
-    const ok = await saveDecision(n.id, { action, ids }, "manual");
-    pstate.form = null; pstate.tab = null; drawQueueBar();
-    const label = { none: "חדשה", same: "קיימת", merge: "מאוחדת" }[action] + (ids.length ? ": " + ids.map(pathOf).join(", ") : "");
-    toast(`${ok ? "נשמר" : DB ? "השמירה נכשלה" : "נשמר בתצוגה הזו בלבד"} · "${n.title}" · ${label}`, ok || !DB ? () => undoDecision(n.id, prev) : null);
-    const q = queue();
-    if (wasQueue && q.length) selectNode(q.find(id => posOf(id) > posOf(n.id)) ?? q[0], true);
-    else { drawPlanTree(); renderPlanDetail(); }
-  };
-  el.querySelectorAll("[data-choose]").forEach(b => b.addEventListener("click", () => decide("same", [+b.dataset.choose])));
-  el.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("click", () => {
-    const id = +b.dataset.toggle; f.ids = f.ids.includes(id) ? f.ids.filter(x => x !== id) : [...f.ids, id]; renderPlanDetail();
+  const el = $("#pdetail"), f = pstate.form;
+  const rerender = focusId => { renderPlanDetail(); if (focusId) document.getElementById(focusId)?.focus(); };
+  $("#pe-keys")?.addEventListener("click", () => { pstate.keys = !pstate.keys; rerender("pe-keys"); });
+  $("#pe-add")?.addEventListener("click", () => addChild(n.id));
+  $("#pe-more")?.addEventListener("click", () => { pstate.menu = !pstate.menu; rerender(pstate.menu ? "m-move" : "pe-more"); });
+  $("#m-move")?.addEventListener("click", () => { pstate.menu = false; if (formDirty()) { toast("קודם שומרים או מבטלים את השינויים בטופס"); renderPlanDetail(); return; } renderPlanDetail(); pstate.modal = { kind: "move", id: n.id, q: "", target: null, digit: null }; drawModal(); });
+  $("#m-sib")?.addEventListener("click", () => { pstate.menu = false; renderPlanDetail(); addChild(n.parent); });
+  $("#m-del")?.addEventListener("click", () => { pstate.menu = false; renderPlanDetail(); askDelete(n.id); });
+  el.querySelector(".pe-menu")?.addEventListener("keydown", e => { if (e.key === "Escape") { pstate.menu = false; rerender("pe-more"); } });
+  el.querySelectorAll(".pkeys [data-nid], .pe-body .linkbtn[data-nid]").forEach(b => b.addEventListener("click", () => selectNode(+b.dataset.nid, true)));
+  el.querySelectorAll("[data-addd]").forEach(b => b.addEventListener("click", () => addChild(n.id, b.dataset.addd)));
+  if (!f) return;
+  $("#pe-form")?.addEventListener("submit", e => { e.preventDefault(); saveForm(n); });
+  $("#f-title")?.addEventListener("input", e => { f.title = e.target.value; drawFoot(); });
+  $("#f-reset")?.addEventListener("click", () => { f.title = n.title0; rerender("f-title"); });
+  $("#f-type")?.addEventListener("change", e => { f.type = e.target.value; rerender("f-type"); });
+  $("#f-sb")?.addEventListener("change", e => { f.special = e.target.checked; drawFoot(); });
+  $("#f-mark")?.addEventListener("change", e => { f.mark = e.target.checked; drawFoot(); });
+  $("#f-notes")?.addEventListener("input", e => { f.notes = e.target.value; drawFoot(); });
+  el.querySelectorAll('input[name="f-link"]').forEach(r => r.addEventListener("change", () => {
+    f.link = r.value;
+    if (f.link === "new" || f.link === "unset") f.ids = []; else if (f.link === "existing") f.ids = f.ids.slice(0, 1);
+    renderPlanDetail(); el.querySelector('input[name="f-link"]:checked')?.focus();
   }));
-  searchInto($("#pick-q"), $("#pick-r"), id => {
-    if (pstate.tab === "merged") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; renderPlanDetail(); } else decide("same", [id]);
-  });
-  $("#dec-new")?.addEventListener("click", () => decide("none", []));
-  $("#dec-merge")?.addEventListener("click", () => decide("merge", f.ids));
-  $("#dec-clear")?.addEventListener("click", async () => {
-    const prev = DEC.get(n.id); await clearDecision(n.id);
-    toast(`"${n.title}" · השיוך נוקה`, () => undoDecision(n.id, null, prev));
-    pstate.tab = null; drawQueueBar(); drawPlanTree(); renderPlanDetail();
-  });
+  const pick = id => { if (f.link === "merged") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; } else f.ids = [id]; rerender(f.link === "merged" ? "pick-q" : null); };
+  el.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => pick(+b.dataset.pick)));
+  el.querySelectorAll("[data-unpick]").forEach(b => b.addEventListener("click", () => { f.ids = f.ids.filter(x => x !== +b.dataset.unpick); rerender("pick-q"); }));
+  searchInto($("#pick-q"), $("#pick-r"), pick);
+}
+function trashHtml() {
+  const list = [...NODES.values()].filter(n => n.deleted && n.parent != null);
+  return `<div class="pe-h"><div class="pe-top"><div style="flex:1"><span class="eyebrow">שחזור</span><h2 id="ed-title" style="font-family:var(--f-display);font-weight:500;font-size:21px;margin:0">נמחקו בתכנון הזה (${list.length})</h2></div>
+      <button class="ghost" id="tr-close">סגירה</button></div></div>
+    <div class="pe-body">${list.length ? list.map(n => { const sub = (NKIDS.get(n.id) || []).length;
+      return `<div class="sel-ext"><span class="path muted">${esc(pathText(n))}</span><s style="flex:1;min-width:0;color:var(--ink-2)">${esc(n.title || "(ריק)")}${sub ? ` (+${sub})` : ""}</s><button type="button" class="ghost" data-restore="${n.id}"${CAN_WRITE === false ? " disabled" : ""}>שחזור</button></div>`; }).join("")
+      : '<div class="muted">אין שלוחות שנמחקו.</div>'}</div>`;
+}
+function wireTrash() {
+  $("#tr-close")?.addEventListener("click", () => { pstate.trash = false; renderPlanDetail(); });
+  document.querySelectorAll("[data-restore]").forEach(b => b.addEventListener("click", () => restoreNode(+b.dataset.restore)));
 }
 async function saveDecision(nodeId, f, source) {
   const doc = { node_id: nodeId, action: f.action, sclass_ids: f.ids || [], note: "", decided_by: MY_ID, decided_at: new Date().toISOString(), source };
@@ -1148,12 +1555,6 @@ async function saveDecision(nodeId, f, source) {
 async function clearDecision(nodeId) {
   DEC.delete(nodeId);
   if (DB && CAN_WRITE !== false) { try { await DB.doc("decisions/" + nodeId).delete(); } catch (e) {} }
-}
-async function undoDecision(nodeId, prev, restore) {
-  const back = restore || prev;
-  if (back) await saveDecision(nodeId, { action: back.action, ids: back.sclass_ids || [] }, back.source || "manual");
-  else await clearDecision(nodeId);
-  drawQueueBar(); selectNode(nodeId, true);
 }
 /* D-122: כותרת ערוכה (nodeprops.title) גוברת על הכותרת מהטיוטה */
 function applyTitles() { for (const n of NODES.values()) { const t = PROPS.get(n.id)?.title; n.title = t ? t : n.title0; } }
@@ -1173,6 +1574,7 @@ function toast(text, undo) {
   if (undo) $("#toast-undo").addEventListener("click", () => { t.hidden = true; undo(); });
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 7000);
 }
+rebuildStructure();
 function globalNotesHtml() {
   const g = k => NOTES_BY.get("global:" + k) || [];
   const col = (t, list) => `<div class="notes-col"><h3>${t}</h3><ul>${list.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
@@ -1189,10 +1591,10 @@ async function initDecisions() {
   if (USER) { try { MY_ID = await USER.id(); } catch (e) {} try { CAN_WRITE = await USER.can("data.write"); } catch (e) {} }
   const refresh = () => {
     const view = (location.hash || "#home").slice(1);
-    if (view === "plan") { drawQueueBar(); drawPlanTree(); renderPlanDetail(); }
+    if (view === "plan") redrawPlan();
     else if (view === "home") renderHome();
   };
-  if (!DB) { if (location.hash === "#plan") drawQueueBar(); return; }
+  if (!DB) { if (location.hash === "#plan") drawHead(); return; }
   DB.collection("decisions").onSnapshot(async snap => {
     DEC.clear();
     for (const s of snap.docs) { const v = s.data(); if (v && v.node_id != null) DEC.set(+v.node_id, v); }
@@ -1203,9 +1605,9 @@ async function initDecisions() {
   DB.collection("nodeprops").onSnapshot(snap => {
     PROPS.clear();
     for (const s of snap.docs) { const v = s.data(); if (v && v.node_id != null) PROPS.set(+v.node_id, v); }
-    applyTitles(); refresh();
+    rebuildStructure(); refresh();
   }, () => {});
-  if (location.hash === "#plan") drawQueueBar();
+  if (location.hash === "#plan") drawHead();
 }
 /* ── ייצוא לאישור (D-121) ── */
 /* הטיוטה כפי שהיא בדף, כקובץ Word לשליחה לאישור. הספרייה נטענת רק בלחיצה. */
