@@ -1881,6 +1881,13 @@ function computeFates() {
   /* בראש ענף סופרים רק את תתי-השלוחות שעוד אין להן החלטה */
   for (const f of FATE.values()) if (f.k === "under") FATE.get(f.head.id).n++;
 }
+/* בענף: כמה תתי-שלוחות נסגרות איתו, וכמה משויכות או מוצעות לעץ החדש וממשיכות אליו (D-152) */
+function branchCounts(id) {
+  const c = { closed: 0, kept: 0 };
+  const walk = pid => { for (const k of KIDS.get(pid) || []) { const f = FATE.get(k);
+    if (f.k === "under-retire" || f.k === "under") c.closed++; else if (LINKED_KINDS.includes(f.k) || f.k === "pending") c.kept++; walk(k); } };
+  walk(id); return c;
+}
 function cmpStats() {
   const s = { all: 0, linked: 0, pending: 0, retired: 0, gap: 0, gapAll: 0 };
   for (const e of EXT.values()) {
@@ -2051,7 +2058,8 @@ function drawPair() {
       root: "התפריט הראשי.", out: "השלוחה מחוץ לתפריט הראשי, ולכן לא נכללת בתכנון (D-114).",
       under: `היא בתוך הענף <span class="path">${esc(f.head?.path || "")}</span>, שלא נמצא בטיוטה. מחליטים על ראש הענף, או משייכים אותה בנפרד.`,
       "under-retire": `היא בתוך הענף <span class="path">${esc(f.head?.path || "")}</span>, שסומן כנסגר.`,
-      retire: `סומנה כנסגרת${subCount(e.id) ? `, יחד עם ${fmt(subCount(e.id))} תתי-השלוחות שלה` : ""}. ההיסטוריה שלה תישמר כהיסטוריה של שלוחה שנסגרה.`,
+      retire: (() => { const c = branchCounts(e.id);
+        return `סומנה כנסגרת${c.closed ? `, ואיתה תתי-השלוחות שאין להן החלטה (${fmt(c.closed)})` : ""}. ההאזנות שלהן נשמרות כהיסטוריה של שלוחה שנסגרה.${c.kept ? ` תתי-השלוחות שמשויכות לעץ החדש (${fmt(c.kept)}) ממשיכות אליו, וההאזנות שלהן עוברות.` : ""}`; })(),
       gap: `אין לה מקום בטיוטה${f.n ? `, וגם לא ל-${fmt(f.n)} מתתי-השלוחות שלה` : ""}. בלי שיוך או סגירה, ההאזנות שלהן לא יעברו לעץ החדש.` }[f.k];
     const canAct = ["gap", "under", "retire"].includes(f.k);
     el.innerHTML = `${oBox(e)}<div class="box dashed"><small>בעץ החדש</small><span>${why}</span></div>
@@ -2059,7 +2067,7 @@ function drawPair() {
         ${f.k !== "retire" ? `<button class="cta" id="c-pick" aria-expanded="${cst.pick === e.id}"${ro}>שיוך לשלוחה בטיוטה…</button>` : ""}
         <button class="ghost" data-retire="${e.id}"${ro}>${f.k === "retire" ? "ביטול הסגירה" : "לא עוברת (נסגרת)"}</button>
         ${f.k === "under" ? `<button class="ghost" data-old="${f.head.id}">מעבר לראש הענף</button>` : ""}</div>` : f.k === "under-retire" ? `<div class="acts"><button class="ghost" data-old="${f.head.id}">מעבר לענף שנסגר</button></div>` : ""}
-      ${cst.retireAsk === e.id ? `<div class="pend" role="alertdialog" aria-labelledby="ret-t"><b id="ret-t">לסמן את ${esc(e.path)} כנסגרת, יחד עם ${fmt(f.n)} תתי-שלוחות שאין להן החלטה? ההאזנות שלהן לא יעברו לעץ החדש.</b>
+      ${cst.retireAsk === e.id ? `<div class="pend" role="alertdialog" aria-labelledby="ret-t"><b id="ret-t">לסמן את ${esc(e.path)} כנסגרת, יחד עם תתי-השלוחות שאין להן החלטה (${fmt(f.n)})? ההאזנות שלהן לא יעברו לעץ החדש.${branchCounts(e.id).kept ? ` תתי-השלוחות שכבר משויכות לעץ החדש (${fmt(branchCounts(e.id).kept)}) לא נסגרות, וההאזנות שלהן עוברות.` : ""}</b>
         <div class="pm-a"><button class="danger" data-retire-yes="${e.id}">סגירה של כל הענף</button><button class="ghost" data-retire-no="1">ביטול</button></div></div>` : ""}
       ${cst.pick === e.id ? pickHtml(e) : ""}`;
     wirePick(e);
