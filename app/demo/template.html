@@ -562,6 +562,14 @@ button.pm-opt:hover { border-color: var(--teal); }
 .pm-k:disabled { background: var(--surface-2); color: var(--ink-3); cursor: default; }
 .pm-k.on { background: var(--navy); color: var(--on-navy); border-color: var(--navy); }
 .info { font-size: 14px; color: var(--ink-2); background: var(--surface-2); border-radius: 12px; padding: 10px 14px; }
+.combo { position: relative; }
+.combo-list { position: absolute; top: calc(100% + 4px); inset-inline: 0; z-index: 8; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px rgba(20, 34, 51, .16); padding: 4px; max-height: 300px; overflow: auto; }
+.combo-o { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; min-height: 40px; }
+.combo-o:hover, .combo-o.on { background: var(--teal-soft); }
+.combo-o .path { color: var(--ink-2); flex: none; }
+.combo-n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.combo-o mark { background: var(--sun-soft); color: inherit; border-radius: 3px; padding: 0 1px; }
+.combo-empty { padding: 10px; color: var(--ink-2); font-size: 14px; }
 .danger { border: 0; border-radius: 999px; padding: 10px 20px; background: var(--bad); color: #fff; font-weight: 600; }
 @media (max-width: 1180px) { .psplit { grid-template-columns: minmax(0, 1fr); } .pedit { position: static; max-height: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -1410,21 +1418,68 @@ function renderPlanDetail() {
   wireDetail(n);
   drawFoot();
 }
+/* הצעות לשיוך לכל צומת: קודם מה שהמיפוי האוטומטי מצא, ואחר כך דמיון שם מול כל העץ הנוכחי,
+   עם תוספת לשלוחות בענף שהאב משויך אליו, ולשם המרצה שבסוגריים (D-008). בלי השורש 2 (D-114) */
+const normName = s => (s || "").replace(/["'״׳.,:;!?\-–_/\\]/g, " ").replace(/\s+/g, " ").trim();
+const BIG = new Map();
+function bigrams(s) {
+  if (BIG.has(s)) return BIG.get(s);
+  const t = normName(s).replace(/ /g, ""), m = new Map();
+  for (let i = 0; i < t.length - 1; i++) { const g = t.slice(i, i + 2); m.set(g, (m.get(g) || 0) + 1); }
+  m.total = Math.max(0, t.length - 1); BIG.set(s, m); return m;
+}
+function nameSim(a, b) {
+  const A = bigrams(a), B = bigrams(b); if (!A.total || !B.total) return 0;
+  let inter = 0; for (const [g, v] of A) inter += Math.min(v, B.get(g) || 0);
+  return 2 * inter / (A.total + B.total);
+}
+function suggestFor(n) {
+  const out = new Map();
+  const m = MAP_BY_NODE.get(n.id);
+  if (m && EXT.get(m.ext)) out.set(m.ext, { e: EXT.get(m.ext), score: m.conf || 0, sys: true });
+  for (const c of m?.signals?.candidates || notFoundCands.get(n.id) || []) if (EXT.get(c.sclass_id) && !out.has(c.sclass_id)) out.set(c.sclass_id, { e: EXT.get(c.sclass_id), score: c.score ?? c.confidence ?? 0, auto: true });
+  const title = n.title || "", bare = title.replace(/\([^)]*\)/g, " "), lect = (title.match(/\(([^)]+)\)/) || [])[1];
+  const pd = DEC.get(n.parent), pm = MAP_BY_NODE.get(n.parent), pext = pd && (pd.sclass_ids || []).length ? EXT.get(pd.sclass_ids[0]) : pm ? EXT.get(pm.ext) : null;
+  const scored = [];
+  if (normName(bare).length >= 2) for (const e of EXT.values()) {
+    if (EXCLUDED(e.path) || out.has(e.id) || !e.name) continue;
+    let sc = Math.max(nameSim(title, e.name), nameSim(bare, e.name));
+    if (sc < .35) continue;
+    const branch = pext && (e.path === pext.path || e.path.startsWith(pext.path + "."));
+    if (branch) sc += .15;
+    const lecturer = lect && normName(lect).length > 1 && e.name.includes(normName(lect));
+    if (lecturer) sc += .1;
+    if (n.digit && e.path.endsWith("." + n.digit)) sc += .03;
+    scored.push({ e, score: Math.min(sc, .99), branch, lecturer });
+  }
+  scored.sort((x, y) => y.score - x.score);
+  for (const x of scored.slice(0, 6)) out.set(x.e.id, x);
+  return [...out.values()].filter(x => x.sys || x.auto || x.score >= .45).sort((x, y) => (y.sys ? 1 : 0) - (x.sys ? 1 : 0) || y.score - x.score).slice(0, 5);
+}
 function linkFieldHtml(n, f, err, ro) {
-  const m = MAP_BY_NODE.get(n.id), sugg = m ? EXT.get(m.ext) : null;
   const sel = f.ids.map(id => EXT.get(id)).filter(Boolean);
-  const alts = [sugg, ...((m?.signals?.candidates || notFoundCands.get(n.id) || []).map(c => EXT.get(c.sclass_id)))].filter((e, i, a) => e && !f.ids.includes(e.id) && a.findIndex(x => x && x.id === e.id) === i).slice(0, 3);
   const extLine = e => `<span class="path" style="color:var(--teal-strong)">${esc(e.path)}</span> <b>${esc(e.name || "בלי שם")}</b>`;
   const warns = e => [...(usedBy(e.id, n.id).length ? [`משויכת גם ל: ${usedBy(e.id, n.id).map(o => o.title).join(", ")}`] : []), ...(EXCLUDED(e.path) ? ["תחת השורש 2. לפי D-114 לא משייכים לשם"] : [])];
   const newPath = n.path || "?";
   let below = "";
   if (f.link === "existing" || f.link === "merged") {
-    const multi = f.link === "merged";
+    const multi = f.link === "merged", choosing = multi || !sel.length;
+    const sugg = choosing ? suggestFor(n).filter(x => !f.ids.includes(x.e.id)) : [];
     below = `<div class="f" style="margin-top:-6px">
       ${sel.map(e => `<div class="sel-ext"><div style="flex:1;min-width:0">${extLine(e)}${warns(e).map(w => `<div class="errt" style="font-weight:500">${esc(w)}</div>`).join("")}</div><button type="button" class="linkbtn" data-unpick="${e.id}"${ro}>הסרה</button></div>`).join("")}
       ${!multi && sel.length === 1 ? `<span class="help">${sel[0].path === newPath ? "נשארת באותו מקום." : `תעבור מ-${esc(sel[0].path)} ל-${esc(newPath)}.`}</span>` : ""}
-      ${(multi || !sel.length) ? `${alts.map((e, i) => `<div class="${i === 0 && e === sugg ? "sugg" : "sel-ext alt"}"><div style="flex:1;min-width:0">${i === 0 && e === sugg ? `<div class="sugg-t">הצעת המערכת · התאמה ${Math.round((m.conf || 0) * 100)}%</div>` : ""}${extLine(e)}</div><button type="button" class="ghost" data-pick="${e.id}"${ro}>${multi ? "+ הוספה" : "בחירה"}</button></div>`).join("")}
-        <input class="in" id="pick-q" type="search" placeholder="חיפוש שלוחה בעץ הנוכחי לפי שם או נתיב" aria-label="חיפוש שלוחה בעץ הנוכחי" autocomplete="off"${ro}><div class="results" id="pick-r"></div>` : ""}
+      ${choosing ? `<span class="lbl" style="margin-top:4px">${sugg.length ? "הצעות לשיוך" : "לא נמצאו הצעות. מחפשים בעץ הנוכחי:"}</span>
+        ${sugg.map(x => { const parent = x.e.parent != null ? EXT.get(x.e.parent) : null, also = usedBy(x.e.id, n.id);
+          return `<div class="${x.sys ? "sugg" : "sel-ext alt"}"><div style="flex:1;min-width:0">
+            <div class="sugg-t">${x.sys ? "הצעת המערכת · " : ""}התאמה ${Math.round(x.score * 100)}%${x.branch ? " · באותו ענף" : ""}${x.lecturer ? " · שם המרצה" : ""}</div>
+            <div>${extLine(x.e)} ${typeChip(x.e.type)}</div>
+            <div class="help">${parent ? `תחת ${esc(parent.name || parent.path)}` : "שורש"}${also.length ? ` · <span style="color:var(--warn)">משויכת גם ל: ${esc(also.map(o => o.title).join(", "))}</span>` : ""}</div></div>
+            <button type="button" class="ghost" data-pick="${x.e.id}"${ro}>${multi ? "+ הוספה" : "בחירה"}</button></div>`; }).join("")}
+        <div class="combo">
+          <input class="in" id="pick-q" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="pick-r" aria-label="חיפוש שלוחה בעץ הנוכחי"
+            placeholder="${sugg.length ? "או חיפוש" : "חיפוש"} לפי שם או נתיב, למשל 1.4.2" autocomplete="off"${ro}>
+          <div class="combo-list" id="pick-r" role="listbox" aria-label="שלוחות בעץ הנוכחי" hidden></div>
+        </div>` : ""}
       ${err ? `<span class="errt" role="alert">${multi ? "בוחרים לפחות שתי שלוחות." : "בוחרים שלוחה מהעץ הנוכחי."}</span>` : multi && sel.length < 2 ? '<span class="help">בוחרים לפחות שתיים.</span>' : ""}
     </div>`;
   }
@@ -1494,14 +1549,39 @@ async function saveForm(n) {
   });
   return true;
 }
-function searchInto(input, box, onPick) {
-  input?.addEventListener("input", () => {
+/* חיפוש עם השלמה אוטומטית (WAI-ARIA combobox): מקלידים, וחצים ו-Enter בוחרים */
+function comboInto(input, box, onPick, exclude) {
+  if (!input) return;
+  let hits = [], active = -1;
+  const mark = (text, v) => { const t = esc(text), i = text.indexOf(v); return i < 0 ? t : esc(text.slice(0, i)) + "<mark>" + esc(v) + "</mark>" + esc(text.slice(i + v.length)); };
+  const close = () => { box.hidden = true; input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant"); active = -1; };
+  const paint = () => {
     const v = input.value.trim();
-    if (v.length < 2) { box.innerHTML = ""; return; }
-    const hits = [...EXT.values()].filter(e => !EXCLUDED(e.path) && ((e.name || "").includes(v) || e.path.startsWith(v))).slice(0, 8);
-    box.innerHTML = hits.map(e => `<button type="button" data-add="${e.id}"><span class="path">${esc(e.path)}</span> ${esc(e.name || "בלי שם")}<span class="pick-go">בחירה</span></button>`).join("") || '<div class="muted">לא נמצאו שלוחות.</div>';
-    box.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => onPick(+b.dataset.add)));
+    box.innerHTML = hits.length ? hits.map((e, i) => `<div role="option" id="pick-o${i}" class="combo-o${i === active ? " on" : ""}" aria-selected="${i === active}" data-i="${i}">
+        <span class="path">${/^[\d.]+$/.test(v) ? mark(e.path, v) : esc(e.path)}</span><span class="combo-n">${mark(e.name || "בלי שם", v)}</span>${typeChip(e.type)}</div>`).join("")
+      : '<div class="combo-empty">לא נמצאו שלוחות.</div>';
+    box.hidden = false; input.setAttribute("aria-expanded", "true");
+    if (active >= 0) { input.setAttribute("aria-activedescendant", "pick-o" + active); box.querySelector(".combo-o.on")?.scrollIntoView({ block: "nearest" }); }
+    else input.removeAttribute("aria-activedescendant");
+  };
+  const search = () => {
+    const v = input.value.trim(); active = -1;
+    if (!v) { close(); return; }
+    const isPath = /^[\d.]+$/.test(v);
+    hits = [...EXT.values()].filter(e => !EXCLUDED(e.path) && !exclude.includes(e.id) && (isPath ? e.path.startsWith(v) : (e.name || "").includes(v)))
+      .sort((a, b) => isPath ? sortKey(a.path) < sortKey(b.path) ? -1 : 1 : ((a.name || "").startsWith(v) ? 0 : 1) - ((b.name || "").startsWith(v) ? 0 : 1) || a.path.length - b.path.length)
+      .slice(0, 10);
+    paint();
+  };
+  input.addEventListener("input", search);
+  input.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown") { e.preventDefault(); if (box.hidden) search(); else { active = Math.min(active + 1, hits.length - 1); paint(); } }
+    else if (e.key === "ArrowUp") { e.preventDefault(); active = Math.max(active - 1, 0); paint(); }
+    else if (e.key === "Enter") { e.preventDefault(); if (!box.hidden && hits[active >= 0 ? active : 0]) onPick(hits[active >= 0 ? active : 0].id); }
+    else if (e.key === "Escape" && !box.hidden) { e.preventDefault(); e.stopPropagation(); close(); }
   });
+  box.addEventListener("mousedown", e => { const o = e.target.closest("[data-i]"); if (o) { e.preventDefault(); onPick(hits[+o.dataset.i].id); } });
+  input.addEventListener("blur", () => setTimeout(close, 120));
 }
 function wireDetail(n) {
   const el = $("#pdetail"), f = pstate.form;
@@ -1531,7 +1611,7 @@ function wireDetail(n) {
   const pick = id => { if (f.link === "merged") { if (!f.ids.includes(id)) f.ids = [...f.ids, id]; } else f.ids = [id]; rerender(f.link === "merged" ? "pick-q" : null); };
   el.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => pick(+b.dataset.pick)));
   el.querySelectorAll("[data-unpick]").forEach(b => b.addEventListener("click", () => { f.ids = f.ids.filter(x => x !== +b.dataset.unpick); rerender("pick-q"); }));
-  searchInto($("#pick-q"), $("#pick-r"), pick);
+  comboInto($("#pick-q"), $("#pick-r"), pick, f.ids);
 }
 function trashHtml() {
   const list = [...NODES.values()].filter(n => n.deleted && n.parent != null);
