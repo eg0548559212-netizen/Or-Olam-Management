@@ -7,6 +7,10 @@
 - Python 3.11 ומעלה, עם `cryptography` ו-`python-docx`.
 - מפתח הצפנה במשתנה הסביבה `OR_OLAM_DB_KEY`. ליצירת מפתח: `python3 -m app.crypto`. שומרים אותו ב-`.env` (מוחרג מהמאגר). **בלי המפתח אי אפשר לקרוא את השדות המוצפנים.**
 
+## חבילת סשן (D-123)
+
+בתחילת סשן: `python3 -m app.session_package restore <zip>`. בסוף סשן: `python3 -m app.session_package save`. הקובץ נשמר אצל המשתמשת, כי הוא כולל את המפתח.
+
 ## בנייה מאפס
 
 הקבצים לא נמצאים במאגר. מניחים אותם תחת `data/`:
