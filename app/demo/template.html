@@ -474,11 +474,14 @@ td .linkish:hover { text-decoration: underline; }
 .plg i { min-width: 14px; width: 14px; height: 14px; padding: 0; border-radius: 4px; }
 .pedit { display: flex; flex-direction: column; position: sticky; top: 20px; max-height: calc(100vh - 40px); }
 .pe-h { padding: 20px 24px 0; display: flex; flex-direction: column; gap: 12px; }
-.pe-top { display: flex; align-items: center; gap: 12px; }
+.pe-top { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
 .eyebrow { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
 .pe-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .pe-title h2 { font-size: 21px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pe-acts { display: flex; gap: 6px; position: relative; flex: none; }
+.pe-acts { display: flex; gap: 6px; flex-wrap: wrap; position: relative; flex: none; }
+.pe-acts .ghost { min-height: 40px; padding: 5px 11px; font-size: 13px; white-space: nowrap; }
+.pe-acts .ghost.dz { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, var(--line)); }
+.pe-acts .ghost.dz:hover { background: var(--bad-soft); }
 .pe-menu { position: absolute; top: 46px; left: 0; background: var(--surface); border-radius: 16px; box-shadow: 0 12px 32px rgba(20, 34, 51, .16); padding: 6px; display: flex; flex-direction: column; min-width: 200px; z-index: 6; }
 .pe-menu button { border: 0; background: none; text-align: right; padding: 10px 12px; border-radius: 10px; min-height: 42px; }
 .pe-menu button:hover, .pe-menu button:focus-visible { background: var(--surface-2); }
@@ -1373,6 +1376,18 @@ async function addChild(parentId, digit) {
   pstate.open.add(parentId); selectNode(id, true, true);
   $("#f-title")?.focus(); $("#f-title")?.select();
 }
+/* D-155: שלוחה חדשה במקש שאחרי השלוחה. אם הוא תפוס, השלוחות הבאות זזות מקש אחד, כמו בגרירה (D-124) */
+async function addAfter(n) {
+  if (formDirty()) { toast("קודם שומרים או מבטלים את השינויים בטופס"); return; }
+  const k = DIGITS.indexOf(n.digit), next = k >= 0 && k < 9 ? DIGITS[k + 1] : null;
+  const moves = next ? shiftPlan(n.parent, next, null) : null;
+  if (!moves) { toast(next ? `אין מקש פנוי אחרי ${n.digit}. השלוחה נוספה במקש הפנוי הראשון` : "אין מקש אחרי השלוחה הזו. השלוחה נוספה במקש הפנוי הראשון"); return addChild(n.parent); }
+  const id = Date.now();
+  await writeProps([...moves.map(([oid, d]) => [oid, { parent_id: n.parent, digit: d }]), [id, { created: true, parent_id: n.parent, digit: next, title: "שלוחה חדשה" }]],
+    `נוספה שלוחה במקש ${next}${moves.length ? `. ${moves.length === 1 ? "שלוחה אחת זזה" : `${moves.length} שלוחות זזו`} מקש אחד` : ""}`);
+  selectNode(id, true, true);
+  $("#f-title")?.focus(); $("#f-title")?.select();
+}
 function askDelete(id) {
   const n = NODES.get(id); if (!n || n.parent == null || CAN_WRITE === false) return;
   if (formDirty() && pstate.sel !== id) { toast("קודם שומרים או מבטלים את השינויים בטופס"); return; }
@@ -1515,11 +1530,12 @@ function renderPlanDetail() {
     <div class="pe-h">
       <div class="pe-top">
         <span class="eyebrow" style="flex:1">עריכת שלוחה</span>
-        <div class="pe-acts">
-          ${menu ? `<button class="ghost${pstate.keys ? " on" : ""}" id="pe-keys" aria-pressed="${pstate.keys}">${pstate.keys ? "חזרה לפרטים" : `מקשים (${kids.length})`}</button>` : ""}
+        <div class="pe-acts" role="group" aria-label="פעולות על השלוחה">
           <button class="ghost" id="pe-add"${ro}>+ תת-שלוחה</button>
-          <button class="ghost" id="pe-more" aria-label="פעולות נוספות" aria-haspopup="menu" aria-expanded="${pstate.menu}" style="width:40px;padding:0"${ro}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></button>
-          ${pstate.menu ? `<div class="pe-menu" role="menu"><button role="menuitem" id="m-move">הזזה אל…</button><button role="menuitem" id="m-sib">הוספת שלוחה אחריה</button><button role="menuitem" class="dz" id="m-del">מחיקת השלוחה</button></div>` : ""}
+          <button class="ghost" id="pe-sib"${ro}>+ שלוחה אחריה</button>
+          <button class="ghost" id="pe-move"${ro}>הזזה אל…</button>
+          ${menu ? `<button class="ghost${pstate.keys ? " on" : ""}" id="pe-keys" aria-pressed="${pstate.keys}">${pstate.keys ? "חזרה לפרטים" : `מקשים (${kids.length})`}</button>` : ""}
+          <button class="ghost dz" id="pe-del"${ro}>מחיקה</button>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;margin-top:-6px">
@@ -1723,11 +1739,9 @@ function wireDetail(n) {
   const rerender = focusId => { renderPlanDetail(); if (focusId) document.getElementById(focusId)?.focus(); };
   $("#pe-keys")?.addEventListener("click", () => { pstate.keys = !pstate.keys; rerender("pe-keys"); });
   $("#pe-add")?.addEventListener("click", () => addChild(n.id));
-  $("#pe-more")?.addEventListener("click", () => { pstate.menu = !pstate.menu; rerender(pstate.menu ? "m-move" : "pe-more"); });
-  $("#m-move")?.addEventListener("click", () => { pstate.menu = false; if (formDirty()) { toast("קודם שומרים או מבטלים את השינויים בטופס"); renderPlanDetail(); return; } renderPlanDetail(); pstate.modal = { kind: "move", id: n.id, q: "", target: null, digit: null }; drawModal(); });
-  $("#m-sib")?.addEventListener("click", () => { pstate.menu = false; renderPlanDetail(); addChild(n.parent); });
-  $("#m-del")?.addEventListener("click", () => { pstate.menu = false; renderPlanDetail(); askDelete(n.id); });
-  el.querySelector(".pe-menu")?.addEventListener("keydown", e => { if (e.key === "Escape") { pstate.menu = false; rerender("pe-more"); } });
+  $("#pe-move")?.addEventListener("click", () => { if (formDirty()) { toast("קודם שומרים או מבטלים את השינויים בטופס"); return; } pstate.modal = { kind: "move", id: n.id, q: "", target: null, digit: null }; drawModal(); });
+  $("#pe-sib")?.addEventListener("click", () => addAfter(n));
+  $("#pe-del")?.addEventListener("click", () => askDelete(n.id));
   el.querySelectorAll(".pkeys [data-nid], .pe-body .linkbtn[data-nid]").forEach(b => b.addEventListener("click", () => selectNode(+b.dataset.nid, true)));
   el.querySelectorAll("[data-addd]").forEach(b => b.addEventListener("click", () => addChild(n.id, b.dataset.addd)));
   if (!f) return;
