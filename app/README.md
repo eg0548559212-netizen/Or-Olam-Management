@@ -35,7 +35,7 @@ python3 -m app.demo.build      # דף ההצגה: data/demo/or-olam-demo.html
 | ייבוא סוגי השלוחות (D-119) | `importers/types_import.py` | `extension_type` |
 | ייבוא הטיוטה | `importers/draft_import.py` | `migration_plan`, `base_tree_snapshot`, `uploaded_file`, `draft` (`imported` + `working`), `draft_node`, `draft_note` |
 | דף ההצגה (D-112) | `demo/build.py`, `demo/template.html` | קורא בלבד. לא כולל ערכים מוצפנים, ומסתיר טלפונים בשמות |
-| החלת מצב הדף (D-113, D-128, D-152) | `planning/apply_decisions.py <decisions> --props <nodeprops> --retired <retired>` | קודם המבנה (`draft_node`: צמתים חדשים, `parent_node_id`, `digit`, `deleted`, `full_path`), אחר כך `mapping_row` (`approved` / `rejected`) והמאפיינים |
+| החלת מצב הדף (D-113, D-128, D-152) | `planning/apply_decisions.py <decisions> --props <nodeprops> --retired <retired> --globalnotes <globalnotes>` | קודם המבנה (`draft_node`: צמתים חדשים, `parent_node_id`, `digit`, `deleted`, `full_path`), אחר כך `mapping_row` (`approved` / `rejected`) והמאפיינים |
 | מיפוי ודוח פערים | `planning/analyze.py` | `mapping_row`, `mapping_source`, `mapping_target`, `gap_report`, `gap_item`, `validation_result` |
 
 - קטלוג מפתחות ההפניה והשדות הרגישים: `settings_catalog.py`.

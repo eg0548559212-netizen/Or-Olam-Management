@@ -24,8 +24,13 @@ deleted → draft_node.deleted לצומת ולכל הצאצאים שלו. אחר
 שלוחות שסומנו "לא עוברת (נסגרת)" במסך "חדש מול ישן" (D-152) נשמרות באוסף retired (מסמך לכל sclass_id),
 ומוחלות עם --retired <תיקייה>: לכל אחת שורת mapping_row עם relation = retire, status = approved,
 מקור אחד ובלי יעד. ההחלה מחליפה את כל שורות ה-retire הקודמות, כך שביטול סגירה בדף מוחק את השורה.
+
+הערות כלליות שנערכו בדף (D-157) נשמרות באוסף globalnotes (global / open_question / lecturers), ומוחלות
+עם --globalnotes <תיקייה>: הן מחליפות את הערות הטיוטה הכלליות (draft_note בלי node_id) מאותה קבוצה.
+"דרושים מוסרים" נשמרות כהערות global עם הקידומת "דרושים מוסרים: ", כמו בייבוא.
 """
 import argparse
+from datetime import datetime, timezone
 import glob
 import json
 import os
@@ -105,6 +110,38 @@ def apply_retired(src_dir, db_file):
         n += 1
     db.commit()
     return {"retired": n}
+
+
+LECT_PREFIX = "דרושים מוסרים"
+
+
+def apply_globalnotes(src_dir, db_file):
+    db = connect(db_file)
+    draft_id = _working_draft(db)
+    n = 0
+    for f in sorted(glob.glob(os.path.join(src_dir, "*.json"))):
+        doc = json.load(open(f, encoding="utf-8"))
+        d = doc.get("data", doc)
+        scope, notes = d.get("scope"), d.get("notes")
+        if scope not in ("global", "open_question", "lecturers") or not isinstance(notes, list):
+            continue
+        old = "node_id IS NULL AND draft_id = ? AND scope = ?"
+        if scope == "open_question":
+            db.execute(f"DELETE FROM draft_note WHERE {old}", (draft_id, "open_question"))
+        elif scope == "lecturers":
+            db.execute(f"DELETE FROM draft_note WHERE {old} AND text LIKE ?", (draft_id, "global", LECT_PREFIX + "%"))
+        else:
+            db.execute(f"DELETE FROM draft_note WHERE {old} AND text NOT LIKE ?", (draft_id, "global", LECT_PREFIX + "%"))
+        for text in notes:
+            db.execute(
+                """INSERT INTO draft_note (draft_id, node_id, scope, note_kind, text, status, author, created_at)
+                   VALUES (?, NULL, ?, 'comment', ?, 'open', ?, ?)""",
+                (draft_id, "open_question" if scope == "open_question" else "global",
+                 f"{LECT_PREFIX}: {text}" if scope == "lecturers" else text, d.get("updated_by"),
+                 d.get("updated_at") or datetime.now(timezone.utc).isoformat(timespec="seconds")))
+        n += 1
+    db.commit()
+    return {"globalnotes": n}
 
 
 def _docs(src_dir):
@@ -233,6 +270,7 @@ if __name__ == "__main__":
     ap.add_argument("src_dir")
     ap.add_argument("--props", help="תיקיית nodeprops (D-118)")
     ap.add_argument("--retired", help="תיקיית retired (D-152)")
+    ap.add_argument("--globalnotes", help="תיקיית globalnotes (D-157)")
     ap.add_argument("--db", default="data/or-olam.db")
     a = ap.parse_args()
     out = apply_structure(a.props, a.db) if a.props else {}
@@ -242,4 +280,6 @@ if __name__ == "__main__":
         finalize_structure(a.db)
     if a.retired:
         out.update(apply_retired(a.retired, a.db))
+    if a.globalnotes:
+        out.update(apply_globalnotes(a.globalnotes, a.db))
     print(json.dumps(out, ensure_ascii=False, indent=2))

@@ -1110,6 +1110,8 @@ function revealNode(id) { let p = NODES.get(id)?.parent; while (p != null) { pst
 function formDirty() { const n = NODES.get(pstate.sel); return !!(n && pstate.form && pstate.form.id === n.id && dirtyKeys(n).length); }
 function selectNode(id, scroll, force) {
   if (!force && id !== pstate.sel && formDirty()) { pstate.pending = id; drawFoot(); return; }
+  if (!force && pstate.sel == null && gDirtyKeys().length) { toast("קודם שומרים או מבטלים את השינויים בהערות הכלליות"); return; }
+  pstate.gform = null;
   pstate.sel = id; pstate.form = null; pstate.keys = false; pstate.trash = false; pstate.menu = false; pstate.pending = null;
   revealNode(id); drawPlanTree(); renderPlanDetail();
   if (scroll) requestAnimationFrame(() => { const b = document.querySelector(`.prow[data-nid="${id}"] .pmain`); b?.scrollIntoView({ block: "nearest" }); if (scroll === "focus") b?.focus(); });
@@ -1250,7 +1252,7 @@ function drawHead() {
     for (const m of suggestedOpen()) await saveDecision(m.node, { action: "same", ids: [m.ext] }, "bulk");
     redrawPlan();
   });
-  $("#gnotes").addEventListener("click", () => { if (formDirty()) { pstate.pending = "global"; drawFoot(); return; } pstate.sel = null; pstate.form = null; drawPlanTree(); renderPlanDetail(); });
+  $("#gnotes").addEventListener("click", () => { if (formDirty()) { pstate.pending = "global"; drawFoot(); return; } pstate.sel = null; pstate.form = null; pstate.gform = null; drawPlanTree(); renderPlanDetail(); });
   $("#xbtn").addEventListener("click", () => { const x = $("#xslot"); x.innerHTML = x.innerHTML ? "" : exportPanelHtml(); if (x.innerHTML) wireExport(); });
 }
 function saveNotice() {
@@ -1534,7 +1536,7 @@ function renderPlanDetail() {
   if (pstate.pane === "old") drawPickOld();
   if (pstate.trash) { el.innerHTML = trashHtml(); wireTrash(); return; }
   const n = NODES.get(pstate.sel);
-  if (!n || n.parent == null || !n.live) { el.innerHTML = `<div class="pe-h">${globalNotesHtml()}</div>`; return; }
+  if (!n || n.parent == null || !n.live) { renderGlobalNotes(el); return; }
   if (!pstate.form || pstate.form.id !== n.id) pstate.form = formBase(n);
   const f = pstate.form, ro = CAN_WRITE === false ? " disabled" : "";
   const crumbs = []; let p = NODES.get(n.parent); while (p && p.parent != null) { crumbs.unshift(p.title); p = NODES.get(p.parent); }
@@ -1827,15 +1829,54 @@ function toast(text, undo) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 7000);
 }
 rebuildStructure();
-function globalNotesHtml() {
-  const g = k => NOTES_BY.get("global:" + k) || [];
-  const col = (t, list) => `<div class="notes-col"><h3>${t}</h3><ul>${list.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
-  return `<div class="card-h"><h2>הערות כלליות בטיוטה</h2></div>
-    <div class="notes-grid one">
-      ${col("בכל הקו", g("global").filter(n => !n.text.startsWith("דרושים מוסרים")).map(n => n.text))}
-      ${col("שאלות שנותרו", g("open_question").map(n => n.text))}
-      ${col("דרושים מוסרים", g("global").filter(n => n.text.startsWith("דרושים מוסרים")).map(n => n.text.replace(/^דרושים מוסרים:\s*/, "")))}
-    </div>`;
+/* D-157: הערות כלליות ניתנות לעריכה. נשמרות באוסף globalnotes (global / open_question / lecturers), וגוברות על הטיוטה */
+const GNOTES = new Map();
+const GN = { global: ["בכל הקו", "הערות שחלות על כל השלוחות"], open_question: ["שאלות שנותרו", "שאלות פתוחות על מבנה הקו"], lecturers: ["דרושים מוסרים", "נושאים ושלוחות שצריך להם מרצה"] };
+function globalNotes(k) {
+  if (Array.isArray(GNOTES.get(k)?.notes)) return GNOTES.get(k).notes;
+  const g = s => NOTES_BY.get("global:" + s) || [];
+  if (k === "open_question") return g("open_question").map(n => n.text);
+  const lect = n => n.text.startsWith("דרושים מוסרים");
+  return k === "lecturers" ? g("global").filter(lect).map(n => n.text.replace(/^דרושים מוסרים:\s*/, "")) : g("global").filter(n => !lect(n)).map(n => n.text);
+}
+const gBase = () => Object.fromEntries(Object.keys(GN).map(k => [k, globalNotes(k).join("\n")]));
+const gDirtyKeys = () => { const b = gBase(), f = pstate.gform; return f ? Object.keys(GN).filter(k => f[k] !== b[k]) : []; };
+function renderGlobalNotes(el) {
+  if (!pstate.gform) pstate.gform = gBase();
+  const f = pstate.gform, ro = CAN_WRITE === false ? " disabled" : "";
+  el.innerHTML = `<div class="pe-h"><span class="eyebrow">עריכת הערות כלליות</span><h2 id="ed-title" style="font-size:21px">הערות כלליות בטיוטה</h2>
+      <div class="muted">כל שורה היא הערה נפרדת. ההערות נכנסות לייצוא ל-Word, בראש המסמך.</div></div>
+    <form class="pe-body" id="gn-form" novalidate>
+      ${Object.entries(GN).map(([k, [t, h]]) => `<div class="f"><label for="gn-${k}">${t}</label>
+        <textarea class="in gn-ta" id="gn-${k}" data-k="${k}" rows="5" aria-describedby="gn-${k}-h"${ro}>${esc(f[k])}</textarea>
+        <span class="help" id="gn-${k}-h">${h} · <span data-cnt="${k}">${f[k].split("\n").filter(x => x.trim()).length}</span> הערות</span></div>`).join("")}
+    </form>
+    <div class="pe-foot" id="gn-foot"></div>`;
+  const foot = () => {
+    const d = gDirtyKeys().length;
+    $("#gn-foot").innerHTML = `<span class="pe-st${d ? " dirty" : ""}" role="status">${d ? (d === 1 ? "שינוי אחד שלא נשמר" : `${d} שינויים שלא נשמרו`) : "כל השינויים נשמרו"}</span>
+      <button type="button" class="ghost" id="gn-discard"${d ? "" : " disabled"}>ביטול שינויים</button><button type="button" class="cta" id="gn-save"${d && CAN_WRITE !== false ? "" : " disabled"}>שמירה</button>`;
+    $("#gn-discard").addEventListener("click", () => { pstate.gform = null; renderPlanDetail(); toast("השינויים בוטלו"); });
+    $("#gn-save").addEventListener("click", saveGlobalNotes);
+  };
+  el.querySelectorAll("[data-k]").forEach(t => t.addEventListener("input", () => {
+    f[t.dataset.k] = t.value; el.querySelector(`[data-cnt="${t.dataset.k}"]`).textContent = t.value.split("\n").filter(x => x.trim()).length; foot(); }));
+  foot();
+}
+async function saveGlobalNotes() {
+  const keys = gDirtyKeys(), prev = Object.fromEntries(keys.map(k => [k, GNOTES.get(k) || null]));
+  for (const k of keys) {
+    const doc = { scope: k, notes: pstate.gform[k].split("\n").map(x => x.trim()).filter(Boolean), updated_by: MY_ID, updated_at: new Date().toISOString() };
+    GNOTES.set(k, doc);
+    if (DB && CAN_WRITE !== false) { try { await DB.doc("globalnotes/" + k).set(doc); } catch (e) {} }
+  }
+  pstate.gform = null; renderPlanDetail();
+  toast("ההערות הכלליות נשמרו", async () => {
+    for (const k of keys) { const d = prev[k];
+      if (d) { GNOTES.set(k, d); if (DB && CAN_WRITE !== false) { try { await DB.doc("globalnotes/" + k).set(d); } catch (e) {} } }
+      else { GNOTES.delete(k); if (DB && CAN_WRITE !== false) { try { await DB.doc("globalnotes/" + k).delete(); } catch (e) {} } } }
+    pstate.gform = null; renderPlanDetail();
+  });
 }
 async function initDecisions() {
   try { USER = await window.claude?.use?.("user"); } catch (e) { USER = null; }
@@ -1859,6 +1900,12 @@ async function initDecisions() {
     PROPS.clear();
     for (const s of snap.docs) { const v = s.data(); if (v && v.node_id != null) PROPS.set(+v.node_id, v); }
     rebuildStructure(); refresh();
+  }, () => {});
+  DB.collection("globalnotes").onSnapshot(snap => {
+    GNOTES.clear();
+    for (const s of snap.docs) { const v = s.data(); if (v && GN[v.scope]) GNOTES.set(v.scope, v); }
+    if (!gDirtyKeys().length) pstate.gform = null;
+    refresh();
   }, () => {});
   DB.collection("retired").onSnapshot(snap => {
     RETIRED.clear();
@@ -2248,10 +2295,7 @@ async function buildDocx(opts) {
     ...(opts.notes ? [R(" · "), R("כתום – הערות", { color: C.note }), R(" · "), R("סגול – דרוש מרצה", { color: C.lecturer }), R(" · "), R("חמרה – צריך שם אחר", { color: C.rename })] : []), ...(opts.links || opts.types ? [R(" · "), R("אפור – סוג ושיוך לעץ הנוכחי", { color: C.grey })] : [])];
   body.push(P(legend, { after: 240 }));
   if (opts.global) {
-    const g = k => NOTES_BY.get("global:" + k) || [];
-    const blocks = [["בכל הקו", g("global").filter(n => !n.text.startsWith("דרושים מוסרים")).map(n => n.text)],
-      ["שאלות שנותרו", g("open_question").map(n => n.text)],
-      ["דרושים מוסרים", g("global").filter(n => n.text.startsWith("דרושים מוסרים")).map(n => n.text.replace(/^דרושים מוסרים:\s*/, ""))]];
+    const blocks = Object.entries(GN).map(([k, [t]]) => [t, globalNotes(k)]);
     for (const [t, list] of blocks) {
       if (!list.length) continue;
       body.push(P([R(t, { bold: true, size: 26 })], { heading: HeadingLevel.HEADING_2, after: 80 }));
