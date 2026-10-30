@@ -14,7 +14,7 @@ draft_node.link_status מתעדכן: none → new, same/split → existing, merg
 מאפייני צומת (D-118) נשמרים באוסף nodeprops ומוחלים עם --props <תיקייה>:
 planned_type → draft_node.planned_cls_type, special_build → draft_node.special_build,
 notes (D-120, רשימת הערות ערוכה) → מחליפה את הערות הצומת ב-draft_note,
-title (D-122, כותרת ערוכה) → draft_node.title.
+title (D-122, כותרת ערוכה) → draft_node.title, flags (D-156, הערות קבועות) → draft_node.flags.
 עריכת מבנה (D-124), מוחלת לפני ההחלטות כדי שצמתים חדשים יהיו קיימים:
 created → צומת חדש ב-draft_node (node_status = new), parent_id / digit → מיקום חדש,
 deleted → draft_node.deleted לצומת ולכל הצאצאים שלו. אחר כך full_path מחושב מחדש,
@@ -196,6 +196,8 @@ def finalize_structure(db_file):
 def apply_props(src_dir, db_file):
     db = connect(db_file)
     draft_id = db.execute("SELECT draft_id FROM draft WHERE kind = 'working' ORDER BY draft_id LIMIT 1").fetchone()[0]
+    if "flags" not in [r[1] for r in db.execute("PRAGMA table_info(draft_node)")]:
+        db.execute("ALTER TABLE draft_node ADD COLUMN flags TEXT")  # D-156, לבסיס נתונים ישן
     n = 0
     for f in sorted(glob.glob(os.path.join(src_dir, "*.json"))):
         doc = json.load(open(f, encoding="utf-8"))
@@ -208,6 +210,8 @@ def apply_props(src_dir, db_file):
             sets.append("title = COALESCE(?, title)"); args.append(d["title"] or None)
         if "special_build" in d:
             sets.append("special_build = ?"); args.append(int(bool(d["special_build"])))
+        if "flags" in d:
+            sets.append("flags = ?"); args.append(json.dumps(d["flags"]) if d["flags"] else None)
         if sets:
             db.execute(f"UPDATE draft_node SET {', '.join(sets)} WHERE draft_id = ? AND node_id = ?",
                        (*args, draft_id, int(d["node_id"])))

@@ -32,6 +32,10 @@
   --new-soft: #f6dcee;
   --special: #3b68cf;
   --special-soft: #dfe7fa;
+  --lecturer: #7048c8;
+  --lecturer-soft: #ece5fb;
+  --rename: #c2410c;
+  --rename-soft: #ffe4d4;
   --shadow: 0 1px 2px rgba(20, 34, 51, .04), 0 8px 24px rgba(20, 34, 51, .05);
   --f-display: "Rubik", "Assistant", "Segoe UI", system-ui, sans-serif;
   --f-body: "Assistant", "Rubik", "Segoe UI", system-ui, sans-serif;
@@ -45,7 +49,7 @@
     --line: #243349; --teal: #4cc2c3; --teal-strong: #7fd8d8; --teal-soft: #173d45; --teal-softer: #142f38;
     --sun: #f5c24c; --sun-strong: #f5c24c; --sun-soft: #3a3120; --navy: #0a111b; --on-navy: #e7eef3;
     --ok: #55c08f; --ok-soft: #173a2c; --warn: #eb9a52; --warn-soft: #3d2a19; --bad: #ec7676; --bad-soft: #3e1f23;
-    --new: #e27cc3; --new-soft: #3b1f34; --special: #84a6f2; --special-soft: #1f2b47;
+    --new: #e27cc3; --new-soft: #3b1f34; --special: #84a6f2; --special-soft: #1f2b47; --lecturer: #b49cf2; --lecturer-soft: #2c2347; --rename: #ff9a66; --rename-soft: #42220f;
     --shadow: 0 1px 2px rgba(0, 0, 0, .25), 0 8px 24px rgba(0, 0, 0, .25);
     color-scheme: dark;
   }
@@ -55,7 +59,7 @@
   --line: #243349; --teal: #4cc2c3; --teal-strong: #7fd8d8; --teal-soft: #173d45; --teal-softer: #142f38;
   --sun: #f5c24c; --sun-strong: #f5c24c; --sun-soft: #3a3120; --navy: #0a111b; --on-navy: #e7eef3;
   --ok: #55c08f; --ok-soft: #173a2c; --warn: #eb9a52; --warn-soft: #3d2a19; --bad: #ec7676; --bad-soft: #3e1f23;
-  --new: #e27cc3; --new-soft: #3b1f34; --special: #84a6f2; --special-soft: #1f2b47;
+  --new: #e27cc3; --new-soft: #3b1f34; --special: #84a6f2; --special-soft: #1f2b47; --lecturer: #b49cf2; --lecturer-soft: #2c2347; --rename: #ff9a66; --rename-soft: #42220f;
   --shadow: 0 1px 2px rgba(0, 0, 0, .25), 0 8px 24px rgba(0, 0, 0, .25);
   color-scheme: dark;
 }
@@ -628,6 +632,13 @@ button.pm-opt:hover { border-color: var(--teal); }
 .orow .use:disabled { opacity: .45; cursor: default; }
 .orow .fate { width: 150px; }
 .from-old { align-self: flex-start; }
+/* ── הערות קבועות (D-156) ── */
+.flagchk { font-weight: 600; }
+.flagchk.lecturer { color: var(--lecturer); } .flagchk.lecturer input { accent-color: var(--lecturer); }
+.flagchk.rename { color: var(--rename); } .flagchk.rename input { accent-color: var(--rename); }
+.tflag { flex: none; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 1px 7px; }
+.tflag.lecturer { background: var(--lecturer-soft); color: var(--lecturer); }
+.tflag.rename { background: var(--rename-soft); color: var(--rename); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
@@ -699,8 +710,8 @@ for (const r of D.refs) {
 const BROKEN = new Set(D.refs.filter(r => r[6] === "broken").map(r => r[0]));
 const ALIAS = new Map(D.aliases.map(([old, id]) => [id, old]));
 const NODES = new Map(), NKIDS = new Map();
-for (const [id, parent, digit, path, title, status, kind, hints, link, special, planned, del] of D.nodes) {
-  NODES.set(id, { id, parent, digit, path, title, title0: title, status, kind, hints, link, special, planned, parent0: parent, digit0: digit, del0: !!del });
+for (const [id, parent, digit, path, title, status, kind, hints, link, special, planned, del, flags] of D.nodes) {
+  NODES.set(id, { id, parent, digit, path, title, title0: title, status, kind, hints, link, special, planned, parent0: parent, digit0: digit, del0: !!del, flags0: flags || [] });
   if (!NKIDS.has(parent)) NKIDS.set(parent, []);
   NKIDS.get(parent).push(id);
 }
@@ -1071,6 +1082,10 @@ function linkStatus(n) {
 const specialBuild = n => { const p = PROPS.get(n.id); return p && "special_build" in p ? !!p.special_build : !!n.special; };
 /* D-120: סוג הערה אחד. ההערות של צומת מאוחדות לרשימה אחת, וניתנות לעריכה (nodeprops.notes) */
 const nodeNotes = n => { const p = PROPS.get(n.id); return p && Array.isArray(p.notes) ? p.notes : (NOTES_BY.get(n.id) || []).map(x => x.text); };
+/* D-156: הערות קבועות, עם חיווי קבוע בעץ. נשמרות ב-nodeprops.flags */
+const FLAG = { lecturer: "דרוש מרצה", rename: "צריך שם אחר" };
+const nodeFlags = n => { const p = PROPS.get(n.id); return (p && Array.isArray(p.flags) ? p.flags : n.flags0 || []).filter(k => FLAG[k]); };
+const flagTags = n => nodeFlags(n).map(k => `<span class="tflag ${k}">${FLAG[k]}</span>`).join("");
 const noteMark = n => { const p = PROPS.get(n.id) || {}; return "note_mark" in p ? !!p.note_mark : (p.note_marks || []).length > 0; };
 function usedBy(extId, exceptNode) {
   const out = [];
@@ -1253,7 +1268,7 @@ function prowHtml(n, depth, flat) {
       <span class="pnm${depth === 0 && !flat ? " top" : ""}${n.title ? "" : " empty"}">${esc(n.title || "(ריק)")}</span>
       ${kids.length && !open && !flat ? `<span class="pkids">${kids.length} תתי-שלוחות</span>` : ""}
       ${nodeNotes(n).length && noteMark(n) ? `<span class="ndot" title="${esc(nodeNotes(n).join(" · "))}"></span>` : ""}
-      ${specialBuild(n) ? '<span class="ind-sb">בנייה מיוחדת</span>' : ""}</button>
+      ${specialBuild(n) ? '<span class="ind-sb">בנייה מיוחדת</span>' : ""}${flagTags(n)}</button>
     ${sel && CAN_WRITE !== false ? `<span class="prowact"><button data-addchild="${n.id}" aria-label="הוספת תת-שלוחה" title="הוספת תת-שלוחה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></span>` : ""}
     <span class="ptcol">${t ? typeChip(t) : n.parent != null ? '<span class="ctype faint">בלי סוג</span>' : ""}</span></div>`;
 }
@@ -1500,7 +1515,7 @@ const TYPE_GROUPS = (() => {
 function formBase(n) {
   const d = DEC.get(n.id);
   return { id: n.id, title: n.title || "", type: effType(n).t || "", special: specialBuild(n), link: linkStatus(n),
-    ids: d && d.action !== "routing" && d.action !== "none" ? [...(d.sclass_ids || [])] : [], notes: nodeNotes(n).join("\n"), mark: noteMark(n) };
+    ids: d && d.action !== "routing" && d.action !== "none" ? [...(d.sclass_ids || [])] : [], notes: nodeNotes(n).join("\n"), mark: noteMark(n), flags: nodeFlags(n).join(",") };
 }
 function dirtyKeys(n) {
   const b = formBase(n), f = pstate.form;
@@ -1559,7 +1574,9 @@ function renderPlanDetail() {
         : f.typeFrom && EXT.get(f.typeFrom) ? `<span class="help" id="f-type-h" role="status" style="margin-top:-8px">הסוג נקבע לפי השלוחה המשויכת <span class="path">${esc(EXT.get(f.typeFrom).path)}</span>. אפשר לשנות.</span>` : ""}
       ${row ? linkFieldHtml(n, f, err === "link", ro) : ""}
       <div class="f">
-        <div class="lrow"><label for="f-notes">הערות</label><label class="chk sm"><input type="checkbox" id="f-mark"${f.mark ? " checked" : ""}${ro}>חיווי בעץ</label></div>
+        <div class="lrow"><label for="f-notes" style="flex:none">הערות</label>
+          ${Object.entries(FLAG).map(([k, t]) => `<label class="chk sm flagchk ${k}"><input type="checkbox" data-flag="${k}"${f.flags.split(",").includes(k) ? " checked" : ""}${ro}>${t}</label>`).join("")}
+          <label class="chk sm" style="margin-inline-start:auto"><input type="checkbox" id="f-mark"${f.mark ? " checked" : ""}${ro}>חיווי בעץ</label></div>
         <textarea id="f-notes" class="in" rows="2" placeholder="כל שורה היא הערה נפרדת"${ro}>${esc(f.notes)}</textarea>
       </div>
     </form>`}
@@ -1686,6 +1703,7 @@ async function saveForm(n) {
   if (f.special !== b.special) patch.special_build = f.special;
   if (f.notes !== b.notes) patch.notes = f.notes.split("\n").map(x => x.trim()).filter(Boolean);
   if (f.mark !== b.mark) patch.note_mark = f.mark;
+  if (f.flags !== b.flags) patch.flags = f.flags ? f.flags.split(",") : [];
   if (Object.keys(patch).length) await saveProps(n.id, patch);
   if (isNodeRow(n) && (f.link !== b.link || f.ids.join(",") !== b.ids.join(","))) {
     if (f.link === "unset") await clearDecision(n.id);
@@ -1751,6 +1769,8 @@ function wireDetail(n) {
   $("#f-type")?.addEventListener("change", e => { f.type = e.target.value; f.typeFrom = null; rerender("f-type"); });
   $("#f-sb")?.addEventListener("change", e => { f.special = e.target.checked; drawFoot(); });
   $("#f-mark")?.addEventListener("change", e => { f.mark = e.target.checked; drawFoot(); });
+  el.querySelectorAll("[data-flag]").forEach(c => c.addEventListener("change", () => {
+    f.flags = Object.keys(FLAG).filter(k => el.querySelector(`[data-flag="${k}"]`)?.checked).join(","); drawFoot(); }));
   $("#f-notes")?.addEventListener("input", e => { f.notes = e.target.value; drawFoot(); });
   el.querySelectorAll('input[name="f-link"]').forEach(r => r.addEventListener("change", () => {
     f.link = r.value;
@@ -2216,7 +2236,7 @@ async function loadDocx() {
 async function buildDocx(opts) {
   const X = await loadDocx();
   const { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } = X;
-  const C = { ink: "1A2433", grey: "6B7785", new: "B8388F", special: "3B68CF", note: "C9681A" };
+  const C = { ink: "1A2433", grey: "6B7785", new: "B8388F", special: "3B68CF", note: "C9681A", lecturer: "7048C8", rename: "C2410C" };
   const R = (text, o = {}) => new TextRun({ text, rightToLeft: o.ltr ? false : true, font: "Arial", size: o.size || 22, bold: o.bold, color: o.color || C.ink });
   const P = (children, o = {}) => new Paragraph({ bidirectional: true, alignment: AlignmentType.START, children, spacing: { after: o.after ?? 60 },
     indent: o.indent ? { start: o.indent } : undefined, heading: o.heading });
@@ -2225,7 +2245,7 @@ async function buildDocx(opts) {
   body.push(P([R("קו אור עולם – סידור פנימי מלא", { size: 36, bold: true })], { heading: HeadingLevel.TITLE, after: 120 }));
   body.push(P([R(`טיוטת עבודה מתוך מערכת הניהול · ${today}`, { color: C.grey })], { after: 120 }));
   const legend = [R("מקרא: ", { bold: true }), R("שחור – שלוחה קיימת · "), R("מג'נטה – שלוחה חדשה", { color: C.new }), R(" · "), R("כחול – בנייה מיוחדת", { color: C.special }),
-    ...(opts.notes ? [R(" · "), R("כתום – הערות", { color: C.note })] : []), ...(opts.links || opts.types ? [R(" · "), R("אפור – סוג ושיוך לעץ הנוכחי", { color: C.grey })] : [])];
+    ...(opts.notes ? [R(" · "), R("כתום – הערות", { color: C.note }), R(" · "), R("סגול – דרוש מרצה", { color: C.lecturer }), R(" · "), R("חמרה – צריך שם אחר", { color: C.rename })] : []), ...(opts.links || opts.types ? [R(" · "), R("אפור – סוג ושיוך לעץ הנוכחי", { color: C.grey })] : [])];
   body.push(P(legend, { after: 240 }));
   if (opts.global) {
     const g = k => NOTES_BY.get("global:" + k) || [];
@@ -2245,6 +2265,7 @@ async function buildDocx(opts) {
     if (n.path) runs.push(R(n.path, { ltr: true, color: C.grey, bold: top, size: top ? 26 : 22 }), R("  "));
     runs.push(R(n.title || "(ריק)", { bold: top, size: top ? 26 : 22, color: ls === "new" && !routing ? C.new : C.ink }));
     if (specialBuild(n)) runs.push(R("  [בנייה מיוחדת]", { color: C.special, size: 20 }));
+    if (opts.notes) for (const k of nodeFlags(n)) runs.push(R(`  [${FLAG[k]}]`, { color: C[k], size: 20, bold: true }));
     const meta = [];
     if (opts.types && t) meta.push(TYPE_NAME(t).replace(/\s*\(.*\)\s*$/, ""));
     const linked = d ? (d.sclass_ids || []).map(id => EXT.get(id)).filter(Boolean) : [];
